@@ -14,7 +14,6 @@ PIPELINE_STEPS = [
     "pipeline/04_ml_dataset_assembly/01_build_ml_datasets.py",
     "pipeline/05_feature_analysis/01_analyze_feature_quality.py",
     "pipeline/05_feature_analysis/02_analyze_fold2_errors.py",
-    "pipeline/05_feature_analysis/03_analyze_sudden_vs_gradual_churn.py",
     "pipeline/06_model_selection/01_compare_model_architectures.py",
     "pipeline/07_feature_selection/01_compare_feature_sets.py",
     "pipeline/08_imbalance_strategy/01_compare_imbalance_strategies.py",
