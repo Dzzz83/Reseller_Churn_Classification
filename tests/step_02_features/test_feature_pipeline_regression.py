@@ -1,14 +1,14 @@
 import pandas as pd
 
-from reseller_churn.step_01_config.project_paths import (
+from reseller_churn.step_00_config.project_paths import (
     ALL_ENGINEERED_FEATURES_PATH,
 )
-from reseller_churn.step_01_config.validation_settings import (
+from reseller_churn.step_00_config.validation_settings import (
     ALL_FEATURE_SNAPSHOTS,
 )
-from reseller_churn.step_02_data.dataset_loader import DatasetLoader
-from reseller_churn.step_03_features.feature_pipeline import FeaturePipeline
-from reseller_churn.step_05_evaluation.regression_checks import (
+from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.step_02_features.feature_pipeline import FeaturePipeline
+from reseller_churn.step_04_evaluation.regression_checks import (
     RegressionChecks,
 )
 
