@@ -9,18 +9,28 @@ from sklearn.ensemble import (
 )
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import average_precision_score
+from sklearn.pipeline import Pipeline
 
 
-ORDERS_PATH = Path("datasets/orders_clean.csv")
-
-OUTPUT_DIR = Path("results/feature_selection")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-OUTPUT_PATH = (
-    OUTPUT_DIR / "targeted_add_one_feature_results.csv"
+DATA_PATH = Path(
+    "datasets/processed/ml_labeled_snapshots.csv"
+)
+ORDERS_PATH = Path(
+    "datasets/orders_clean.csv"
 )
 
-SEEDS = [42, 78, 88, 1034, 2026]
+RESULTS_DIR = Path(
+    "results/feature_selection"
+)
+RESULTS_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+OUTPUT_PATH = (
+    RESULTS_DIR
+    / "targeted_add_one_feature_results.csv"
+)
 
 
 BASE_FEATURES = [
@@ -43,11 +53,31 @@ CANDIDATES = [
 ]
 
 
-SNAPSHOTS = [
-    "2012-07-01",
-    "2012-10-01",
-    "2013-01-01",
-    "2013-04-01",
+FOLDS = {
+    "fold_1": {
+        "train": [
+            "2012-07-01",
+        ],
+        "validation":
+            "2013-01-01",
+    },
+    "fold_2": {
+        "train": [
+            "2012-07-01",
+            "2012-10-01",
+        ],
+        "validation":
+            "2013-04-01",
+    },
+}
+
+
+SEEDS = [
+    42,
+    78,
+    88,
+    1034,
+    2026,
 ]
 
 
@@ -56,8 +86,6 @@ RF_PARAMS = {
     "max_depth": 5,
     "min_samples_leaf": 1,
     "max_features": "sqrt",
-    "class_weight": None,
-    "n_jobs": -1,
 }
 
 
@@ -67,13 +95,36 @@ GB_PARAMS = {
     "max_leaf_nodes": 7,
     "min_samples_leaf": 20,
     "l2_regularization": 0.0,
-    "early_stopping": False,
 }
 
 
-def random_oversample(x, y, seed):
-    x = x.reset_index(drop=True)
-    y = y.reset_index(drop=True)
+# These are the saved Stage-08 results. The add-one
+# experiment must reproduce them before any candidate
+# comparison is trusted.
+EXPECTED_BASELINE = {
+    "Random Forest": {
+        "fold_1": 0.409271934480239,
+        "fold_2": 0.29468531757418653,
+    },
+    "Gradient Boosting": {
+        "fold_1": 0.3480374636919924,
+        "fold_2": 0.3057197779457027,
+    },
+}
+
+
+def random_oversample(
+    x,
+    y,
+    seed,
+):
+    x = x.reset_index(
+        drop=True
+    )
+
+    y = y.reset_index(
+        drop=True
+    )
 
     data = x.copy()
     data["_target"] = y
@@ -103,7 +154,9 @@ def random_oversample(x, y, seed):
     balanced = balanced.sample(
         frac=1,
         random_state=seed,
-    ).reset_index(drop=True)
+    ).reset_index(
+        drop=True
+    )
 
     y_balanced = balanced.pop(
         "_target"
@@ -112,398 +165,407 @@ def random_oversample(x, y, seed):
     return balanced, y_balanced
 
 
-def build_snapshot(
-    orders,
-    snapshot_text,
-):
-    snapshot = pd.Timestamp(
-        snapshot_text
-    )
-
-    eligibility_start = (
-        snapshot
-        - pd.DateOffset(months=6)
-    )
-
-    history_12m_start = (
-        snapshot
-        - pd.DateOffset(months=12)
-    )
-
-    history_3m_start = (
-        snapshot
-        - pd.DateOffset(months=3)
-    )
-
-    label_end = (
-        snapshot
-        + pd.DateOffset(months=6)
-    )
-
-    pre_snapshot = orders[
-        orders["OrderDate"] < snapshot
-    ]
-
-    eligible_ids = (
-        orders[
+def build_rf(seed):
+    # Exact Stage-08 Random Forest pipeline.
+    return Pipeline(
+        [
             (
+                "imputer",
+                SimpleImputer(
+                    strategy="median",
+                    add_indicator=True,
+                ),
+            ),
+            (
+                "model",
+                RandomForestClassifier(
+                    **RF_PARAMS,
+                    random_state=seed,
+                    n_jobs=-1,
+                    class_weight=None,
+                ),
+            ),
+        ]
+    )
+
+
+def build_gb(seed):
+    # Exact Stage-08 Gradient Boosting model.
+    return HistGradientBoostingClassifier(
+        **GB_PARAMS,
+        random_state=seed,
+        early_stopping=False,
+    )
+
+
+def build_candidate_features(
+    orders,
+    labeled,
+):
+    """
+    Build only the five new candidate features.
+
+    The existing seven baseline features are NOT rebuilt.
+    They remain exactly as stored in ml_labeled_snapshots.csv.
+    """
+    key_rows = (
+        labeled[
+            [
+                "StoreID",
+                "snapshot",
+            ]
+        ]
+        .drop_duplicates()
+        .copy()
+    )
+
+    parts = []
+
+    for snapshot_text, group in (
+        key_rows.groupby(
+            "snapshot",
+            sort=True,
+        )
+    ):
+        snapshot = pd.Timestamp(
+            snapshot_text
+        )
+
+        start = (
+            snapshot
+            - pd.DateOffset(
+                months=12
+            )
+        )
+
+        store_ids = (
+            group["StoreID"]
+            .unique()
+        )
+
+        history = orders[
+            (
+                orders["StoreID"]
+                .isin(store_ids)
+            )
+            & (
                 orders["OrderDate"]
-                >= eligibility_start
+                >= start
             )
             & (
                 orders["OrderDate"]
                 < snapshot
             )
-        ]["StoreID"]
-        .unique()
-    )
+        ].copy()
 
-    history_12m = pre_snapshot[
-        (
-            pre_snapshot["StoreID"]
-            .isin(eligible_ids)
-        )
-        & (
-            pre_snapshot["OrderDate"]
-            >= history_12m_start
-        )
-    ].copy()
-
-    history_3m = pre_snapshot[
-        (
-            pre_snapshot["StoreID"]
-            .isin(eligible_ids)
-        )
-        & (
-            pre_snapshot["OrderDate"]
-            >= history_3m_start
-        )
-    ].copy()
-
-    rows = []
-
-    for store_id in eligible_ids:
-
-        h12 = history_12m[
-            history_12m["StoreID"]
-            == store_id
-        ].sort_values(
+        # Exactly one cleaned row exists per SalesOrderID,
+        # but sort explicitly so the last order is deterministic
+        # if multiple resellers order on the same date.
+        history = history.sort_values(
             [
+                "StoreID",
                 "OrderDate",
                 "SalesOrderID",
             ]
         )
 
-        h3 = history_3m[
-            history_3m["StoreID"]
-            == store_id
-        ]
-
-        if h12.empty:
-            raise RuntimeError(
-                "No 12-month history "
-                f"for StoreID {store_id}"
+        aggregated = (
+            history.groupby(
+                "StoreID",
+                as_index=False,
             )
-
-        revenue_12m = (
-            h12["SubTotal"].sum()
-        )
-
-        last_order = h12.iloc[-1]
-
-        future_orders = orders[
-            (
-                orders["StoreID"]
-                == store_id
-            )
-            & (
-                orders["OrderDate"]
-                >= snapshot
-            )
-            & (
-                orders["OrderDate"]
-                < label_end
-            )
-        ]
-
-        row = {
-            "StoreID": store_id,
-            "snapshot": snapshot_text,
-
-            "churn": int(
-                future_orders.empty
-            ),
-
-            # Existing locked features
-            "n_orders_3m":
-                len(h3),
-
-            "revenue_3m":
-                h3["SubTotal"].sum(),
-
-            "recency_days":
-                (
-                    snapshot
-                    - h12[
-                        "OrderDate"
-                    ].max()
-                ).days,
-
-            "revenue_12m":
-                revenue_12m,
-
-            "share_bikes":
-                h12[
-                    "rev_bikes"
-                ].sum()
-                / revenue_12m,
-
-            "share_accessories":
-                h12[
-                    "rev_accessories"
-                ].sum()
-                / revenue_12m,
-
-            "share_clothing":
-                h12[
-                    "rev_clothing"
-                ].sum()
-                / revenue_12m,
-
-            # New candidate features
-            "avg_order_value_12m":
-                h12[
-                    "SubTotal"
-                ].mean(),
-
-            "std_order_value_12m":
-                h12[
-                    "SubTotal"
-                ].std(ddof=1),
-
-            "avg_qty_12m":
-                h12[
-                    "qty"
-                ].mean(),
-
-            "avg_lines_12m":
-                h12[
-                    "n_lines"
-                ].mean(),
-
-            "last_order_value":
-                float(
-                    last_order[
-                        "SubTotal"
-                    ]
+            .agg(
+                avg_order_value_12m=(
+                    "SubTotal",
+                    "mean",
                 ),
-        }
-
-        rows.append(row)
-
-    return pd.DataFrame(rows)
-
-
-def prepare_rf_data(
-    x_train,
-    x_val,
-):
-    # std_order_value_12m is undefined
-    # when there is only one historical order.
-    #
-    # Imputation is fitted on TRAIN only.
-
-    imputer = SimpleImputer(
-        strategy="median"
-    )
-
-    x_train = (
-        imputer.fit_transform(
-            x_train
-        )
-    )
-
-    x_val = (
-        imputer.transform(
-            x_val
-        )
-    )
-
-    return x_train, x_val
-
-
-def predict_rf(
-    x_train,
-    y_train,
-    x_val,
-):
-    x_train, x_val = (
-        prepare_rf_data(
-            x_train,
-            x_val,
-        )
-    )
-
-    probabilities = []
-
-    for seed in SEEDS:
-
-        model = (
-            RandomForestClassifier(
-                **RF_PARAMS,
-                random_state=seed,
+                std_order_value_12m=(
+                    "SubTotal",
+                    "std",
+                ),
+                avg_qty_12m=(
+                    "qty",
+                    "mean",
+                ),
+                avg_lines_12m=(
+                    "n_lines",
+                    "mean",
+                ),
             )
         )
 
-        model.fit(
-            x_train,
-            y_train,
+        last_orders = (
+            history.groupby(
+                "StoreID",
+                as_index=False,
+            )
+            .tail(1)[
+                [
+                    "StoreID",
+                    "SubTotal",
+                ]
+            ]
+            .rename(
+                columns={
+                    "SubTotal":
+                        "last_order_value"
+                }
+            )
         )
 
-        probabilities.append(
-            model.predict_proba(
-                x_val
-            )[:, 1]
+        features = (
+            group[
+                [
+                    "StoreID",
+                    "snapshot",
+                ]
+            ]
+            .merge(
+                aggregated,
+                on="StoreID",
+                how="left",
+                validate="one_to_one",
+            )
+            .merge(
+                last_orders,
+                on="StoreID",
+                how="left",
+                validate="one_to_one",
+            )
         )
 
-    return np.mean(
-        probabilities,
-        axis=0,
+        parts.append(
+            features
+        )
+
+    candidates = pd.concat(
+        parts,
+        ignore_index=True,
     )
 
+    assert len(
+        candidates
+    ) == len(
+        key_rows
+    )
 
-def predict_gb(
+    assert not candidates.duplicated(
+        [
+            "StoreID",
+            "snapshot",
+        ]
+    ).any()
+
+    # Every labeled reseller is eligible because it bought
+    # within the previous six months, therefore it must have
+    # at least one order in the previous twelve months.
+    required = [
+        "avg_order_value_12m",
+        "avg_qty_12m",
+        "avg_lines_12m",
+        "last_order_value",
+    ]
+
+    assert (
+        candidates[
+            required
+        ]
+        .notna()
+        .all()
+        .all()
+    )
+
+    # std_order_value_12m is intentionally NaN for a reseller
+    # with only one order in the 12-month history.
+    return candidates
+
+
+def attach_candidate_features(
+    labeled,
+    candidates,
+):
+    original_rows = len(
+        labeled
+    )
+
+    original_keys = (
+        labeled[
+            [
+                "StoreID",
+                "snapshot",
+            ]
+        ]
+        .copy()
+        .reset_index(
+            drop=True
+        )
+    )
+
+    result = labeled.merge(
+        candidates,
+        on=[
+            "StoreID",
+            "snapshot",
+        ],
+        how="left",
+        validate="one_to_one",
+        sort=False,
+    )
+
+    assert len(
+        result
+    ) == original_rows
+
+    pd.testing.assert_frame_equal(
+        result[
+            [
+                "StoreID",
+                "snapshot",
+            ]
+        ].reset_index(
+            drop=True
+        ),
+        original_keys,
+        check_dtype=False,
+    )
+
+    return result
+
+
+def evaluate_rf_seed(
     x_train,
     y_train,
     x_val,
+    y_val,
+    recent_mask,
+    seed,
 ):
-    probabilities = []
+    model = build_rf(
+        seed
+    )
 
-    for seed in SEEDS:
+    model.fit(
+        x_train,
+        y_train,
+    )
 
-        (
-            x_balanced,
-            y_balanced,
-        ) = random_oversample(
+    probability = (
+        model.predict_proba(
+            x_val
+        )[:, 1]
+    )
+
+    overall = (
+        average_precision_score(
+            y_val,
+            probability,
+        )
+    )
+
+    recent = (
+        average_precision_score(
+            y_val.loc[
+                recent_mask
+            ],
+            probability[
+                recent_mask.to_numpy()
+            ],
+        )
+    )
+
+    return overall, recent
+
+
+def evaluate_gb_seed(
+    x_train,
+    y_train,
+    x_val,
+    y_val,
+    recent_mask,
+    seed,
+):
+    x_balanced, y_balanced = (
+        random_oversample(
             x_train,
             y_train,
             seed,
         )
-
-        model = (
-            HistGradientBoostingClassifier(
-                **GB_PARAMS,
-                random_state=seed,
-            )
-        )
-
-        model.fit(
-            x_balanced,
-            y_balanced,
-        )
-
-        probabilities.append(
-            model.predict_proba(
-                x_val
-            )[:, 1]
-        )
-
-    return np.mean(
-        probabilities,
-        axis=0,
     )
 
-
-def safe_pr_auc(
-    y_true,
-    probabilities,
-):
-    y_true = np.asarray(
-        y_true
+    model = build_gb(
+        seed
     )
 
-    if (
-        len(
-            np.unique(
-                y_true
-            )
+    model.fit(
+        x_balanced,
+        y_balanced,
+    )
+
+    probability = (
+        model.predict_proba(
+            x_val
+        )[:, 1]
+    )
+
+    overall = (
+        average_precision_score(
+            y_val,
+            probability,
         )
-        < 2
-    ):
-        return np.nan
-
-    return average_precision_score(
-        y_true,
-        probabilities,
     )
 
+    recent = (
+        average_precision_score(
+            y_val.loc[
+                recent_mask
+            ],
+            probability[
+                recent_mask.to_numpy()
+            ],
+        )
+    )
 
-def evaluate_one(
+    return overall, recent
+
+
+def evaluate_experiment(
+    df,
     model_name,
-    predictor,
-    feature_name,
-    frames,
+    feature_added,
 ):
     features = (
         BASE_FEATURES.copy()
     )
 
     if (
-        feature_name
+        feature_added
         != "BASELINE"
     ):
         features.append(
-            feature_name
+            feature_added
         )
 
-    folds = [
-        {
-            "name": "fold_1",
-            "train": [
-                "2012-07-01",
-            ],
-            "validation":
-                "2013-01-01",
-        },
-        {
-            "name": "fold_2",
-            "train": [
-                "2012-07-01",
-                "2012-10-01",
-            ],
-            "validation":
-                "2013-04-01",
-        },
-    ]
+    fold_scores = {}
+    recent_scores = {}
 
-    result = {
-        "model":
-            model_name,
+    recent_n = None
+    recent_churners = None
 
-        "feature_added":
-            feature_name,
-    }
+    for (
+        fold_name,
+        fold,
+    ) in FOLDS.items():
 
-    fold_scores = []
+        train = df[
+            df["snapshot"].isin(
+                fold["train"]
+            )
+        ].copy()
 
-    for fold in folds:
-
-        train = pd.concat(
-            [
-                frames[s]
-                for s
-                in fold["train"]
-            ],
-            ignore_index=True,
-        )
-
-        val = (
-            frames[
-                fold[
-                    "validation"
-                ]
-            ].copy()
-        )
+        val = df[
+            df["snapshot"]
+            == fold["validation"]
+        ].copy()
 
         x_train = train[
             features
@@ -521,157 +583,211 @@ def evaluate_one(
             "churn"
         ].astype(int)
 
-        probabilities = (
-            predictor(
-                x_train,
-                y_train,
-                x_val,
+        recent_mask = (
+            val["recency_days"]
+            <= 30
+        )
+
+        seed_scores = []
+        seed_recent_scores = []
+
+        for seed in SEEDS:
+
+            if (
+                model_name
+                == "Random Forest"
+            ):
+                overall, recent = (
+                    evaluate_rf_seed(
+                        x_train,
+                        y_train,
+                        x_val,
+                        y_val,
+                        recent_mask,
+                        seed,
+                    )
+                )
+
+            elif (
+                model_name
+                == "Gradient Boosting"
+            ):
+                overall, recent = (
+                    evaluate_gb_seed(
+                        x_train,
+                        y_train,
+                        x_val,
+                        y_val,
+                        recent_mask,
+                        seed,
+                    )
+                )
+
+            else:
+                raise ValueError(
+                    model_name
+                )
+
+            seed_scores.append(
+                overall
             )
+
+            seed_recent_scores.append(
+                recent
+            )
+
+        # IMPORTANT:
+        # This matches Stage 08 exactly:
+        # score each seed first, then average scores.
+        fold_scores[
+            fold_name
+        ] = np.mean(
+            seed_scores
         )
 
-        score = safe_pr_auc(
-            y_val,
-            probabilities,
+        recent_scores[
+            fold_name
+        ] = np.mean(
+            seed_recent_scores
         )
 
-        fold_scores.append(
-            score
-        )
-
-        result[
-            f"{fold['name']}_pr_auc"
-        ] = score
-
-        # Special Fold-2 subgroup:
-        # recently active resellers
-        # who looked healthy immediately
-        # before the snapshot.
         if (
-            fold["name"]
+            fold_name
             == "fold_2"
         ):
-            recent_mask = (
-                val[
-                    "recency_days"
-                ]
-                <= 30
-            )
-
-            result[
-                "fold_2_recent30_n"
-            ] = int(
+            recent_n = int(
                 recent_mask.sum()
             )
 
-            result[
-                "fold_2_recent30_churners"
-            ] = int(
-                val.loc[
-                    recent_mask,
-                    "churn",
-                ].sum()
-            )
-
-            result[
-                "fold_2_recent30_pr_auc"
-            ] = safe_pr_auc(
+            recent_churners = int(
                 y_val.loc[
                     recent_mask
-                ],
-                probabilities[
-                    recent_mask
-                ],
+                ].sum()
             )
 
-    result[
-        "mean_pr_auc"
-    ] = np.mean(
-        fold_scores
-    )
+    return {
+        "model":
+            model_name,
 
-    result[
-        "worst_fold_pr_auc"
-    ] = np.min(
-        fold_scores
-    )
+        "feature_added":
+            feature_added,
 
-    return result
+        "fold_1_pr_auc":
+            fold_scores[
+                "fold_1"
+            ],
 
+        "fold_2_pr_auc":
+            fold_scores[
+                "fold_2"
+            ],
 
-def print_snapshot_sanity(
-    frames,
-):
-    print(
-        "=== Snapshot sanity check ==="
-    )
+        "mean_pr_auc":
+            np.mean(
+                list(
+                    fold_scores.values()
+                )
+            ),
 
-    expected = {
-        "2012-07-01":
-            (326, 76),
+        "worst_fold_pr_auc":
+            np.min(
+                list(
+                    fold_scores.values()
+                )
+            ),
 
-        "2012-10-01":
-            (366, 47),
+        "fold_2_recent30_n":
+            recent_n,
 
-        "2013-01-01":
-            (343, 25),
+        "fold_2_recent30_churners":
+            recent_churners,
 
-        "2013-04-01":
-            (340, 64),
+        "fold_2_recent30_pr_auc":
+            recent_scores[
+                "fold_2"
+            ],
     }
 
-    all_ok = True
+
+def verify_baseline(
+    results,
+):
+    print()
+    print(
+        "=== Baseline Reproduction Check ==="
+    )
 
     for (
-        snapshot,
-        frame,
-    ) in frames.items():
+        model_name,
+        expected,
+    ) in EXPECTED_BASELINE.items():
 
-        actual = (
-            len(frame),
-            int(
-                frame[
-                    "churn"
-                ].sum()
-            ),
-        )
+        row = results[
+            (
+                results["model"]
+                == model_name
+            )
+            & (
+                results["feature_added"]
+                == "BASELINE"
+            )
+        ].iloc[0]
 
-        wanted = expected[
-            snapshot
-        ]
+        for fold_name in [
+            "fold_1",
+            "fold_2",
+        ]:
+            actual = row[
+                f"{fold_name}_pr_auc"
+            ]
 
-        if (
-            actual
-            == wanted
-        ):
-            status = "PASS"
-        else:
-            status = "FAIL"
-            all_ok = False
+            target = expected[
+                fold_name
+            ]
 
-        print(
-            f"{status} "
-            f"{snapshot}: "
-            f"rows={actual[0]}, "
-            f"churners={actual[1]} "
-            f"(expected "
-            f"{wanted[0]}, "
-            f"{wanted[1]})"
-        )
+            difference = (
+                actual
+                - target
+            )
 
-    if not all_ok:
-        raise RuntimeError(
-            "Snapshot reconstruction "
-            "does not match the "
-            "verified development data."
-        )
+            print(
+                f"{model_name} "
+                f"{fold_name}: "
+                f"actual={actual:.10f}, "
+                f"expected={target:.10f}, "
+                f"delta={difference:+.10f}"
+            )
 
-    print()
+            if not np.isclose(
+                actual,
+                target,
+                rtol=0,
+                atol=1e-10,
+            ):
+                raise RuntimeError(
+                    "Baseline reproduction failed. "
+                    "Do not interpret candidate "
+                    "feature results."
+                )
+
+    print(
+        "[PASS] Exact Stage-08 "
+        "baseline reproduced."
+    )
 
 
 def add_deltas(
     results,
 ):
     results = results.copy()
+
+    metrics = [
+        "fold_1_pr_auc",
+        "fold_2_pr_auc",
+        "mean_pr_auc",
+        "worst_fold_pr_auc",
+        "fold_2_recent30_pr_auc",
+    ]
 
     for model_name in (
         results[
@@ -699,14 +815,6 @@ def add_deltas(
             .iloc[0]
         )
 
-        metrics = [
-            "fold_1_pr_auc",
-            "fold_2_pr_auc",
-            "mean_pr_auc",
-            "worst_fold_pr_auc",
-            "fold_2_recent30_pr_auc",
-        ]
-
         for metric in metrics:
 
             results.loc[
@@ -731,23 +839,20 @@ def print_results(
     columns = [
         "model",
         "feature_added",
-
         "fold_1_pr_auc",
         "fold_2_pr_auc",
-
         "mean_pr_auc",
         "worst_fold_pr_auc",
-
         "delta_mean_pr_auc",
         "delta_fold_2_pr_auc",
-
         "fold_2_recent30_pr_auc",
         "delta_fold_2_recent30_pr_auc",
     ]
 
+    print()
     print(
-        "=== Targeted Add-One "
-        "Feature Test ==="
+        "=== Corrected Targeted "
+        "Add-One Feature Test ==="
     )
 
     print(
@@ -774,7 +879,6 @@ def print_results(
     )
 
     print()
-
     print(
         "Fold-2 recent subgroup: "
         "recency_days <= 30 "
@@ -782,40 +886,95 @@ def print_results(
     )
 
     print()
+    print(
+        "Existing seven features came directly "
+        "from ml_labeled_snapshots.csv."
+    )
 
     print(
-        "Final-test snapshot "
-        "2013-10-01 was NOT "
-        "constructed or evaluated."
+        "Final-test snapshot 2013-10-01 "
+        "was NOT constructed or evaluated."
     )
 
 
 def main():
+    labeled = pd.read_csv(
+        DATA_PATH
+    )
+
+    labeled[
+        "snapshot"
+    ] = pd.to_datetime(
+        labeled[
+            "snapshot"
+        ]
+    ).dt.strftime(
+        "%Y-%m-%d"
+    )
+
     orders = pd.read_csv(
         ORDERS_PATH,
+        parse_dates=[
+            "OrderDate",
+        ],
         encoding="utf-8-sig",
     )
 
-    orders[
-        "OrderDate"
-    ] = pd.to_datetime(
-        orders[
-            "OrderDate"
-        ]
-    )
+    expected_counts = {
+        "2012-07-01":
+            (326, 76),
 
-    frames = {
-        snapshot:
-            build_snapshot(
-                orders,
-                snapshot,
-            )
-        for snapshot
-        in SNAPSHOTS
+        "2012-10-01":
+            (366, 47),
+
+        "2013-01-01":
+            (343, 25),
+
+        "2013-04-01":
+            (340, 64),
     }
 
-    print_snapshot_sanity(
-        frames
+    print(
+        "=== Development Dataset Check ==="
+    )
+
+    for (
+        snapshot,
+        expected,
+    ) in expected_counts.items():
+
+        part = labeled[
+            labeled["snapshot"]
+            == snapshot
+        ]
+
+        actual = (
+            len(part),
+            int(
+                part[
+                    "churn"
+                ].sum()
+            ),
+        )
+
+        assert actual == expected
+
+        print(
+            f"[PASS] {snapshot}: "
+            f"{actual[0]} rows, "
+            f"{actual[1]} churners"
+        )
+
+    candidates = (
+        build_candidate_features(
+            orders,
+            labeled,
+        )
+    )
+
+    df = attach_candidate_features(
+        labeled,
+        candidates,
     )
 
     experiments = [
@@ -825,42 +984,35 @@ def main():
 
     rows = []
 
-    for feature_name in experiments:
+    for model_name in [
+        "Random Forest",
+        "Gradient Boosting",
+    ]:
 
-        print(
-            "Testing RF:",
-            feature_name,
-        )
+        for feature_added in experiments:
 
-        rows.append(
-            evaluate_one(
-                "Random Forest",
-                predict_rf,
-                feature_name,
-                frames,
+            print(
+                f"Testing "
+                f"{model_name}: "
+                f"{feature_added}"
             )
-        )
 
-    for feature_name in experiments:
-
-        print(
-            "Testing GB:",
-            feature_name,
-        )
-
-        rows.append(
-            evaluate_one(
-                "Gradient Boosting",
-                predict_gb,
-                feature_name,
-                frames,
+            rows.append(
+                evaluate_experiment(
+                    df,
+                    model_name,
+                    feature_added,
+                )
             )
-        )
 
-    results = (
-        pd.DataFrame(
-            rows
-        )
+    results = pd.DataFrame(
+        rows
+    )
+
+    # Critical guardrail: if this fails,
+    # no candidate result should be trusted.
+    verify_baseline(
+        results
     )
 
     results = add_deltas(
@@ -872,13 +1024,11 @@ def main():
         index=False,
     )
 
-    print()
     print_results(
         results
     )
 
     print()
-
     print(
         "Saved:",
         OUTPUT_PATH,
