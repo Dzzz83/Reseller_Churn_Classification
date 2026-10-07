@@ -27,10 +27,12 @@ PIPELINE_STEPS = [
 
 def main() -> None:
     print(
-        "=== Full Development Pipeline ==="
+        "=== Full Development Pipeline ===",
+        flush=True,
     )
     print(
-        "Stage 12 final evaluation is intentionally excluded."
+        "Stage 12 final evaluation is intentionally excluded.",
+        flush=True,
     )
     print()
 
@@ -44,11 +46,13 @@ def main() -> None:
         )
 
         print(
-            "=" * 80
+            "=" * 80,
+            flush=True,
         )
         print(
             f"[{index}/{len(PIPELINE_STEPS)}] "
-            f"{relative_path}"
+            f"{relative_path}",
+            flush=True,
         )
         print(
             "=" * 80
@@ -57,6 +61,7 @@ def main() -> None:
         subprocess.run(
             [
                 sys.executable,
+                "-u",
                 str(script_path),
             ],
             cwd=PROJECT_ROOT,
