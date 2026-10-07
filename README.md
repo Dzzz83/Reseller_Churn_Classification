@@ -59,7 +59,6 @@ python pipeline/03_feature_engineering/01_build_all_features.py
 python pipeline/04_ml_dataset_assembly/01_build_ml_datasets.py
 python pipeline/05_feature_analysis/01_analyze_feature_quality.py
 python pipeline/05_feature_analysis/02_analyze_fold2_errors.py
-python pipeline/05_feature_analysis/03_analyze_sudden_vs_gradual_churn.py
 python pipeline/06_model_selection/01_compare_model_architectures.py
 python pipeline/07_feature_selection/01_compare_feature_sets.py
 python pipeline/08_imbalance_strategy/01_compare_imbalance_strategies.py
