@@ -17,7 +17,6 @@ PIPELINE_STEPS = [
     "pipeline/06_model_selection/01_compare_model_architectures.py",
     "pipeline/07_feature_selection/01_compare_feature_sets.py",
     "pipeline/08_imbalance_strategy/01_compare_imbalance_strategies.py",
-    "pipeline/09_hyperparameter_tuning/01_tune_models.py",
     "pipeline/10_threshold_selection/01_select_thresholds.py",
     "pipeline/11_provisional_training/01_train_provisional_models.py",
     "pipeline/11_provisional_training/02_evaluate_development_models.py",
