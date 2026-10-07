@@ -1,0 +1,28 @@
+name: 01 Regression Tests
+
+on:
+  push:
+    branches:
+      - refactor/readable-oop-pipeline
+  pull_request:
+
+jobs:
+  regression-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 01 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 02 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 03 Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: 04 Run regression tests
+        run: pytest -q
