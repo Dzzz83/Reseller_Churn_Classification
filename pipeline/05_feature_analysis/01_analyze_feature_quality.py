@@ -24,7 +24,7 @@ def main() -> None:
         .isna()
         .mean()
         .rename("missing_fraction")
-        .reset_index(names="feature")
+        .reset_index(name="feature")
     )
 
     correlations = (
