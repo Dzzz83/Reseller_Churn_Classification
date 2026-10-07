@@ -1,0 +1,7 @@
+setting,value
+status,PROVISIONAL / DEMO
+features,"n_orders_3m, revenue_3m, recency_days, share_bikes, share_accessories, share_clothing, revenue_12m"
+threshold,0.5
+imbalance_strategy,none
+hyperparameter_tuning,none
+final_test_used,NO
