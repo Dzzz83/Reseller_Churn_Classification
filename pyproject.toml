@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reseller-churn-classification"
+version = "0.1.0"
+description = "Leakage-safe reseller churn classification pipeline"
+requires-python = ">=3.11"
+dependencies = [
+    "joblib",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["reseller_churn*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
