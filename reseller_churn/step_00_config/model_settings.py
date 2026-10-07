@@ -25,6 +25,8 @@ BASELINE_RANDOM_FOREST = RandomForestSettings(
     n_estimators=300,
 )
 
+BASELINE_GRADIENT_BOOSTING = GradientBoostingSettings()
+
 TUNED_RANDOM_FOREST = RandomForestSettings(
     n_estimators=600,
     max_depth=5,
