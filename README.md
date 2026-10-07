@@ -62,7 +62,8 @@ python pipeline/05_feature_analysis/02_analyze_fold2_errors.py
 python pipeline/06_model_selection/01_compare_model_architectures.py
 python pipeline/07_feature_selection/01_compare_feature_sets.py
 python pipeline/08_imbalance_strategy/01_compare_imbalance_strategies.py
-python pipeline/09_hyperparameter_tuning/01_tune_models.py
+# Optional research-only exhaustive retuning:
+# python pipeline/09_hyperparameter_tuning/01_tune_models.py
 python pipeline/10_threshold_selection/01_select_thresholds.py
 python pipeline/11_provisional_training/01_train_provisional_models.py
 ```
