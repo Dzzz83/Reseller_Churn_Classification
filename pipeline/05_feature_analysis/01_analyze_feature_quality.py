@@ -34,7 +34,7 @@ def main() -> None:
         .corr(numeric_only=True)["churn"]
         .drop("churn")
         .rename("correlation_with_churn")
-        .reset_index(names="feature")
+        .reset_index(name="feature")
     )
 
     summary = (
