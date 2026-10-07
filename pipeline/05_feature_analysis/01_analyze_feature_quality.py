@@ -23,8 +23,8 @@ def main() -> None:
         data[FULL_FEATURES]
         .isna()
         .mean()
-        .rename("missing_fraction")
-        .reset_index(name="feature")
+        .rename_axis("feature")
+        .reset_index(name="missing_fraction")
     )
 
     correlations = (
@@ -33,8 +33,8 @@ def main() -> None:
         ]
         .corr(numeric_only=True)["churn"]
         .drop("churn")
-        .rename("correlation_with_churn")
-        .reset_index(name="feature")
+        .rename_axis("feature")
+        .reset_index(name="correlation_with_churn")
     )
 
     summary = (
