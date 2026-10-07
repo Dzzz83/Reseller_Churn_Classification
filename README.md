@@ -39,7 +39,17 @@ tests/
 
 ## Pipeline Order
 
-Run commands from the repository root.
+To run the complete development pipeline through provisional model evaluation:
+
+```bash
+python pipeline/run_full_development_pipeline.py
+```
+
+This deliberately stops before Stage 12 and does not evaluate the protected
+2013-10-01 final test.
+
+To run individual stages, use the commands below from the repository root.
+
 
 ```bash
 python pipeline/01_data_audit/01_audit_source_data.py
