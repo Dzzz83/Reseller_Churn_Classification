@@ -20,17 +20,17 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from comparisons.friend_method.corrected_features import FriendSnapshotBuilder
-from comparisons.friend_method.corrected_model import fit_friend_model
-from comparisons.friend_method.feature_provenance import attach_feature_scope
-from comparisons.friend_method.validation import (
+from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_model import fit_friend_model
+from comparisons.correlation_pruned_churn.feature_provenance import attach_feature_scope
+from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
 )
 from reseller_churn.step_01_data.dataset_loader import DatasetLoader
 
 
-OUTPUT = ROOT / "results" / "friend_method_audit"
+OUTPUT = ROOT / "results" / "correlation_pruned_churn"
 
 
 def evaluate(

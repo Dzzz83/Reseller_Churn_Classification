@@ -1,7 +1,7 @@
 import pandas as pd
 
-from comparisons.friend_method.corrected_features import FriendSnapshotBuilder
-from comparisons.friend_method.corrected_model import select_numeric_features
+from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_model import select_numeric_features
 
 
 def sample_orders() -> pd.DataFrame:

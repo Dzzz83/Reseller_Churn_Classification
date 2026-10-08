@@ -12,15 +12,15 @@ sys.path.insert(0, str(ROOT))
 import numpy as np
 import pandas as pd
 
-from comparisons.friend_method.corrected_features import FriendSnapshotBuilder
-from comparisons.friend_method.validation import (
+from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
 )
 from reseller_churn.step_01_data.dataset_loader import DatasetLoader
 
 
-OUTPUT = ROOT / "results" / "friend_method_audit"
+OUTPUT = ROOT / "results" / "correlation_pruned_churn"
 
 
 def main() -> None:

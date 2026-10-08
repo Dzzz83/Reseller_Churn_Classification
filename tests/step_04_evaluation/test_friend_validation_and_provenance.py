@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from comparisons.friend_method.feature_provenance import (
+from comparisons.correlation_pruned_churn.feature_provenance import (
     attach_feature_scope,
 )
-from comparisons.friend_method.validation import (
+from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
 )

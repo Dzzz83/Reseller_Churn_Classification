@@ -103,16 +103,16 @@ From the repository root with the configured Python environment:
 
 ```bash
 python -m pytest -q
-python comparisons/friend_method/01_verify_data_and_labels.py
-python comparisons/friend_method/02_verify_features.py
-python comparisons/friend_method/03_compare_validation_strategies.py
-python comparisons/friend_method/04_compare_with_our_model.py
+python comparisons/correlation_pruned_churn/01_verify_data_and_labels.py
+python comparisons/correlation_pruned_churn/02_verify_features.py
+python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py
+python comparisons/correlation_pruned_churn/04_compare_with_our_model.py
 ```
 
 Optional exploratory scope using unverified store attributes:
 
 ```bash
-python comparisons/friend_method/03_compare_validation_strategies.py \
+python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py \
   --include-unverified-store-profile
 ```
 
@@ -120,7 +120,7 @@ This optional command **overwrites** the `03_` output files with
 both historical-only and unverified-scope results. It does not alter
 the core model or source datasets.
 
-Outputs in `results/friend_method_audit/`:
+Outputs in `results/correlation_pruned_churn/`:
 
 - `01_verified_snapshot_counts.csv`
 - `03_fold_metrics.csv`
@@ -138,7 +138,7 @@ matched-dataset comparison, not an isolated feature-only comparison.
 Run:
 
 ```bash
-python comparisons/friend_method/05_reproduce_corrected_original.py
+python comparisons/correlation_pruned_churn/05_reproduce_corrected_original.py
 ```
 
 This is **not** the earlier four-snapshot development experiment. It keeps

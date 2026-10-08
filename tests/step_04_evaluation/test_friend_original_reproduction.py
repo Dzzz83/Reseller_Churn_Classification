@@ -3,12 +3,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from comparisons.friend_method.corrected_model import _is_log_feature
-from comparisons.friend_method import __path__
+from comparisons.correlation_pruned_churn.corrected_model import _is_log_feature
+from comparisons.correlation_pruned_churn import __path__
 from importlib import util
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[2] / "comparisons" / "friend_method" / "05_reproduce_corrected_original.py"
+SCRIPT = Path(__file__).resolve().parents[2] / "comparisons" / "correlation_pruned_churn" / "05_reproduce_corrected_original.py"
 spec = util.spec_from_file_location("friend_original_replication", SCRIPT)
 module = util.module_from_spec(spec)
 spec.loader.exec_module(module)

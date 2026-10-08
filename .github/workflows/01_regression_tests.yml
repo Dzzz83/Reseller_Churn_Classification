@@ -28,23 +28,23 @@ jobs:
         run: pytest -q
 
       - name: 05 Verify source labels
-        run: python comparisons/friend_method/01_verify_data_and_labels.py
+        run: python comparisons/correlation_pruned_churn/01_verify_data_and_labels.py
 
       - name: 06 Verify feature calculations
-        run: python comparisons/friend_method/02_verify_features.py
+        run: python comparisons/correlation_pruned_churn/02_verify_features.py
 
       - name: 07 Evaluate grouped and temporal designs
         run: |
-          python comparisons/friend_method/03_compare_validation_strategies.py --include-unverified-store-profile
-          python comparisons/friend_method/04_compare_with_our_model.py
+          python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py --include-unverified-store-profile
+          python comparisons/correlation_pruned_churn/04_compare_with_our_model.py
 
       - name: 08 Reproduce original GroupKFold and corrected November audit
-        run: python comparisons/friend_method/05_reproduce_corrected_original.py
+        run: python comparisons/correlation_pruned_churn/05_reproduce_corrected_original.py
 
       - name: 09 Archive comparison results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: friend-method-development-audit
-          path: results/friend_method_audit/*.csv
+          path: results/correlation_pruned_churn/*.csv
           if-no-files-found: ignore

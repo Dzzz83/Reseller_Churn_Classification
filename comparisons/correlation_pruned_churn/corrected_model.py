@@ -17,7 +17,7 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
-from comparisons.friend_method.corrected_features import (
+from comparisons.correlation_pruned_churn.corrected_features import (
     CATEGORICAL_FEATURES,
 )
 

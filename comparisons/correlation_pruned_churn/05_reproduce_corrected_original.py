@@ -22,9 +22,9 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import GroupKFold
 
-from comparisons.friend_method.corrected_features import FriendSnapshotBuilder
-from comparisons.friend_method.corrected_model import fit_friend_model
-from comparisons.friend_method.feature_provenance import attach_feature_scope
+from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_model import fit_friend_model
+from comparisons.correlation_pruned_churn.feature_provenance import attach_feature_scope
 from reseller_churn.step_01_data.dataset_loader import DatasetLoader
 
 
@@ -33,7 +33,7 @@ TRAIN_SNAPSHOTS = (
     "2013-02-01", "2013-05-01",
 )
 RETROSPECTIVE_TEST = "2013-11-01"
-OUTPUT = ROOT / "results" / "friend_method_audit"
+OUTPUT = ROOT / "results" / "correlation_pruned_churn"
 
 # Exact metrics transcribed from phase2.ipynb, code-cell 15.
 # These are the *published, uncorrected* reference scores, not experiment inputs.

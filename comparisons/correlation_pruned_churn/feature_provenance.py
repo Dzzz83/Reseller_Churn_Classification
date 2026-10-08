@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from comparisons.friend_method.corrected_features import (
+from comparisons.correlation_pruned_churn.corrected_features import (
     CATEGORICAL_FEATURES,
     NUMERIC_FEATURES,
 )
