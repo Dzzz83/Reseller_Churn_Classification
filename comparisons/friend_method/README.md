@@ -14,7 +14,7 @@ remain unchanged.
 
 | Finding | Classification | Evidence / handling |
 | --- | --- | --- |
-| Source notebook loads 3,806 orders, including six rows with nonpositive subtotal or invalid quantity | Confirmed data-quality issue | Read the verified 3,800-row `orders_clean.csv` |
+| Raw CSV contains six invalid orders, but the original Phase 1 notebook removes them before modeling | Already correctly handled in original | Preserve the cleaned 3,800-order input and verify row counts |
 | Source label tests `OrderDate <= snapshot + 6 months` | Confirmed inconsistent six-month endpoint | Use half-open `[t, t + 6 months)` |
 | Five-fold GroupKFold groups by `StoreID` | Valid alternative, **not** leakage by itself | Retain as a separate unseen-reseller evaluation |
 | Source feature pruning uses correlation with the labels of all development rows *before* GroupKFold | Confirmed supervised CV information leakage | Fit feature pruning inside each training fold |
