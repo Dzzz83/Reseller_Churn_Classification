@@ -19,7 +19,7 @@ dependencies = [
 dev = ["pytest"]
 
 [tool.setuptools.packages.find]
-include = ["reseller_churn*"]
+include = ["reseller_churn*", "comparisons*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
