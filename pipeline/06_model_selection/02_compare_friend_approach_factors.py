@@ -53,13 +53,13 @@ FRIEND_SAFE_OVERLAP_FEATURES = [
 ]
 
 
-def predict_average(
+def predict_by_seed(
     x_train: pd.DataFrame,
     y_train: pd.Series,
     x_validation: pd.DataFrame,
     settings: RandomForestSettings,
     seeds: tuple[int, ...],
-) -> np.ndarray:
+) -> list[np.ndarray]:
     predictions = []
 
     for seed in seeds:
@@ -72,7 +72,7 @@ def predict_average(
             model.predict_proba(x_validation)[:, 1]
         )
 
-    return np.mean(predictions, axis=0)
+    return predictions
 
 
 def evaluate_temporal(
@@ -96,7 +96,7 @@ def evaluate_temporal(
         train = prepared.training_data
         validation = prepared.validation_data
 
-        probability = predict_average(
+        probabilities_by_seed = predict_by_seed(
             x_train=train[features],
             y_train=train["churn"].astype(int),
             x_validation=validation[features],
@@ -106,11 +106,21 @@ def evaluate_temporal(
 
         target = validation["churn"].astype(int).to_numpy()
 
-        fold_scores.append(
+        seed_scores = [
             average_precision_score(
                 target,
                 probability,
             )
+            for probability in probabilities_by_seed
+        ]
+
+        fold_scores.append(
+            float(np.mean(seed_scores))
+        )
+
+        probability = np.mean(
+            probabilities_by_seed,
+            axis=0,
         )
 
         pooled_target.extend(target.tolist())
@@ -166,12 +176,17 @@ def evaluate_group_kfold(
         train = working.iloc[train_index]
         validation = working.iloc[validation_index]
 
-        probability = predict_average(
+        probabilities_by_seed = predict_by_seed(
             x_train=train[features],
             y_train=train["churn"].astype(int),
             x_validation=validation[features],
             settings=settings,
             seeds=seeds,
+        )
+
+        probability = np.mean(
+            probabilities_by_seed,
+            axis=0,
         )
 
         target = validation["churn"].astype(int).to_numpy()
