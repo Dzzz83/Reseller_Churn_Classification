@@ -3,9 +3,7 @@ name: 01 Regression Tests
 on:
   push:
     branches:
-      - refactor/readable-oop-pipeline
-      - research/churn-method-comparison
-      - pipeline_preparation
+      - data_preparation
   pull_request:
 
 jobs:
