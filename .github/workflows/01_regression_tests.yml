@@ -5,6 +5,7 @@ on:
     branches:
       - refactor/readable-oop-pipeline
       - research/churn-method-comparison
+      - pipeline_preparation
   pull_request:
 
 jobs:
