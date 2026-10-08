@@ -27,3 +27,22 @@ jobs:
 
       - name: 04 Run regression tests
         run: pytest -q
+
+      - name: 05 Verify source labels
+        run: python comparisons/friend_method/01_verify_data_and_labels.py
+
+      - name: 06 Verify feature calculations
+        run: python comparisons/friend_method/02_verify_features.py
+
+      - name: 07 Evaluate grouped and temporal designs
+        run: |
+          python comparisons/friend_method/03_compare_validation_strategies.py --include-unverified-store-profile
+          python comparisons/friend_method/04_compare_with_our_model.py
+
+      - name: 08 Archive comparison results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: friend-method-development-audit
+          path: results/friend_method_audit/*.csv
+          if-no-files-found: ignore
