@@ -82,6 +82,9 @@ def _is_log_feature(name: str) -> bool:
             "avg_qty",
             "avg_lines",
             "rev_trend",
+            "AnnualSales",
+            "AnnualRevenue",
+            "NumberEmployees",
         )
     )
 
