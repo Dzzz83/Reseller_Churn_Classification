@@ -104,6 +104,21 @@ def main() -> None:
     summary["churn_rate"] = (
         summary["churners"] / summary["eligible"]
     )
+    expected_counts = {
+        "2012-05-01": (200, 70),
+        "2012-08-01": (393, 74),
+        "2012-11-01": (347, 28),
+        "2013-02-01": (343, 29),
+    }
+    actual_counts = {
+        row.snapshot: (int(row.eligible), int(row.churners))
+        for row in summary.itertuples(index=False)
+    }
+    if actual_counts != expected_counts:
+        raise AssertionError(
+            "Corrected snapshot/label counts differ from the "
+            f"verified cleaned-source reference: {actual_counts}"
+        )
     OUTPUT.mkdir(parents=True, exist_ok=True)
     path = OUTPUT / "01_verified_snapshot_counts.csv"
     summary.to_csv(path, index=False)
