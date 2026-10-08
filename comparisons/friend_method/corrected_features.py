@@ -154,8 +154,9 @@ class FriendSnapshotBuilder:
         previous = (
             features[f"revenue_{half * 2}m"] - current
         )
-        features["rev_trend"] = np.where(
-            previous > 0, current / previous, np.nan
+        # Division is intentionally undefined without earlier revenue.
+        features["rev_trend"] = current.div(
+            previous.where(previous > 0)
         )
 
         distinct_order_dates = (
