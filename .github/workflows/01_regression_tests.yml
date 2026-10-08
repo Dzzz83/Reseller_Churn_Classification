@@ -39,7 +39,10 @@ jobs:
           python comparisons/friend_method/03_compare_validation_strategies.py --include-unverified-store-profile
           python comparisons/friend_method/04_compare_with_our_model.py
 
-      - name: 08 Archive comparison results
+      - name: 08 Reproduce original GroupKFold and corrected November audit
+        run: python comparisons/friend_method/05_reproduce_corrected_original.py
+
+      - name: 09 Archive comparison results
         if: always()
         uses: actions/upload-artifact@v4
         with:
