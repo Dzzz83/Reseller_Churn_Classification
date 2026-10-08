@@ -9,20 +9,20 @@ import pandas as pd
 from sklearn.metrics import average_precision_score
 from sklearn.model_selection import GroupKFold
 
-from reseller_churn.step_00_config.feature_sets import (
+from reseller_churn.config.feature_sets import (
     FULL_FEATURES,
     PRUNED_FEATURES,
 )
-from reseller_churn.step_00_config.model_settings import (
+from reseller_churn.config.model_settings import (
     MODEL_SEEDS,
     TUNED_RANDOM_FOREST,
     RandomForestSettings,
 )
-from reseller_churn.step_00_config.project_paths import RESULTS_DIR
-from reseller_churn.step_00_config.validation_settings import DEVELOPMENT_FOLDS
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.temporal_dataset import TemporalDataset
-from reseller_churn.step_03_modeling.model_factory import ModelFactory
+from reseller_churn.config.project_paths import RESULTS_DIR
+from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.temporal_dataset import TemporalDataset
+from reseller_churn.modeling.model_factory import ModelFactory
 
 
 OUTPUT_DIR = RESULTS_DIR / "model_selection"

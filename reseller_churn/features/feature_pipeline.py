@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
-from reseller_churn.step_01_data.eligibility import ResellerEligibility
+from reseller_churn.data.prediction_window import PredictionWindow
+from reseller_churn.data.eligibility import ResellerEligibility
 
 
 CATEGORY_REVENUE_COLUMNS = {

@@ -1,11 +1,11 @@
 import pandas as pd
 
-from reseller_churn.step_00_config.validation_settings import (
+from reseller_churn.config.validation_settings import (
     EXPECTED_LABELED_COUNTS,
 )
-from reseller_churn.step_01_data.churn_labels import ChurnLabelBuilder
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
+from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 def test_prediction_window_boundaries() -> None:

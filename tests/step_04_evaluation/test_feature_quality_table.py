@@ -1,7 +1,7 @@
 import pandas as pd
 
-from reseller_churn.step_00_config.feature_sets import FULL_FEATURES
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.config.feature_sets import FULL_FEATURES
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 def test_feature_quality_table_has_one_row_per_feature() -> None:

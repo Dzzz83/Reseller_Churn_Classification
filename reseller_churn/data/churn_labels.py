@@ -1,7 +1,7 @@
 import pandas as pd
 
-from reseller_churn.step_01_data.eligibility import ResellerEligibility
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
+from reseller_churn.data.eligibility import ResellerEligibility
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 class ChurnLabelBuilder:

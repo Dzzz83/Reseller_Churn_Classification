@@ -1,6 +1,6 @@
 import pandas as pd
 
-from reseller_churn.step_00_config.project_paths import (
+from reseller_churn.config.project_paths import (
     LABELED_SNAPSHOTS_PATH,
     ORDERS_PATH,
     STORES_PATH,

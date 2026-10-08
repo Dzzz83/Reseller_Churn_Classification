@@ -1,21 +1,21 @@
 from sklearn.metrics import average_precision_score
 
-from reseller_churn.step_00_config.feature_sets import PRUNED_FEATURES
-from reseller_churn.step_00_config.model_settings import (
+from reseller_churn.config.feature_sets import PRUNED_FEATURES
+from reseller_churn.config.model_settings import (
     MODEL_SEEDS,
     TUNED_GRADIENT_BOOSTING,
     TUNED_RANDOM_FOREST,
 )
-from reseller_churn.step_00_config.validation_settings import (
+from reseller_churn.config.validation_settings import (
     DEVELOPMENT_FOLDS,
 )
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.temporal_dataset import TemporalDataset
-from reseller_churn.step_03_modeling.model_factory import ModelFactory
-from reseller_churn.step_03_modeling.resampling import (
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.temporal_dataset import TemporalDataset
+from reseller_churn.modeling.model_factory import ModelFactory
+from reseller_churn.modeling.resampling import (
     balance_classes_by_random_oversampling,
 )
-from reseller_churn.step_04_evaluation.regression_checks import (
+from reseller_churn.evaluation.regression_checks import (
     RegressionChecks,
 )
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from reseller_churn.step_00_config.validation_settings import TemporalFold
+from reseller_churn.config.validation_settings import TemporalFold
 
 
 @dataclass(frozen=True)

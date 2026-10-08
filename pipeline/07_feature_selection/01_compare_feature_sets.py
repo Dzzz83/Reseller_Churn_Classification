@@ -7,17 +7,17 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import pandas as pd
 from sklearn.metrics import average_precision_score
 
-from reseller_churn.step_00_config.feature_sets import FEATURE_SETS
-from reseller_churn.step_00_config.model_settings import (
+from reseller_churn.config.feature_sets import FEATURE_SETS
+from reseller_churn.config.model_settings import (
     ARCHITECTURE_COMPARISON_SEEDS,
     BASELINE_GRADIENT_BOOSTING,
     BASELINE_RANDOM_FOREST,
 )
-from reseller_churn.step_00_config.project_paths import RESULTS_DIR
-from reseller_churn.step_00_config.validation_settings import DEVELOPMENT_FOLDS
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.temporal_dataset import TemporalDataset
-from reseller_churn.step_03_modeling.model_factory import ModelFactory
+from reseller_churn.config.project_paths import RESULTS_DIR
+from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.temporal_dataset import TemporalDataset
+from reseller_churn.modeling.model_factory import ModelFactory
 
 
 OUTPUT_DIR = RESULTS_DIR / "feature_selection"

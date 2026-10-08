@@ -9,8 +9,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from reseller_churn.step_01_data.churn_labels import ChurnLabelBuilder
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
+from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 CATEGORY_COLUMNS = {

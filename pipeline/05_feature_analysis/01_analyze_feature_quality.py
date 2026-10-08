@@ -6,9 +6,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import pandas as pd
 
-from reseller_churn.step_00_config.feature_sets import FULL_FEATURES
-from reseller_churn.step_00_config.project_paths import RESULTS_DIR
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.config.feature_sets import FULL_FEATURES
+from reseller_churn.config.project_paths import RESULTS_DIR
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 OUTPUT_DIR = RESULTS_DIR / "feature_analysis"

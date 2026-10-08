@@ -12,7 +12,7 @@ from comparisons.correlation_pruned_churn.corrected_features import (
     HistoricalSnapshotBuilder,
 )
 from comparisons.correlation_pruned_churn.validation import DEVELOPMENT_SNAPSHOTS
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 SHARE_COLUMNS = (

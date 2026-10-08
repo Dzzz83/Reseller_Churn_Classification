@@ -4,12 +4,12 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from reseller_churn.step_00_config.validation_settings import (
+from reseller_churn.config.validation_settings import (
     EXPECTED_LABELED_COUNTS,
 )
-from reseller_churn.step_01_data.churn_labels import ChurnLabelBuilder
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
+from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 def main() -> None:

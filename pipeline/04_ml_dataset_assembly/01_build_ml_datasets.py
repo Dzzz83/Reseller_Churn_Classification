@@ -6,13 +6,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import pandas as pd
 
-from reseller_churn.step_00_config.project_paths import (
+from reseller_churn.config.project_paths import (
     ALL_ENGINEERED_FEATURES_PATH,
     FINAL_TEST_FEATURES_PATH,
     LABELED_SNAPSHOTS_PATH,
 )
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_01_data.ml_dataset_builder import MLDatasetBuilder
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.ml_dataset_builder import MLDatasetBuilder
 
 
 def main() -> None:

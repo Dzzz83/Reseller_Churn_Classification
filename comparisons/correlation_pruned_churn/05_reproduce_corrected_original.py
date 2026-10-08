@@ -25,7 +25,7 @@ from sklearn.model_selection import GroupKFold
 from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
 from comparisons.correlation_pruned_churn.corrected_model import fit_correlation_pruned_model
 from comparisons.correlation_pruned_churn.feature_provenance import attach_feature_scope
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 TRAIN_SNAPSHOTS = (

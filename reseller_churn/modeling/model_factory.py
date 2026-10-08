@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from reseller_churn.step_00_config.model_settings import (
+from reseller_churn.config.model_settings import (
     GradientBoostingSettings,
     RandomForestSettings,
 )

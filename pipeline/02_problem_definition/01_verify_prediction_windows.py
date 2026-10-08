@@ -6,11 +6,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import pandas as pd
 
-from reseller_churn.step_00_config.validation_settings import (
+from reseller_churn.config.validation_settings import (
     FINAL_TEST_SNAPSHOT,
     LABELED_SNAPSHOTS,
 )
-from reseller_churn.step_01_data.prediction_window import PredictionWindow
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 def main() -> None:

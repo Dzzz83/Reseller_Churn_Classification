@@ -7,20 +7,20 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import joblib
 import pandas as pd
 
-from reseller_churn.step_00_config.feature_sets import PRUNED_FEATURES
-from reseller_churn.step_00_config.model_settings import (
+from reseller_churn.config.feature_sets import PRUNED_FEATURES
+from reseller_churn.config.model_settings import (
     PROVISIONAL_THRESHOLDS,
     TUNED_GRADIENT_BOOSTING,
     TUNED_RANDOM_FOREST,
 )
-from reseller_churn.step_00_config.project_paths import (
+from reseller_churn.config.project_paths import (
     MODELS_DIR,
     RESULTS_DIR,
 )
-from reseller_churn.step_00_config.validation_settings import LABELED_SNAPSHOTS
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_03_modeling.model_factory import ModelFactory
-from reseller_churn.step_03_modeling.resampling import (
+from reseller_churn.config.validation_settings import LABELED_SNAPSHOTS
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.modeling.model_factory import ModelFactory
+from reseller_churn.modeling.resampling import (
     balance_classes_by_random_oversampling,
 )
 

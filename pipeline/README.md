@@ -20,11 +20,11 @@ Reusable implementation lives in the matching ordered package:
 
 ```text
 reseller_churn/
-├── step_00_config/
-├── step_01_data/
-├── step_02_features/
-├── step_03_modeling/
-└── step_04_evaluation/
+├── config/
+├── data/
+├── features/
+├── modeling/
+└── evaluation/
 ```
 
 The numbered pipeline files are orchestration only. Business rules and reusable

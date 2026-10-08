@@ -6,7 +6,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
 
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 REQUIRED_ORDER_COLUMNS = {

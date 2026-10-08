@@ -11,11 +11,11 @@ from experiment orchestration.
 
 ```text
 reseller_churn/
-├── step_00_config/       shared paths, feature sets, folds, model settings
-├── step_01_data/         windows, eligibility, labels, temporal datasets
-├── step_02_features/     leakage-safe feature engineering
-├── step_03_modeling/     model factory, resampling, seeded predictions
-└── step_04_evaluation/   metrics, thresholds, regression checks
+├── config/       shared paths, feature sets, folds, model settings
+├── data/         windows, eligibility, labels, temporal datasets
+├── features/     leakage-safe feature engineering
+├── modeling/     model factory, resampling, seeded predictions
+└── evaluation/   metrics, thresholds, regression checks
 
 pipeline/
 ├── 01_data_audit/
@@ -32,9 +32,9 @@ pipeline/
 └── 12_final_evaluation/
 
 tests/
-├── step_01_data/
-├── step_02_features/
-└── step_03_modeling/
+├── data/
+├── features/
+└── modeling/
 ```
 
 ## Pipeline Order
@@ -109,7 +109,7 @@ revenue_12m
 Current tuned model settings and seeds live only in:
 
 ```text
-reseller_churn/step_00_config/model_settings.py
+reseller_churn/config/model_settings.py
 ```
 
 That file is the single source of truth.

@@ -27,7 +27,7 @@ from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
 )
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
+from reseller_churn.data.dataset_loader import DatasetLoader
 
 
 OUTPUT = ROOT / "results" / "correlation_pruned_churn"

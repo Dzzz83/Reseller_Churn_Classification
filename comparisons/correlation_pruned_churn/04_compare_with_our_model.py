@@ -19,11 +19,11 @@ from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
 )
-from reseller_churn.step_00_config.feature_sets import PRUNED_FEATURES
-from reseller_churn.step_00_config.model_settings import TUNED_RANDOM_FOREST
-from reseller_churn.step_01_data.dataset_loader import DatasetLoader
-from reseller_churn.step_02_features.feature_pipeline import FeaturePipeline
-from reseller_churn.step_03_modeling.model_factory import ModelFactory
+from reseller_churn.config.feature_sets import PRUNED_FEATURES
+from reseller_churn.config.model_settings import TUNED_RANDOM_FOREST
+from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.features.feature_pipeline import FeaturePipeline
+from reseller_churn.modeling.model_factory import ModelFactory
 
 
 OUTPUT = ROOT / "results" / "correlation_pruned_churn"
