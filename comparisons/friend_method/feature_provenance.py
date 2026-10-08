@@ -87,7 +87,7 @@ def attach_feature_scope(
             if name in result.columns
         ),
         categorical_features=(
-            *CATEGORICAL_FEATURES,
+            "TerritoryID",
             *UNVERIFIED_STORE_CATEGORICAL,
         ),
     )
