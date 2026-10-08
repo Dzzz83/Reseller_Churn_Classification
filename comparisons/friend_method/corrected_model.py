@@ -89,6 +89,7 @@ def _is_log_feature(name: str) -> bool:
 def create_friend_pipeline(
     numeric_features: list[str],
     model_name: str,
+    categorical_features: tuple[str, ...] = CATEGORICAL_FEATURES,
 ) -> Pipeline:
     log_features = [
         feature for feature in numeric_features
@@ -146,7 +147,7 @@ def create_friend_pipeline(
                     handle_unknown="ignore",
                 ),
             ),
-            list(CATEGORICAL_FEATURES),
+            list(categorical_features),
         )
     )
 
@@ -184,12 +185,13 @@ def fit_friend_model(
     train: pd.DataFrame,
     numeric_candidates: list[str],
     model_name: str,
+    categorical_features: tuple[str, ...] = CATEGORICAL_FEATURES,
 ) -> tuple[Pipeline, list[str]]:
     selected_numeric = select_numeric_features(
         train, numeric_candidates
     )
     selected_features = (
-        selected_numeric + list(CATEGORICAL_FEATURES)
+        selected_numeric + list(categorical_features)
     )
 
     for col in selected_numeric:
@@ -201,6 +203,7 @@ def fit_friend_model(
     model = create_friend_pipeline(
         numeric_features=selected_numeric,
         model_name=model_name,
+        categorical_features=categorical_features,
     )
     model.fit(
         train[selected_features],
