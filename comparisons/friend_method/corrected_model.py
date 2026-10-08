@@ -4,8 +4,6 @@ Faithful to the friend's modeling choices except historically unverifiable
 profile variables are excluded and supervised feature selection is fitted
 separately on each training fold, never on its validation labels.
 """
-from dataclasses import dataclass
-
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -22,12 +20,6 @@ from sklearn.preprocessing import (
 from comparisons.friend_method.corrected_features import (
     CATEGORICAL_FEATURES,
 )
-
-
-@dataclass(frozen=True)
-class FriendModelSpec:
-    variant: str
-    model_name: str
 
 
 def select_numeric_features(
@@ -200,14 +192,11 @@ def fit_friend_model(
         selected_numeric + list(CATEGORICAL_FEATURES)
     )
 
-    if train[selected_numeric].lt(-1).any().any():
-        # log1p is defined only for x >= -1, but numeric nonlog
-        # features may legitimately have arbitrary values.
-        for col in selected_numeric:
-            if _is_log_feature(col) and (
-                train[col].dropna() < -1
-            ).any():
-                raise ValueError(f"Negative log-input feature: {col}")
+    for col in selected_numeric:
+        if _is_log_feature(col) and (
+            train[col].dropna() < -1
+        ).any():
+            raise ValueError(f"Negative log-input feature: {col}")
 
     model = create_friend_pipeline(
         numeric_features=selected_numeric,
