@@ -1,6 +1,6 @@
 import pandas as pd
 
-from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
 from comparisons.correlation_pruned_churn.corrected_model import select_numeric_features
 
 
@@ -28,7 +28,7 @@ def test_corrected_six_month_label_excludes_end_date() -> None:
     stores = pd.DataFrame(
         {"StoreID": [1, 2], "YearOpened": [2000, 2001]}
     )
-    builder = FriendSnapshotBuilder(sample_orders(), stores)
+    builder = HistoricalSnapshotBuilder(sample_orders(), stores)
 
     frame = builder.build(("2013-11-01",), "full")
     labels = dict(zip(frame["StoreID"], frame["churn"]))
@@ -41,7 +41,7 @@ def test_future_orders_never_change_snapshot_features() -> None:
         {"StoreID": [1, 2], "YearOpened": [2000, 2001]}
     )
     orders = sample_orders()
-    builder = FriendSnapshotBuilder(orders, stores)
+    builder = HistoricalSnapshotBuilder(orders, stores)
 
     before = builder.build(("2013-11-01",), "full")
 
@@ -49,7 +49,7 @@ def test_future_orders_never_change_snapshot_features() -> None:
     new_order["OrderDate"] = pd.Timestamp("2013-12-15")
     new_order["SalesOrderID"] = 105
 
-    revised = FriendSnapshotBuilder(
+    revised = HistoricalSnapshotBuilder(
         pd.concat([orders, new_order], ignore_index=True),
         stores,
     ).build(("2013-11-01",), "full")

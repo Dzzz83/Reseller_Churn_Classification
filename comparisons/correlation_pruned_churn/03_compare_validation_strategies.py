@@ -20,8 +20,8 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
-from comparisons.correlation_pruned_churn.corrected_model import fit_friend_model
+from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_model import fit_correlation_pruned_model
 from comparisons.correlation_pruned_churn.feature_provenance import attach_feature_scope
 from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
@@ -56,7 +56,7 @@ def evaluate(
         train = frame.iloc[fold.training_indices]
         validation = frame.iloc[fold.validation_indices]
 
-        model, features = fit_friend_model(
+        model, features = fit_correlation_pruned_model(
             train=train,
             numeric_candidates=list(numeric_candidates),
             model_name=model_name,
@@ -177,7 +177,7 @@ def main() -> None:
     orders = DatasetLoader.load_orders()
     stores = DatasetLoader.load_stores()
 
-    builder = FriendSnapshotBuilder(orders, stores)
+    builder = HistoricalSnapshotBuilder(orders, stores)
     variants = {
         name: builder.build(
             DEVELOPMENT_SNAPSHOTS,

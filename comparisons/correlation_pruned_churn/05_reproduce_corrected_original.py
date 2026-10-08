@@ -22,8 +22,8 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import GroupKFold
 
-from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
-from comparisons.correlation_pruned_churn.corrected_model import fit_friend_model
+from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_model import fit_correlation_pruned_model
 from comparisons.correlation_pruned_churn.feature_provenance import attach_feature_scope
 from reseller_churn.step_01_data.dataset_loader import DatasetLoader
 
@@ -98,7 +98,7 @@ def evaluate_groupkfold(
         assert set(fold_train["StoreID"]).isdisjoint(set(fold_valid["StoreID"]))
 
         # Crucial difference from original: churn-based pruning only sees fold_train.
-        model, columns = fit_friend_model(
+        model, columns = fit_correlation_pruned_model(
             fold_train, list(numeric_candidates), model_name, categorical_features
         )
         predictions = model.predict_proba(fold_valid[columns])[:, 1]
@@ -123,7 +123,7 @@ def evaluate_groupkfold(
 
     # Refit feature selection and preprocessing from scratch on all five train
     # snapshots; no November test labels influence fitting or threshold choice.
-    final_model, final_columns = fit_friend_model(
+    final_model, final_columns = fit_correlation_pruned_model(
         training, list(numeric_candidates), model_name, categorical_features
     )
     y_test = test["churn"].astype(int).to_numpy()
@@ -182,7 +182,7 @@ def main() -> None:
     orders = DatasetLoader.load_orders()
     stores = DatasetLoader.load_stores()
     assert len(orders) == 3800, "Expected cleaned 3,800-order source"
-    builder = FriendSnapshotBuilder(orders, stores)
+    builder = HistoricalSnapshotBuilder(orders, stores)
     summary_rows, fold_rows, prediction_rows = [], [], []
 
     for variant in ("full", "obs6"):

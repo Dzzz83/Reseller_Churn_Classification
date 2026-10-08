@@ -50,7 +50,7 @@ NUMERIC_FEATURES = (
 
 
 @dataclass(frozen=True)
-class FriendSnapshotBuilder:
+class HistoricalSnapshotBuilder:
     """Rebuild the two observation-window variants without future features."""
 
     orders: pd.DataFrame

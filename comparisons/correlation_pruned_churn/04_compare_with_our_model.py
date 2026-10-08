@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
 from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
@@ -33,7 +33,7 @@ def main() -> None:
     orders = DatasetLoader.load_orders()
     stores = DatasetLoader.load_stores()
 
-    labels = FriendSnapshotBuilder(orders, stores).build(
+    labels = HistoricalSnapshotBuilder(orders, stores).build(
         DEVELOPMENT_SNAPSHOTS,
         feature_window="full",
     )[["StoreID", "snapshot", "churn"]]

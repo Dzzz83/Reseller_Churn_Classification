@@ -89,7 +89,7 @@ def _is_log_feature(name: str) -> bool:
     )
 
 
-def create_friend_pipeline(
+def create_correlation_pruned_pipeline(
     numeric_features: list[str],
     model_name: str,
     categorical_features: tuple[str, ...] = CATEGORICAL_FEATURES,
@@ -184,7 +184,7 @@ def create_friend_pipeline(
     )
 
 
-def fit_friend_model(
+def fit_correlation_pruned_model(
     train: pd.DataFrame,
     numeric_candidates: list[str],
     model_name: str,
@@ -203,7 +203,7 @@ def fit_friend_model(
         ).any():
             raise ValueError(f"Negative log-input feature: {col}")
 
-    model = create_friend_pipeline(
+    model = create_correlation_pruned_pipeline(
         numeric_features=selected_numeric,
         model_name=model_name,
         categorical_features=categorical_features,

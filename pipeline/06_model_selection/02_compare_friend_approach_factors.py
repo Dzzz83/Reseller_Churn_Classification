@@ -27,7 +27,7 @@ from reseller_churn.step_03_modeling.model_factory import ModelFactory
 
 OUTPUT_DIR = RESULTS_DIR / "model_selection"
 
-FRIEND_RANDOM_FOREST = RandomForestSettings(
+ALTERNATIVE_RANDOM_FOREST_SETTINGS = RandomForestSettings(
     n_estimators=500,
     max_depth=None,
     min_samples_leaf=5,
@@ -40,7 +40,7 @@ FRIEND_RANDOM_FOREST = RandomForestSettings(
 #
 # Current-state store attributes and categorical store fields are deliberately
 # excluded because historical availability has not been established.
-FRIEND_SAFE_OVERLAP_FEATURES = [
+SHARED_HISTORICAL_FEATURES = [
     "n_orders_6m",
     "n_orders_12m",
     "mean_gap",
@@ -295,21 +295,21 @@ def main() -> None:
             "C_friend_rf_params_only",
             "temporal",
             PRUNED_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
             "D_friend_rf_our_full17",
             "temporal",
             FULL_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
             "E_friend_rf_safe_overlap9",
             "temporal",
-            FRIEND_SAFE_OVERLAP_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            SHARED_HISTORICAL_FEATURES,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
@@ -323,21 +323,21 @@ def main() -> None:
             "G_groupkfold_friend_rf_pruned7",
             "group",
             PRUNED_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
             "H_groupkfold_friend_rf_full17",
             "group",
             FULL_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
             "I_groupkfold_friend_rf_overlap9",
             "group",
-            FRIEND_SAFE_OVERLAP_FEATURES,
-            FRIEND_RANDOM_FOREST,
+            SHARED_HISTORICAL_FEATURES,
+            ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
     ]

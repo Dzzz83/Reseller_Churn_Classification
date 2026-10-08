@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from comparisons.correlation_pruned_churn.corrected_features import (
-    FriendSnapshotBuilder,
+    HistoricalSnapshotBuilder,
 )
 from comparisons.correlation_pruned_churn.validation import DEVELOPMENT_SNAPSHOTS
 from reseller_churn.step_01_data.dataset_loader import DatasetLoader
@@ -87,7 +87,7 @@ def verify_sample(
 def main() -> None:
     orders = DatasetLoader.load_orders()
     stores = DatasetLoader.load_stores()
-    builder = FriendSnapshotBuilder(orders, stores)
+    builder = HistoricalSnapshotBuilder(orders, stores)
 
     print("=== Friend Feature Formula Verification ===")
     for variant in ("full", "obs6"):

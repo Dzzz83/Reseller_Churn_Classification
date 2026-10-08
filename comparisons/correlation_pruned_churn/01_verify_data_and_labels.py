@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 import numpy as np
 import pandas as pd
 
-from comparisons.correlation_pruned_churn.corrected_features import FriendSnapshotBuilder
+from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
 from comparisons.correlation_pruned_churn.validation import (
     DEVELOPMENT_SNAPSHOTS,
     ValidationPlans,
@@ -63,7 +63,7 @@ def main() -> None:
     ):
         raise AssertionError("Category revenue does not reconcile")
 
-    builder = FriendSnapshotBuilder(orders=orders, stores=stores)
+    builder = HistoricalSnapshotBuilder(orders=orders, stores=stores)
     features = {
         variant: builder.build(
             DEVELOPMENT_SNAPSHOTS,
