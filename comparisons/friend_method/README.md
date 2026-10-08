@@ -133,7 +133,53 @@ Random Forest on the **same snapshot rows and labels** as the friend method.
 It retains the primary model's hyperparameters and uses seed 42; it is a
 matched-dataset comparison, not an isolated feature-only comparison.
 
-## 5. Interpretation safeguards
+## 5. Original notebook reproduction (five training snapshots)
+
+Run:
+
+```bash
+python comparisons/friend_method/05_reproduce_corrected_original.py
+```
+
+This is **not** the earlier four-snapshot development experiment. It keeps
+the original notebook's five train snapshots (May 2012 through May 2013),
+five GroupKFold(StoreID) folds, 500-tree RandomForest / LogisticRegression,
+F1-selected OOF threshold, and November 2013 retrospective test.
+
+Corrections are limited to the justified defects:
+- Half-open six-month churn labels, including November's corrected 35 churners.
+- Supervised correlation pruning inside each CV training fold.
+- Cleaned order source, which **the friend's original Phase 1 notebook also
+  cleaned already**. The prior assertion that it trained with all 3,806 orders
+  was wrong: the notebook removes the same six invalid rows.
+- Historically unverified store-profile attributes are labeled **diagnostic
+  only**, not silently certified as safe. The `historical_only` scope
+  replaces original current store profile with prior-transaction-derived
+  attributes. It is an adaptation, not an exact reproduction.
+
+For the original-like store-profile diagnostic, log transforms include
+`AnnualSales`, `AnnualRevenue`, and `NumberEmployees`, as in the notebook.
+
+Reproduction files:
+- `05_original_reproduction_metrics.csv`: pooled OOF and November results
+- `05_original_reproduction_folds.csv`: per-fold metrics/selected features
+- `05_original_reproduction_predictions.csv`: CV and November predictions
+- `05_original_vs_corrected.csv`: original published versus corrected
+  profile-diagnostic metrics; these remain **different experiments**
+
+**Important comparability cautions:**
+- OOF recall and F1 use the threshold that maximizes F1 on the **same**
+  OOF outcomes, replicating the notebook, so CV threshold-dependent scores
+  may be optimistic. No held-out label is used to choose thresholds.
+- November has already been inspected and is therefore a retrospective
+  audit, not an untouched holdout. Its label definition differs from the
+  notebook's published test labels (35 rather than 26 churners).
+- The protected October 2013 test snapshot and its outcomes remain untouched.
+- Comparison with the previously published score is descriptive: the
+  corrected run differs in label boundaries, fold-local pruning, and possibly
+  feature availability. Do not attribute all differences to GroupKFold.
+
+## 6. Interpretation safeguards
 
 - PR-AUC is the **primary model-ranking metric**.
 - Threshold 0.5 precision/recall/F1 is a **diagnostic**, not a
