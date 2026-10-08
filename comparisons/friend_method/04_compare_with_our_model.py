@@ -43,6 +43,10 @@ def main() -> None:
         stores,
         list(DEVELOPMENT_SNAPSHOTS),
     )
+    features["snapshot"] = (
+        pd.to_datetime(features["snapshot"])
+        .dt.strftime("%Y-%m-%d")
+    )
     data = features.merge(
         labels,
         on=["StoreID", "snapshot"],
