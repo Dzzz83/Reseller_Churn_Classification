@@ -1,81 +1,149 @@
-# Friend-method verification (isolated)
+# Alternative Churn Method — Verification and Validation Comparison
 
-Original source: https://github.com/pnn-re1506/CurrentTopicTest
+Research branch: `research/churn-method-comparison`
 
-This is a **corrected reconstruction**, not an edit to your teammate's
-notebooks. It does not alter the primary reseller churn pipeline.
+Source: [CurrentTopicTest](https://github.com/pnn-re1506/CurrentTopicTest),
+especially `6-6/reseller_churn_phase1_v2.ipynb` and
+`6-6/reseller_churn_phase2.ipynb`.
 
-## Problems and corrections
+This is an **independent audit and corrected reconstruction**, not a
+modification of either original model pipeline. The active project models
+remain unchanged.
 
-| Source behavior | Correction |
-| --- | --- |
-| Uses 3,806 raw orders, including six invalid records | Reads the verified 3,800-order clean input |
-| Uses `OrderDate <= snapshot + 6 months` | Uses half-open `[snapshot, snapshot + 6 months)` |
-| Uses `GroupKFold(StoreID)` for primary CV, mixing calendar dates | Uses two past-to-future folds with resolved training labels |
-| Selects features using all CV training labels before splitting | Recomputes supervised correlation pruning separately within every training fold |
-| Uses current `AnnualSales`, `BusinessType`, `Specialty`, `Brands`, `Internet`, `store_salesperson` | Excludes all historically unverifiable store fields; keeps stable `store_age` |
-| Uses potentially historical order-level territory | Keeps historical last-order `TerritoryID`; obtains salesperson from the last historical order rather than the current store record |
-| Calls all-before-snapshot features 'full' | Names this variant `full`; `obs6` means just the previous six months |
-| Selects F1 threshold with OOF labels | Threshold selection is deferred until development model selection is decided; 0.5 metrics are diagnostic only |
+## 1. Verified issues versus methodological choices
 
-The implementations keep your teammate's original modeling family:
-RandomForest (500 trees, min leaf 5) and LogisticRegression, using
-numeric log/median/indicator/scale preprocessing and categorical one-hot
-encoding. Correlated numeric features are pruned with Spearman rho > 0.8
-using each fold's training rows.
+| Finding | Classification | Evidence / handling |
+| --- | --- | --- |
+| Source notebook loads 3,806 orders, including six rows with nonpositive subtotal or invalid quantity | Confirmed data-quality issue | Read the verified 3,800-row `orders_clean.csv` |
+| Source label tests `OrderDate <= snapshot + 6 months` | Confirmed inconsistent six-month endpoint | Use half-open `[t, t + 6 months)` |
+| Five-fold GroupKFold groups by `StoreID` | Valid alternative, **not** leakage by itself | Retain as a separate unseen-reseller evaluation |
+| Source feature pruning uses correlation with the labels of all development rows *before* GroupKFold | Confirmed supervised CV information leakage | Fit feature pruning inside each training fold |
+| Source imputers, scalers and one-hot encoders are in an sklearn Pipeline | Correct train-only placement | Retain and test under both split strategies |
+| `AnnualSales`, `BusinessType`, `Brands`, `Internet` and current store salesperson lack effective-from timestamps in the CSV | Historical validity **unverified** — not proven leakage | Keep optional diagnostic variant; do not present it as validated leakage-free |
+| `GroupKFold` mixes snapshot periods and temporal validation does not | Different questions | Report separately, not as a universal winner |
+| Source F1 threshold selected on OOF predictions, then evaluated on those same OOF labels | Potentially optimistic *CV threshold-dependent F1* | Development comparison uses fixed 0.5 diagnostic; threshold selection deferred |
+| KMeans is fitted on the original November test features for segmentation | Descriptive post-hoc analysis, not classifier training | Excluded from predictive evaluation; do not use test-derived segments to tune model |
 
-## Protected timeline
+We have **not verified** whether the store attributes were recorded before
+each historical snapshot. The static `stores.csv` does not provide
+effective-from timestamps. Verifying this would require historical records
+or original data documentation. Do not label these attributes as definitely
+leaky or definitely safe without that evidence.
 
-The primary project has a protected final test on **2013-10-01**.
-The 2013-05-01 teammate snapshot has labels ending on 2013-11-01,
-so those outcomes were **not known at the October prediction date**.
+The friend's label endpoint changes their **2013-11-01** outcome from
+26 churners to 35 under the half-open definition, with the same 475 eligible
+resellers. That was confirmed from the original transaction CSV. Those
+November labels have already been inspected and are **not** used in this
+development runner.
 
-Therefore this development audit restricts snapshots to:
+## 2. Safeguarded development dates
 
-- 2012-05-01
-- 2012-08-01
-- 2012-11-01
-- 2013-02-01
+The primary project's untouched test snapshot starts **2013-10-01**.
+To avoid selecting models using labels past that date, this audit builds
+only the following snapshots:
 
-Development folds:
+| Snapshot | Eligible | Churners | Last label boundary |
+| --- | ---: | ---: | --- |
+| 2012-05-01 | 200 | 70 | 2012-11-01 |
+| 2012-08-01 | 393 | 74 | 2013-02-01 |
+| 2012-11-01 | 347 | 28 | 2013-05-01 |
+| 2013-02-01 | 343 | 29 | 2013-08-01 |
 
-1. Train 2012-05 -> validate 2012-11
-2. Train 2012-05, 2012-08 -> validate 2013-02
+These counts were independently checked against the cleaned order CSV.
+Both observation-window variants must have identical keys and labels.
 
-The final validation snapshot 2013-02 has labels ending 2013-08,
-which is before the October test date. Both feature variants use the
-same eligible resellers and labels.
+### Strategy A: GroupKFold(StoreID)
 
-## Run (from repository root)
+Five folds. A StoreID is never present on both sides of the same fold.
+All four development snapshots may occur on either side of the split.
+
+**Question answered:** generalization to resellers not seen in training,
+within the historical development population.
+
+### Strategy B: chronological temporal validation
+
+- Fold 1: Train 2012-05; validate 2012-11.
+- Fold 2: Train 2012-05, 2012-08; validate 2013-02.
+
+Every training label has fully resolved at its validation date.
+
+**Question answered:** generalization to later historical periods.
+
+Training population sizes and validation churn prevalence differ between
+strategies. Score differences should not be attributed only to the
+algorithm used to generate fold indices.
+
+## 3. Feature scope
+
+- `full`: all transactions **before** snapshot, for all-time feature
+  quantities, plus explicitly windowed 12m/6m variables.
+- `obs6`: only the preceding six months, with 6m/3m variables.
+- `historical_only`: features constructed from prior orders plus
+  `store_age` from YearOpened. Historical order territory and
+  salesperson are derived from the last **past** order.
+- `unverified_store_profile_diagnostic`: adds the original static store
+  attributes (including AnnualSales and categorial store metadata).
+  This variant is for isolating possible predictive value; it is
+  **not** verified as safe for deployment.
+
+The two models retain the original modeling architecture:
+
+- RandomForest: 500 trees, min samples leaf 5, seed 42, no class weights.
+- LogisticRegression: max_iter 5000.
+- Numerical log1p/median impute (+ missing indicator)/scale.
+- Non-log numerical median impute (+ missing indicator)/scale.
+- Categorical most-frequent impute and one-hot encode.
+- Numeric Spearman correlation filter |rho| > 0.8 fitted on fold
+  training rows only. This is a reimplementation of the original
+  rule, with validation labels excluded.
+
+## 4. Run commands
+
+From the repository root with the configured Python environment:
 
 ```bash
 python -m pytest -q
-python comparisons/friend_method/01_verify_development.py
+python comparisons/friend_method/01_verify_data_and_labels.py
+python comparisons/friend_method/02_verify_features.py
+python comparisons/friend_method/03_compare_validation_strategies.py
+python comparisons/friend_method/04_compare_with_our_model.py
 ```
 
-Outputs are written to `results/friend_method_audit/`:
+Optional exploratory scope using unverified store attributes:
 
-- `01_development_fold_metrics.csv`
-- `01_development_model_summary.csv`
-- `01_development_predictions.csv`
+```bash
+python comparisons/friend_method/03_compare_validation_strategies.py \
+  --include-unverified-store-profile
+```
 
-**The script does not construct November 2013 outcomes or evaluate
-October 2013 test labels.**
+This optional command **overwrites** the `03_` output files with
+both historical-only and unverified-scope results. It does not alter
+the core model or source datasets.
 
-## Important methodological caveats
+Outputs in `results/friend_method_audit/`:
 
-- Because this corrects data quality and excludes unverifiable features,
-  it is **not an exact score reproduction** of the friend's original
-  0.500 CV / 0.518 test. The aim is a fair and deployable variant.
-- The friend's November 2013 test has already been examined, so it should
-  not be treated as a pristine untouched benchmark for iterative tuning.
-- Selecting improvements based on test outcomes after October 2013
-  would compromise the protected October test.
-- A post-freeze evaluation of the friend's November snapshot requires
-  an explicit independent audit stage with those caveats stated.
-- Per-fold F1 at 0.5 is **not** a selected operational threshold.
-- Temporal validation can reuse a StoreID across time. That is valid
-  for forecasting existing resellers and differs from evaluating unseen IDs.
-- These CV results are development estimates and can be optimistic after
-  repeated model decisions. Avoid claiming statistical certainty from
-  only two temporal folds.
+- `01_verified_snapshot_counts.csv`
+- `03_fold_metrics.csv`
+- `03_model_comparison.csv`
+- `03_oof_predictions.csv`
+- `04_matched_model_comparison.csv`
+
+The baseline comparison runs the primary project's current seven-feature
+Random Forest on the **same snapshot rows and labels** as the friend method.
+It retains the primary model's hyperparameters and uses seed 42; it is a
+matched-dataset comparison, not an isolated feature-only comparison.
+
+## 5. Interpretation safeguards
+
+- PR-AUC is the **primary model-ranking metric**.
+- Threshold 0.5 precision/recall/F1 is a **diagnostic**, not a
+  tuned operating threshold.
+- Report per-fold and aggregate results. Do not compare GroupKFold OOF
+  results directly with temporal mean-fold PR-AUC as the same quantity.
+- Feature selection and preprocessing are fit on each fold's training side.
+- No calibration or threshold is selected using final-test labels.
+- Repeated development comparisons can create selection optimism.
+- The friend's November test has already been examined. It can later
+  be used only as an explicitly labeled retrospective audit, not as a
+  pristine unseen holdout.
+- **No October 2013 final-test labels are evaluated by these scripts.**
