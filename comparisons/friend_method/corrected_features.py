@@ -7,7 +7,6 @@ salesperson come from the last order *before* each prediction snapshot.
 """
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 from reseller_churn.step_01_data.churn_labels import ChurnLabelBuilder
