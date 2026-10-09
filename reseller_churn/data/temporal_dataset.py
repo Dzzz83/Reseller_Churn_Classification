@@ -3,7 +3,8 @@ from dataclasses import dataclass
 import pandas as pd
 
 from reseller_churn.config.validation_settings import TemporalFold
-
+from reseller_churn.config.validation_settings import FINAL_TEST_SNAPSHOT
+from reseller_churn.data.prediction_window import PredictionWindow
 
 @dataclass(frozen=True)
 class PreparedTemporalFold:
@@ -27,6 +28,37 @@ class TemporalDataset:
         ).dt.strftime("%Y-%m-%d")
 
     def prepare_fold(self, fold: TemporalFold) -> PreparedTemporalFold:
+        validation_date = pd.Timestamp(fold.validation_snapshot)
+        final_test_date = pd.Timestamp(FINAL_TEST_SNAPSHOT)
+
+        # The protected final test must not be used for development.
+        if validation_date >= final_test_date:
+            raise ValueError(
+                "Protected final-test snapshot cannot be used for validation."
+            )
+
+        # Every configured training snapshot must exist.
+        available_snapshots = set(self.data[self.snapshot_column])
+
+        missing = sorted(
+            set(fold.training_snapshots) - available_snapshots
+        )
+
+        if missing:
+            raise ValueError(
+                f"{fold.name}: missing training snapshots: {missing}"
+            )
+
+        # All training labels must be available before validation.
+        for snapshot in fold.training_snapshots:
+            window = PredictionWindow.from_date(snapshot)
+
+            if window.label_end > validation_date:
+                raise ValueError(
+                    f"{fold.name}: training label for {snapshot} "
+                    f"is unavailable by {fold.validation_snapshot}."
+                )
+
         training_data = self.data[
             self.data[self.snapshot_column].isin(
                 fold.training_snapshots
