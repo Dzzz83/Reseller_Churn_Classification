@@ -6,12 +6,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import average_precision_score
 from sklearn.utils.class_weight import compute_sample_weight
 
 from reseller_churn.config.feature_sets import PRUNED_FEATURES
@@ -28,6 +23,7 @@ from reseller_churn.modeling.model_factory import ModelFactory
 from reseller_churn.modeling.resampling import (
     balance_classes_by_random_oversampling,
 )
+from reseller_churn.evaluation.metrics import calculate_threshold_metrics
 
 
 OUTPUT_DIR = RESULTS_DIR / "imbalance_strategy"
@@ -35,31 +31,16 @@ DIAGNOSTIC_THRESHOLD = 0.5
 
 
 def score(target, probabilities) -> dict[str, float]:
-    predictions = (
-        probabilities
-        >= DIAGNOSTIC_THRESHOLD
-    ).astype(int)
-
+    threshold_metrics = calculate_threshold_metrics(
+        target,
+        probabilities,
+        DIAGNOSTIC_THRESHOLD,
+    )
     return {
-        "pr_auc": average_precision_score(
-            target,
-            probabilities,
-        ),
-        "precision": precision_score(
-            target,
-            predictions,
-            zero_division=0,
-        ),
-        "recall": recall_score(
-            target,
-            predictions,
-            zero_division=0,
-        ),
-        "f1": f1_score(
-            target,
-            predictions,
-            zero_division=0,
-        ),
+        "pr_auc": average_precision_score(target, probabilities),
+        "precision": threshold_metrics["precision"],
+        "recall": threshold_metrics["recall"],
+        "f1": threshold_metrics["f1"],
     }
 
 

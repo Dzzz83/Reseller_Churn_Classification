@@ -12,13 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
+from sklearn.metrics import average_precision_score
 
 from comparisons.correlation_pruned_churn.corrected_features import HistoricalSnapshotBuilder
 from comparisons.correlation_pruned_churn.corrected_model import fit_correlation_pruned_model
@@ -28,6 +22,10 @@ from comparisons.correlation_pruned_churn.validation import (
     ValidationPlans,
 )
 from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.evaluation.metrics import (
+    calculate_ranking_metrics,
+    calculate_threshold_metrics,
+)
 
 
 OUTPUT = ROOT / "results" / "correlation_pruned_churn"
@@ -67,12 +65,13 @@ def evaluate(
             validation[features]
         )[:, 1]
         truth = validation["churn"].astype(int).to_numpy()
-        predicted = (probability >= 0.5).astype(int)
-
         if len(np.unique(truth)) != 2:
             raise AssertionError(
                 f"{fold.name}: validation labels have only one class"
             )
+
+        ranking = calculate_ranking_metrics(truth, probability)
+        threshold_metrics = calculate_threshold_metrics(truth, probability, 0.5)
 
         summary_rows.append(
             {
@@ -87,17 +86,11 @@ def evaluate(
                 "validation_churn_rate": float(truth.mean()),
                 "selected_feature_count": len(features),
                 "selected_features": ",".join(features),
-                "pr_auc": average_precision_score(truth, probability),
-                "roc_auc": roc_auc_score(truth, probability),
-                "precision_at_0_5": precision_score(
-                    truth, predicted, zero_division=0
-                ),
-                "recall_at_0_5": recall_score(
-                    truth, predicted, zero_division=0
-                ),
-                "f1_at_0_5": f1_score(
-                    truth, predicted, zero_division=0
-                ),
+                "pr_auc": ranking["pr_auc"],
+                "roc_auc": ranking["roc_auc"],
+                "precision_at_0_5": threshold_metrics["precision"],
+                "recall_at_0_5": threshold_metrics["recall"],
+                "f1_at_0_5": threshold_metrics["f1"],
             }
         )
 
