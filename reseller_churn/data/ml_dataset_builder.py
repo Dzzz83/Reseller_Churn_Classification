@@ -10,94 +10,92 @@ from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.prediction_window import PredictionWindow
 
 
-class MLDatasetBuilder:
+def build_ml_datasets(
+    orders: pd.DataFrame,
+    engineered_features: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Combine historical features with labels without exposing final-test labels."""
 
-    def build(
-        self,
-        orders: pd.DataFrame,
-        engineered_features: pd.DataFrame,
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        features = engineered_features.copy()
-        features["snapshot"] = pd.to_datetime(
-            features["snapshot"]
-        )
+    features = engineered_features.copy()
+    features["snapshot"] = pd.to_datetime(
+        features["snapshot"]
+    )
 
-        labeled_parts = []
+    labeled_parts = []
 
-        for snapshot_text in LABELED_SNAPSHOTS:
-            window = PredictionWindow.from_date(snapshot_text)
+    for snapshot_text in LABELED_SNAPSHOTS:
+        window = PredictionWindow.from_date(snapshot_text)
 
-            if window.label_end > pd.Timestamp(FINAL_TEST_SNAPSHOT):
-                raise AssertionError(
-                    "A development label reaches beyond the final-test snapshot."
-                )
-
-            snapshot_features = features[
-                features["snapshot"] == window.snapshot
-            ].copy()
-
-            labels = build_churn_labels(
-                orders,
-                window,
+        if window.label_end > pd.Timestamp(FINAL_TEST_SNAPSHOT):
+            raise AssertionError(
+                "A development label reaches beyond the final-test snapshot."
             )
 
-            expected_rows, expected_churners = (
-                EXPECTED_LABELED_COUNTS[snapshot_text]
-            )
-
-            if len(snapshot_features) != expected_rows:
-                raise AssertionError(
-                    f"{snapshot_text}: unexpected feature-row count."
-                )
-
-            result = snapshot_features.merge(
-                labels[["StoreID", "churn"]],
-                on="StoreID",
-                how="left",
-                validate="one_to_one",
-            )
-
-            if result["churn"].isna().any():
-                raise AssertionError(
-                    f"{snapshot_text}: missing churn labels."
-                )
-
-            result["churn"] = result["churn"].astype(int)
-
-            if int(result["churn"].sum()) != expected_churners:
-                raise AssertionError(
-                    f"{snapshot_text}: unexpected churn count."
-                )
-
-            labeled_parts.append(result)
-
-        labeled_data = pd.concat(
-            labeled_parts,
-            ignore_index=True,
-        )
-
-        final_test_features = features[
-            features["snapshot"]
-            == pd.Timestamp(FINAL_TEST_SNAPSHOT)
+        snapshot_features = features[
+            features["snapshot"] == window.snapshot
         ].copy()
 
-        if len(final_test_features) != EXPECTED_FINAL_TEST_ROWS:
+        labels = build_churn_labels(
+            orders,
+            window,
+        )
+
+        expected_rows, expected_churners = (
+            EXPECTED_LABELED_COUNTS[snapshot_text]
+        )
+
+        if len(snapshot_features) != expected_rows:
             raise AssertionError(
-                "Unexpected final-test feature-row count."
+                f"{snapshot_text}: unexpected feature-row count."
             )
 
-        if "churn" in final_test_features.columns:
+        result = snapshot_features.merge(
+            labels[["StoreID", "churn"]],
+            on="StoreID",
+            how="left",
+            validate="one_to_one",
+        )
+
+        if result["churn"].isna().any():
             raise AssertionError(
-                "Final-test features must not contain churn labels."
+                f"{snapshot_text}: missing churn labels."
             )
 
-        if not (
-            labeled_data["snapshot"].max()
-            < final_test_features["snapshot"].min()
-        ):
+        result["churn"] = result["churn"].astype(int)
+
+        if int(result["churn"].sum()) != expected_churners:
             raise AssertionError(
-                "Development snapshots overlap the final test."
+                f"{snapshot_text}: unexpected churn count."
             )
 
-        return labeled_data, final_test_features
+        labeled_parts.append(result)
+
+    labeled_data = pd.concat(
+        labeled_parts,
+        ignore_index=True,
+    )
+
+    final_test_features = features[
+        features["snapshot"]
+        == pd.Timestamp(FINAL_TEST_SNAPSHOT)
+    ].copy()
+
+    if len(final_test_features) != EXPECTED_FINAL_TEST_ROWS:
+        raise AssertionError(
+            "Unexpected final-test feature-row count."
+        )
+
+    if "churn" in final_test_features.columns:
+        raise AssertionError(
+            "Final-test features must not contain churn labels."
+        )
+
+    if not (
+        labeled_data["snapshot"].max()
+        < final_test_features["snapshot"].min()
+    ):
+        raise AssertionError(
+            "Development snapshots overlap the final test."
+        )
+
+    return labeled_data, final_test_features

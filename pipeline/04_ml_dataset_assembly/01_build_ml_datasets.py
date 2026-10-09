@@ -12,7 +12,7 @@ from reseller_churn.config.project_paths import (
     LABELED_SNAPSHOTS_PATH,
 )
 from reseller_churn.data.dataset_loader import DatasetLoader
-from reseller_churn.data.ml_dataset_builder import MLDatasetBuilder
+from reseller_churn.data.ml_dataset_builder import build_ml_datasets
 
 
 def main() -> None:
@@ -23,7 +23,7 @@ def main() -> None:
         parse_dates=["snapshot"],
     )
 
-    labeled_data, final_test_features = MLDatasetBuilder().build(
+    labeled_data, final_test_features = build_ml_datasets(
         orders=DatasetLoader.load_orders(),
         engineered_features=engineered_features,
     )

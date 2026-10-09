@@ -6,7 +6,7 @@ from reseller_churn.config.project_paths import (
     LABELED_SNAPSHOTS_PATH,
 )
 from reseller_churn.data.dataset_loader import DatasetLoader
-from reseller_churn.data.ml_dataset_builder import MLDatasetBuilder
+from reseller_churn.data.ml_dataset_builder import build_ml_datasets
 
 
 def test_ml_dataset_assembly_matches_reference():
@@ -17,7 +17,7 @@ def test_ml_dataset_assembly_matches_reference():
         parse_dates=["snapshot"],
     )
 
-    actual_labeled, actual_final = MLDatasetBuilder().build(
+    actual_labeled, actual_final = build_ml_datasets(
         orders=DatasetLoader.load_orders(),
         engineered_features=features,
     )
