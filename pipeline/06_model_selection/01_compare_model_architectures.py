@@ -6,11 +6,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    average_precision_score,
-    roc_auc_score,
-)
-
 from reseller_churn.config.feature_sets import REDUCED_FEATURES
 from reseller_churn.config.model_settings import (
     ARCHITECTURE_COMPARISON_SEEDS,
@@ -22,6 +17,7 @@ from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
 from reseller_churn.data.dataset_loader import DatasetLoader
 from reseller_churn.data.temporal_dataset import TemporalDataset
 from reseller_churn.modeling.model_factory import ModelFactory
+from reseller_churn.evaluation.metrics import calculate_ranking_metrics
 
 
 OUTPUT_DIR = RESULTS_DIR / "model_selection"
@@ -31,16 +27,7 @@ def score_model(model, x_train, y_train, x_val, y_val) -> dict[str, float]:
     model.fit(x_train, y_train)
     probabilities = model.predict_proba(x_val)[:, 1]
 
-    return {
-        "pr_auc": average_precision_score(
-            y_val,
-            probabilities,
-        ),
-        "roc_auc": roc_auc_score(
-            y_val,
-            probabilities,
-        ),
-    }
+    return calculate_ranking_metrics(y_val, probabilities)
 
 
 def main() -> None:
