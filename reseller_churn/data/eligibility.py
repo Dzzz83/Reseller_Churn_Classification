@@ -3,19 +3,17 @@ import pandas as pd
 from reseller_churn.data.prediction_window import PredictionWindow
 
 
-class ResellerEligibility:
-    """Identify resellers active in the six months before a snapshot."""
+def get_eligible_store_ids(
+    orders: pd.DataFrame,
+    window: PredictionWindow,
+) -> list[int]:
+    """Return resellers active during the eligibility period."""
 
-    @staticmethod
-    def eligible_store_ids(
-        orders: pd.DataFrame,
-        window: PredictionWindow,
-    ) -> list[int]:
-        recent_orders = window.select_eligibility_period(orders)
+    recent_orders = window.select_eligibility_period(orders)
 
-        return sorted(
-            recent_orders["StoreID"]
-            .drop_duplicates()
-            .astype(int)
-            .tolist()
-        )
+    return sorted(
+        recent_orders["StoreID"]
+        .drop_duplicates()
+        .astype(int)
+        .tolist()
+    )

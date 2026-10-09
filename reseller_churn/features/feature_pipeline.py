@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from reseller_churn.data.prediction_window import PredictionWindow
-from reseller_churn.data.eligibility import ResellerEligibility
+from reseller_churn.data.eligibility import get_eligible_store_ids
 
 
 CATEGORY_REVENUE_COLUMNS = {
@@ -57,7 +57,7 @@ class FeaturePipeline:
         window = PredictionWindow.from_date(snapshot)
         history = window.select_history(orders)
 
-        eligible_store_ids = ResellerEligibility.eligible_store_ids(
+        eligible_store_ids = get_eligible_store_ids(
             orders,
             window,
         )
