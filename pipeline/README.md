@@ -36,6 +36,7 @@ Additional research-only commands:
 
 ```bash
 python pipeline/06_model_selection/02_compare_model_design_factors.py
+python comparisons/validation_schedule_audit.py
 python pipeline/09_hyperparameter_tuning/01_tune_models.py
 ```
 
@@ -43,3 +44,10 @@ Generated experiment reports go to `results/`, and provisional model objects
 go to `models/provisional/`. These are reproducible outputs and are ignored by
 Git. See the root README for the regression references, evaluation policies,
 and the two different validation questions.
+
+The schedule audit tests whether a complete 12-month lookback and two resolved
+six-month label windows can support selecting both validation procedures **before**
+a shared development holdout. With orders starting 2011-05-31 and a protected
+final-test snapshot of 2013-10-01, the earliest temporal results arrive after
+the latest permitted development holdout. This is a time-coverage constraint,
+not evidence that either validation method has better predictive performance.
