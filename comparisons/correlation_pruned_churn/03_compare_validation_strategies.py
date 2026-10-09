@@ -186,7 +186,7 @@ def main() -> None:
         for name in ("full", "obs6")
     }
 
-    print("=== Corrected Friend Method — Development Only ===", flush=True)
+    print("=== Correlation-Pruned Churn Method — Development Only ===", flush=True)
     print(
         "GroupKFold = unseen reseller identity. "
         "Temporal = future-period prediction.",

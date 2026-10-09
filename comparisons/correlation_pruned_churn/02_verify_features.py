@@ -89,7 +89,7 @@ def main() -> None:
     stores = DatasetLoader.load_stores()
     builder = HistoricalSnapshotBuilder(orders, stores)
 
-    print("=== Friend Feature Formula Verification ===")
+    print("=== Historical Feature Verification ===")
     for variant in ("full", "obs6"):
         frame = builder.build(
             DEVELOPMENT_SNAPSHOTS,

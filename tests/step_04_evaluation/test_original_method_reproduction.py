@@ -9,7 +9,7 @@ from importlib import util
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[2] / "comparisons" / "correlation_pruned_churn" / "05_reproduce_corrected_original.py"
-spec = util.spec_from_file_location("friend_original_replication", SCRIPT)
+spec = util.spec_from_file_location("original_method_replication", SCRIPT)
 module = util.module_from_spec(spec)
 spec.loader.exec_module(module)
 

@@ -36,7 +36,7 @@ ALTERNATIVE_RANDOM_FOREST_SETTINGS = RandomForestSettings(
 
 # These are the features that appear in both:
 # 1. our verified 17-feature dataset; and
-# 2. the friend's selected "full" feature set.
+# 2. the original method's selected "full" feature set.
 #
 # Current-state store attributes and categorical store fields are deliberately
 # excluded because historical availability has not been established.
@@ -267,7 +267,7 @@ def run_experiment(
 
 def main() -> None:
     print(
-        "=== Friend-Approach Factor Comparison ==="
+        "=== Model Design Factor Comparison ==="
     )
     print(
         "Development data only. Final-test labels are NOT used."
@@ -292,21 +292,21 @@ def main() -> None:
             (42,),
         ),
         (
-            "C_friend_rf_params_only",
+            "C_correlation_pruned_rf_params_only",
             "temporal",
             PRUNED_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
-            "D_friend_rf_our_full17",
+            "D_correlation_pruned_rf_our_full17",
             "temporal",
             FULL_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
-            "E_friend_rf_safe_overlap9",
+            "E_correlation_pruned_rf_safe_overlap9",
             "temporal",
             SHARED_HISTORICAL_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
@@ -320,21 +320,21 @@ def main() -> None:
             (42,),
         ),
         (
-            "G_groupkfold_friend_rf_pruned7",
+            "G_groupkfold_correlation_pruned_rf_pruned7",
             "group",
             PRUNED_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
-            "H_groupkfold_friend_rf_full17",
+            "H_groupkfold_correlation_pruned_rf_full17",
             "group",
             FULL_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
             (42,),
         ),
         (
-            "I_groupkfold_friend_rf_overlap9",
+            "I_groupkfold_correlation_pruned_rf_overlap9",
             "group",
             SHARED_HISTORICAL_FEATURES,
             ALTERNATIVE_RANDOM_FOREST_SETTINGS,
@@ -373,7 +373,7 @@ def main() -> None:
 
     output_path = (
         OUTPUT_DIR
-        / "02_friend_approach_factor_comparison.csv"
+        / "02_model_design_factor_comparison.csv"
     )
 
     results.to_csv(
@@ -404,9 +404,9 @@ def main() -> None:
     )
 
     print()
-    print("Reference from friend's repository:")
+    print("Reference implementation:")
     print(
-        "Friend full RF: 5-fold GroupKFold by StoreID, "
+        "Correlation-pruned full RF: 5-fold GroupKFold by StoreID, "
         "1,620 training observations, 20 selected features, "
         "pooled OOF PR-AUC = 0.500."
     )

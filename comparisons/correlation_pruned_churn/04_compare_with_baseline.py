@@ -119,18 +119,18 @@ def main() -> None:
 
     comparison = pd.DataFrame(results)
 
-    friend_path = OUTPUT / "03_model_comparison.csv"
-    if friend_path.exists():
-        friend_scores = pd.read_csv(friend_path)
-        friend_scores = friend_scores[
-            (friend_scores["feature_scope"] == "historical_only")
-            & (friend_scores["model"] == "RandomForest")
+    comparison_path = OUTPUT / "03_model_comparison.csv"
+    if comparison_path.exists():
+        correlation_pruned_scores = pd.read_csv(comparison_path)
+        correlation_pruned_scores = correlation_pruned_scores[
+            (correlation_pruned_scores["feature_scope"] == "historical_only")
+            & (correlation_pruned_scores["model"] == "RandomForest")
         ]
         shared_cols = list(comparison.columns)
         comparison = pd.concat(
             [
                 comparison,
-                friend_scores[shared_cols],
+                correlation_pruned_scores[shared_cols],
             ],
             ignore_index=True,
         )

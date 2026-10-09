@@ -1,6 +1,6 @@
 """Leakage-safe preprocessing and fold-local feature selection.
 
-Faithful to the friend's modeling choices except historically unverifiable
+Faithful to the original method's modeling choices except historically unverifiable
 profile variables are excluded and supervised feature selection is fitted
 separately on each training fold, never on its validation labels.
 """

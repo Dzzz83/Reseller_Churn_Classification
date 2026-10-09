@@ -1,4 +1,4 @@
-"""Corrected, historical-only reconstruction of the friend's feature variants.
+"""Corrected, historical-only reconstruction of the original method's feature variants.
 
 The original notebooks remain unchanged in pnn-re1506/CurrentTopicTest.
 This implementation intentionally excludes all nonhistorical store-profile

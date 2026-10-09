@@ -30,7 +30,7 @@ effective-from timestamps. Verifying this would require historical records
 or original data documentation. Do not label these attributes as definitely
 leaky or definitely safe without that evidence.
 
-The friend's label endpoint changes their **2013-11-01** outcome from
+The original method's label endpoint changes their **2013-11-01** outcome from
 26 churners to 35 under the half-open definition, with the same 475 eligible
 resellers. That was confirmed from the original transaction CSV. Those
 November labels have already been inspected and are **not** used in this
@@ -106,7 +106,7 @@ python -m pytest -q
 python comparisons/correlation_pruned_churn/01_verify_data_and_labels.py
 python comparisons/correlation_pruned_churn/02_verify_features.py
 python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py
-python comparisons/correlation_pruned_churn/04_compare_with_our_model.py
+python comparisons/correlation_pruned_churn/04_compare_with_baseline.py
 ```
 
 Optional exploratory scope using unverified store attributes:
@@ -129,7 +129,7 @@ Outputs in `results/correlation_pruned_churn/`:
 - `04_matched_model_comparison.csv`
 
 The baseline comparison runs the primary project's current seven-feature
-Random Forest on the **same snapshot rows and labels** as the friend method.
+Random Forest on the **same snapshot rows and labels** as the correlation-pruned method.
 It retains the primary model's hyperparameters and uses seed 42; it is a
 matched-dataset comparison, not an isolated feature-only comparison.
 
@@ -149,7 +149,7 @@ F1-selected OOF threshold, and November 2013 retrospective test.
 Corrections are limited to the justified defects:
 - Half-open six-month churn labels, including November's corrected 35 churners.
 - Supervised correlation pruning inside each CV training fold.
-- Cleaned order source, which **the friend's original Phase 1 notebook also
+- Cleaned order source, which **the original Phase 1 notebook also
   cleaned already**. The prior assertion that it trained with all 3,806 orders
   was wrong: the notebook removes the same six invalid rows.
 - Historically unverified store-profile attributes are labeled **diagnostic
@@ -189,7 +189,7 @@ Reproduction files:
 - Feature selection and preprocessing are fit on each fold's training side.
 - No calibration or threshold is selected using final-test labels.
 - Repeated development comparisons can create selection optimism.
-- The friend's November test has already been examined. It can later
+- The original method's November test has already been examined. It can later
   be used only as an explicitly labeled retrospective audit, not as a
   pristine unseen holdout.
 - **No October 2013 final-test labels are evaluated by these scripts.**
