@@ -154,6 +154,9 @@ def evaluate_group_kfold(
         train = working.iloc[train_index]
         validation = working.iloc[validation_index]
 
+        if set(train["StoreID"]) & set(validation["StoreID"]):
+            raise AssertionError("GroupKFold reused a StoreID across split sides")
+
         probabilities_by_seed = SeededProbabilityPredictor.random_forest_by_seed(
             training_features=train[features],
             training_target=train["churn"].astype(int),

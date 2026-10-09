@@ -112,3 +112,25 @@ def test_protected_final_test_cannot_be_validation():
 
     with pytest.raises(ValueError, match="Protected final-test"):
         make_temporal_data().prepare_fold(fold)
+
+
+def test_duplicate_training_snapshots_are_rejected():
+    fold = TemporalFold(
+        name="duplicate_training",
+        training_snapshots=("2012-07-01", "2012-07-01"),
+        validation_snapshot="2013-04-01",
+    )
+
+    with pytest.raises(ValueError, match="duplicate training snapshots"):
+        make_temporal_data().prepare_fold(fold)
+
+
+def test_missing_validation_snapshot_is_rejected():
+    fold = TemporalFold(
+        name="missing_validation",
+        training_snapshots=("2012-07-01",),
+        validation_snapshot="2013-06-01",
+    )
+
+    with pytest.raises(ValueError, match="missing validation snapshot"):
+        make_temporal_data().prepare_fold(fold)

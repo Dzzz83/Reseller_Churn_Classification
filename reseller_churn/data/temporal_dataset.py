@@ -2,9 +2,12 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from reseller_churn.config.validation_settings import TemporalFold
-from reseller_churn.config.validation_settings import FINAL_TEST_SNAPSHOT
+from reseller_churn.config.validation_settings import (
+    FINAL_TEST_SNAPSHOT,
+    TemporalFold,
+)
 from reseller_churn.data.prediction_window import PredictionWindow
+
 
 @dataclass(frozen=True)
 class PreparedTemporalFold:
@@ -37,7 +40,11 @@ class TemporalDataset:
                 "Protected final-test snapshot cannot be used for validation."
             )
 
-        # Every configured training snapshot must exist.
+        # Duplicate snapshot entries indicate a misconfigured fold.
+        if len(set(fold.training_snapshots)) != len(fold.training_snapshots):
+            raise ValueError(f"{fold.name}: duplicate training snapshots")
+
+        # Every configured snapshot must exist.
         available_snapshots = set(self.data[self.snapshot_column])
 
         missing = sorted(
@@ -47,6 +54,12 @@ class TemporalDataset:
         if missing:
             raise ValueError(
                 f"{fold.name}: missing training snapshots: {missing}"
+            )
+
+        if fold.validation_snapshot not in available_snapshots:
+            raise ValueError(
+                f"{fold.name}: missing validation snapshot: "
+                f"{fold.validation_snapshot}"
             )
 
         # All training labels must be available before validation.
