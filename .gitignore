@@ -8,4 +8,10 @@ dist/
 build/
 .venv/
 venv/
+bi_venv/
 .env
+
+# Experiment artifacts are reproducible; verified processed data stays tracked.
+results/
+models/provisional/
+*.log

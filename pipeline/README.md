@@ -1,31 +1,45 @@
-# Pipeline Execution Order
+# Development Pipeline
 
-The folder and file names are intentionally numbered so the repository shows
-the project methodology in execution order.
+Numbered directories show the **execution order** of experiments. Reusable
+implementation is kept in the unnumbered `reseller_churn/` package.
 
-1. **01_data_audit** — verify cleaned source data.
-2. **02_problem_definition** — verify prediction windows, eligibility, and churn labels.
-3. **03_feature_engineering** — build historical reseller features.
-4. **04_ml_dataset_assembly** — combine historical features with development labels and keep the final test unlabeled.
-5. **05_feature_analysis** — inspect feature behavior and model failure modes.
-6. **06_model_selection** — compare model architectures.
-7. **07_feature_selection** — compare feature sets.
-8. **08_imbalance_strategy** — compare imbalance handling.
-9. **09_hyperparameter_tuning** — tune the finalist models.
-10. **10_threshold_selection** — select classification thresholds on development data.
-11. **11_provisional_training** — train provisional models using frozen development choices.
-12. **12_final_evaluation** — reserved for the single final-test evaluation after every choice is frozen.
+| Stage | Purpose |
+| --- | --- |
+| 01 Data audit | Verify cleaned source data |
+| 02 Problem definition | Verify time windows, eligibility and labels |
+| 03 Feature engineering | Build past-only reseller features |
+| 04 ML dataset assembly | Build labeled development rows and unlabeled final-test features |
+| 05 Feature analysis | Analyze features and fold-2 classification errors |
+| 06 Model selection | Compare architectures; model-design-factor audit is optional |
+| 07 Feature selection | Compare predefined feature sets |
+| 08 Imbalance strategy | Compare class imbalance treatments |
+| 09 Hyperparameter tuning | Optional exhaustive development-only search |
+| 10 Threshold selection | Analyze provisional thresholds on development data |
+| 11 Provisional training | Train and evaluate development models |
+| 12 Final evaluation | Intentionally guarded; not executable |
 
-Reusable implementation lives in the matching ordered package:
+Run from the repository root:
 
-```text
-reseller_churn/
-├── config/
-├── data/
-├── features/
-├── modeling/
-└── evaluation/
+```bash
+python pipeline/run_full_development_pipeline.py
 ```
 
-The numbered pipeline files are orchestration only. Business rules and reusable
-ML logic belong in `reseller_churn/`.
+The runner executes the numbered stages except **09** (optional), **12**
+(protected final evaluation), and the optional additional model-design-factor
+comparison in Stage 06.
+
+All labels and evaluation metrics in the runner belong to development
+snapshots. The protected final-test features may be assembled, but **final-test
+outcomes are never accessed**.
+
+Additional research-only commands:
+
+```bash
+python pipeline/06_model_selection/02_compare_model_design_factors.py
+python pipeline/09_hyperparameter_tuning/01_tune_models.py
+```
+
+Generated experiment reports go to `results/`, and provisional model objects
+go to `models/provisional/`. These are reproducible outputs and are ignored by
+Git. See the root README for the regression references, evaluation policies,
+and the two different validation questions.

@@ -1,133 +1,122 @@
 # Reseller Churn Classification
 
-Predict whether an **active reseller** will place no orders during the six
-months after a historical prediction snapshot.
+Predict whether a reseller active in the preceding six months will place **no
+orders during the following six months**. Predictions use historical data only.
 
-The codebase is intentionally organized for human readability. Folder and file
-names show the order of the pipeline, and reusable implementation is separated
-from experiment orchestration.
+The repository separates reusable implementation from numbered experiment
+scripts. The project is currently in **development**: model and threshold choices
+are provisional; the protected final test has not been evaluated.
 
-## Repository Structure
+## Structure
 
 ```text
 reseller_churn/
-├── config/       shared paths, feature sets, folds, model settings
-├── data/         windows, eligibility, labels, temporal datasets
-├── features/     leakage-safe feature engineering
-├── modeling/     model factory, resampling, seeded predictions
-└── evaluation/   metrics, thresholds, regression checks
-
-pipeline/
-├── 01_data_audit/
-├── 02_problem_definition/
-├── 03_feature_engineering/
-├── 04_ml_dataset_assembly/
-├── 05_feature_analysis/
-├── 06_model_selection/
-├── 07_feature_selection/
-├── 08_imbalance_strategy/
-├── 09_hyperparameter_tuning/
-├── 10_threshold_selection/
-├── 11_provisional_training/
-└── 12_final_evaluation/
-
+  config/        file paths, feature sets, model and fold settings
+  data/          prediction windows, eligibility, churn labels and folds
+  features/      historical feature construction
+  modeling/      model factories, oversampling and seeded predictions
+  evaluation/    shared metrics and regression checks
+pipeline/        numbered development stages (01–12)
+comparisons/
+  correlation_pruned_churn/    independent method and validation audit
 tests/
-├── data/
-├── features/
-└── modeling/
+  step_01_data/
+  step_02_features/
+  step_03_modeling/
+  step_04_evaluation/
 ```
 
-## Pipeline Order
+See [pipeline/README.md](pipeline/README.md) for stage-by-stage execution.
 
-To run the complete development pipeline through provisional model evaluation:
+## Set up and run
+
+Use Python 3.11 or later in a project virtual environment:
 
 ```bash
+python -m pip install -e ".[dev]"
+python -m pytest -q
 python pipeline/run_full_development_pipeline.py
 ```
 
-This deliberately stops before Stage 12 and does not evaluate the protected
-2013-10-01 final test.
+The development runner executes stages 01–08 and 10–11, including development
+model evaluation. Stage 09 exhaustive tuning is optional and does not run by
+default. The runner **never executes Stage 12**.
 
-To run individual stages, use the commands below from the repository root.
-
+Additional, separate development-only comparisons:
 
 ```bash
-python pipeline/01_data_audit/01_audit_source_data.py
-python pipeline/02_problem_definition/01_verify_prediction_windows.py
-python pipeline/02_problem_definition/02_verify_churn_labels.py
-python pipeline/03_feature_engineering/01_build_all_features.py
-python pipeline/04_ml_dataset_assembly/01_build_ml_datasets.py
-python pipeline/05_feature_analysis/01_analyze_feature_quality.py
-python pipeline/05_feature_analysis/02_analyze_fold2_errors.py
-python pipeline/06_model_selection/01_compare_model_architectures.py
-python pipeline/07_feature_selection/01_compare_feature_sets.py
-python pipeline/08_imbalance_strategy/01_compare_imbalance_strategies.py
-# Optional research-only exhaustive retuning:
-# python pipeline/09_hyperparameter_tuning/01_tune_models.py
-python pipeline/10_threshold_selection/01_select_thresholds.py
-python pipeline/11_provisional_training/01_train_provisional_models.py
+python pipeline/06_model_selection/02_compare_model_design_factors.py
+python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py
 ```
 
-Stage 12 is intentionally guarded and has no executable final-test script yet.
+The correlation-pruned audit also provides validation, feature-verification,
+comparison, and original-method reproduction scripts documented in its README.
 
-## Anti-Leakage Rules
+## Prediction and leakage boundaries
 
 At snapshot `t`:
 
-- eligibility uses only `[t - 6 months, t)`;
-- features use only historical data before `t`;
-- the churn label uses only `[t, t + 6 months)`;
-- any learned preprocessing or model choice uses development data only;
-- the 2013-10-01 final test remains untouched until all choices are frozen.
+- Eligibility: at least one order in **[t − 6 months, t)**.
+- Features: orders strictly before `t` (up to 12 months of history in
+  the main feature pipeline).
+- Churn label: **1** when no orders occur in **[t, t + 6 months)**;
+  otherwise **0**. The upper boundary is exclusive.
+- Preprocessing, supervised feature selection, oversampling, and model
+  training are fitted only on training rows within each fold.
+- The **2013-10-01** final-test snapshot is protected; its outcome labels
+  are not available to development code. The stored final-test CSV contains
+  features, not churn labels.
 
-## Development Folds
+## Development validation designs
+
+The main development pipeline uses chronological folds:
+
+| Fold | Training snapshots | Validation snapshot |
+| --- | --- | --- |
+| 1 | 2012-07-01 | 2013-01-01 |
+| 2 | 2012-07-01, 2012-10-01 | 2013-04-01 |
+
+The comparison module also supports **GroupKFold by StoreID**, which measures
+performance on unseen reseller identities within mixed historical periods.
+Chronological validation instead asks how a model performs on later periods.
+Both are legitimate for their respective questions, but results from different
+snapshot schedules and populations must not be interpreted as a direct
+head-to-head comparison.
+
+Historically unverified store-profile attributes are isolated in an explicitly
+opt-in diagnostic comparison; they are not silently treated as past-known data.
+
+## Metrics and research decisions
+
+The current locked feature baseline contains:
 
 ```text
-Fold 1
-Train:      2012-07-01
-Validation: 2013-01-01
-
-Fold 2
-Train:      2012-07-01 + 2012-10-01
-Validation: 2013-04-01
+n_orders_3m, revenue_3m, recency_days,
+share_bikes, share_accessories, share_clothing, revenue_12m
 ```
 
-## Current Locked Model Inputs
+Model settings, random seeds, and provisional thresholds are defined in
+`reseller_churn/config/model_settings.py`. Ranking metrics such as PR-AUC are
+distinct from precision/recall/F1 calculated at a specified threshold. The
+existing threshold script ranks development thresholds by **mean F1**; choosing
+a new recall-first objective is a **future model-selection experiment**, not an
+implicit change made by this refactor. The business goal makes churn recall
+important, but precision, false alarms and stability must also be reported.
 
-The current pruned feature set is:
+## Reproducibility and generated files
 
-```text
-n_orders_3m
-revenue_3m
-recency_days
-share_bikes
-share_accessories
-share_clothing
-revenue_12m
-```
+- `datasets/orders_clean.csv` and `datasets/stores_clean.csv` are cleaned
+  input datasets.
+- The three tracked `datasets/processed/` CSVs are verified references for
+  feature and ML dataset assembly. Do not silently replace them.
+- `results/`, `models/provisional/` and `*.log` are **generated outputs**,
+  excluded from future Git commits. Regenerate them by running the appropriate
+  stage. Old experiment results are not retained as a repository archive.
+- `python -m pytest -q` verifies protected boundaries, feature/dataset
+  parity, model baselines, shared metrics and validation safeguards.
+- GitHub Actions runs both regression/audit checks and a separate full
+  development-pipeline verification on changes to the pipeline.
 
-Current tuned model settings and seeds live only in:
-
-```text
-reseller_churn/config/model_settings.py
-```
-
-That file is the single source of truth.
-
-## Validation of the Refactor
-
-The tests protect the business rules and previously verified results:
-
-```bash
-pytest
-```
-
-They check:
-
-- prediction-window boundaries;
-- historical churn counts;
-- feature parity with the verified engineered dataset;
-- exact Stage-08 Random Forest and Gradient Boosting PR-AUC baselines.
-
-The purpose of the refactor is structural clarity. It must not silently change
-the validated methodology or model results.
+Refactoring must preserve observed data and previously locked model scores.
+Changes to feature definitions, validation policy, thresholds or model choice
+must be evaluated and documented as separate research decisions.

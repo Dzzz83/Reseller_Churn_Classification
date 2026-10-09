@@ -1,0 +1,44 @@
+name: 02 Full Development Pipeline
+
+on:
+  push:
+    branches:
+      - pipeline_preparation
+    paths:
+      - "reseller_churn/**"
+      - "pipeline/**"
+      - ".github/workflows/02_development_pipeline.yml"
+  workflow_dispatch:
+
+jobs:
+  development-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: 01 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 02 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 03 Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: 04 Run development stages, excluding protected final test
+        run: python -u pipeline/run_full_development_pipeline.py
+
+      - name: 05 Verify reference data and regression baselines
+        run: python -m pytest -q
+
+      - name: 06 Upload development output for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-pipeline-results
+          path: results/**/*.csv
+          if-no-files-found: ignore
