@@ -12,6 +12,29 @@ CATEGORY_REVENUE_COLUMNS = {
     "accessories": "rev_accessories",
 }
 
+# Preserve the established column order in generated feature datasets.
+OUTPUT_COLUMNS = [
+    "StoreID",
+    "snapshot",
+    "recency_days",
+    "n_orders_12m",
+    "revenue_12m",
+    "n_orders_6m",
+    "revenue_6m",
+    "n_orders_3m",
+    "revenue_3m",
+    "mean_gap",
+    "std_gap",
+    "overdue_ratio",
+    "has_previous_6m_revenue",
+    "revenue_trend",
+    "share_bikes",
+    "share_components",
+    "share_clothing",
+    "share_accessories",
+    "store_age",
+]
+
 
 class FeaturePipeline:
     """Build all reseller features from orders available before each snapshot.
@@ -97,29 +120,7 @@ class FeaturePipeline:
             window,
         )
 
-        return features[
-            [
-                "StoreID",
-                "snapshot",
-                "recency_days",
-                "n_orders_12m",
-                "revenue_12m",
-                "n_orders_6m",
-                "revenue_6m",
-                "n_orders_3m",
-                "revenue_3m",
-                "mean_gap",
-                "std_gap",
-                "overdue_ratio",
-                "has_previous_6m_revenue",
-                "revenue_trend",
-                "share_bikes",
-                "share_components",
-                "share_clothing",
-                "share_accessories",
-                "store_age",
-            ]
-        ]
+        return features[OUTPUT_COLUMNS]
 
     @staticmethod
     def _build_rfm_features(
@@ -171,18 +172,15 @@ class FeaturePipeline:
                 history["OrderDate"] >= period_start
             ]
 
+            count_column = f"n_orders_{months}m"
+            revenue_column = f"revenue_{months}m"
+
             recent_features = (
                 recent_orders.groupby("StoreID")
                 .agg(
                     **{
-                        f"n_orders_{months}m": (
-                            "SalesOrderID",
-                            "nunique",
-                        ),
-                        f"revenue_{months}m": (
-                            "SubTotal",
-                            "sum",
-                        ),
+                        count_column: ("SalesOrderID", "nunique"),
+                        revenue_column: ("SubTotal", "sum"),
                     }
                 )
                 .reset_index()
@@ -195,18 +193,10 @@ class FeaturePipeline:
                 validate="one_to_one",
             )
 
-            count_column = f"n_orders_{months}m"
-            revenue_column = f"revenue_{months}m"
-
-            result[
-                [count_column, revenue_column]
-            ] = result[
+            result[[count_column, revenue_column]] = result[
                 [count_column, revenue_column]
             ].fillna(0)
-
-            result[count_column] = (
-                result[count_column].astype(int)
-            )
+            result[count_column] = result[count_column].astype(int)
 
         return result
 
@@ -216,35 +206,21 @@ class FeaturePipeline:
         history: pd.DataFrame,
     ) -> pd.DataFrame:
         order_dates = (
-            history[
-                ["StoreID", "OrderDate"]
-            ]
+            history[["StoreID", "OrderDate"]]
             .drop_duplicates()
-            .sort_values(
-                ["StoreID", "OrderDate"]
-            )
+            .sort_values(["StoreID", "OrderDate"])
             .copy()
         )
 
         order_dates["gap_days"] = (
-            order_dates.groupby("StoreID")[
-                "OrderDate"
-            ]
-            .diff()
-            .dt.days
+            order_dates.groupby("StoreID")["OrderDate"].diff().dt.days
         )
 
         gap_features = (
             order_dates.groupby("StoreID")
             .agg(
-                mean_gap=(
-                    "gap_days",
-                    "mean",
-                ),
-                std_gap=(
-                    "gap_days",
-                    "std",
-                ),
+                mean_gap=("gap_days", "mean"),
+                std_gap=("gap_days", "std"),
             )
             .reset_index()
         )
