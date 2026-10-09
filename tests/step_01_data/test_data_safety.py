@@ -5,7 +5,7 @@ from reseller_churn.config.validation_settings import (
     FINAL_TEST_SNAPSHOT,
     TemporalFold,
 )
-from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.prediction_window import PredictionWindow
 from reseller_churn.data.temporal_dataset import TemporalDataset
 
@@ -35,7 +35,7 @@ def test_churn_window_boundaries():
         ]
     )
 
-    labels = ChurnLabelBuilder().build(
+    labels = build_churn_labels(
         orders,
         PredictionWindow.from_date("2013-04-01"),
     )

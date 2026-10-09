@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.prediction_window import PredictionWindow
 
 
@@ -81,7 +81,7 @@ class HistoricalSnapshotBuilder:
         feature_window: str,
     ) -> pd.DataFrame:
         window = PredictionWindow.from_date(snapshot)
-        eligible = ChurnLabelBuilder().build(self.orders, window)
+        eligible = build_churn_labels(self.orders, window)
 
         history = self.orders.loc[
             self.orders["OrderDate"] < snapshot

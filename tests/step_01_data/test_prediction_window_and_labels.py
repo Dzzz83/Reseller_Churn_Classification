@@ -3,7 +3,7 @@ import pandas as pd
 from reseller_churn.config.validation_settings import (
     EXPECTED_LABELED_COUNTS,
 )
-from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.dataset_loader import DatasetLoader
 from reseller_churn.data.prediction_window import PredictionWindow
 
@@ -29,13 +29,11 @@ def test_prediction_window_boundaries() -> None:
 
 def test_verified_snapshot_counts() -> None:
     orders = DatasetLoader.load_orders()
-    builder = ChurnLabelBuilder()
-
     for snapshot, (
         expected_rows,
         expected_churners,
     ) in EXPECTED_LABELED_COUNTS.items():
-        labels = builder.build(
+        labels = build_churn_labels(
             orders,
             PredictionWindow.from_date(snapshot),
         )

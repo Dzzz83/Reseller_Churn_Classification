@@ -6,15 +6,12 @@ from reseller_churn.config.validation_settings import (
     FINAL_TEST_SNAPSHOT,
     LABELED_SNAPSHOTS,
 )
-from reseller_churn.data.churn_labels import ChurnLabelBuilder
+from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.prediction_window import PredictionWindow
 
 
 class MLDatasetBuilder:
     """Combine historical features with labels without exposing final-test labels."""
-
-    def __init__(self) -> None:
-        self.label_builder = ChurnLabelBuilder()
 
     def build(
         self,
@@ -40,7 +37,7 @@ class MLDatasetBuilder:
                 features["snapshot"] == window.snapshot
             ].copy()
 
-            labels = self.label_builder.build(
+            labels = build_churn_labels(
                 orders,
                 window,
             )
