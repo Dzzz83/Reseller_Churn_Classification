@@ -22,7 +22,7 @@ from reseller_churn.config.project_paths import RESULTS_DIR
 from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
 from reseller_churn.data.dataset_loader import DatasetLoader
 from reseller_churn.data.temporal_dataset import TemporalDataset
-from reseller_churn.modeling.model_factory import ModelFactory
+from reseller_churn.modeling.seeded_predictions import SeededProbabilityPredictor
 
 
 OUTPUT_DIR = RESULTS_DIR / "model_selection"
@@ -53,28 +53,6 @@ SHARED_HISTORICAL_FEATURES = [
 ]
 
 
-def predict_by_seed(
-    x_train: pd.DataFrame,
-    y_train: pd.Series,
-    x_validation: pd.DataFrame,
-    settings: RandomForestSettings,
-    seeds: tuple[int, ...],
-) -> list[np.ndarray]:
-    predictions = []
-
-    for seed in seeds:
-        model = ModelFactory.create_random_forest(
-            settings=settings,
-            random_seed=seed,
-        )
-        model.fit(x_train, y_train)
-        predictions.append(
-            model.predict_proba(x_validation)[:, 1]
-        )
-
-    return predictions
-
-
 def evaluate_temporal(
     data: pd.DataFrame,
     features: list[str],
@@ -96,10 +74,10 @@ def evaluate_temporal(
         train = prepared.training_data
         validation = prepared.validation_data
 
-        probabilities_by_seed = predict_by_seed(
-            x_train=train[features],
-            y_train=train["churn"].astype(int),
-            x_validation=validation[features],
+        probabilities_by_seed = SeededProbabilityPredictor.random_forest_by_seed(
+            training_features=train[features],
+            training_target=train["churn"].astype(int),
+            validation_features=validation[features],
             settings=settings,
             seeds=seeds,
         )
@@ -176,10 +154,10 @@ def evaluate_group_kfold(
         train = working.iloc[train_index]
         validation = working.iloc[validation_index]
 
-        probabilities_by_seed = predict_by_seed(
-            x_train=train[features],
-            y_train=train["churn"].astype(int),
-            x_validation=validation[features],
+        probabilities_by_seed = SeededProbabilityPredictor.random_forest_by_seed(
+            training_features=train[features],
+            training_target=train["churn"].astype(int),
+            validation_features=validation[features],
             settings=settings,
             seeds=seeds,
         )
