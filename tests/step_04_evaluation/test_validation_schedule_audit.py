@@ -1,23 +1,8 @@
-import importlib.util
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
 
-# The standalone audit has a CLI-oriented filename; import it for unit tests.
-AUDIT_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "comparisons"
-    / "validation_schedule_audit.py"
-)
-spec = importlib.util.spec_from_file_location("validation_schedule_audit", AUDIT_PATH)
-assert spec is not None and spec.loader is not None
-module = importlib.util.module_from_spec(spec)
-import sys
-sys.modules[spec.name] = module
-spec.loader.exec_module(module)
-assess_schedule = module.assess_schedule
+from comparisons.validation_schedule_audit import assess_schedule
 
 
 def test_actual_history_cannot_support_independent_pretest_holdout():
