@@ -11,6 +11,8 @@ import pandas as pd
 
 from reseller_churn.config.validation_settings import FINAL_TEST_SNAPSHOT
 from reseller_churn.data.dataset_loader import DatasetLoader
+from reseller_churn.data.churn_labels import build_churn_labels
+from reseller_churn.data.prediction_window import PredictionWindow
 
 
 @dataclass(frozen=True)
@@ -61,6 +63,35 @@ def assess_schedule(
     )
 
 
+
+PARTIAL_HISTORY_CANDIDATE = (
+    "2012-04-01",  # First training snapshot, about 10 months observed
+    "2012-10-01",  # Temporal validation
+    "2013-04-01",  # Shared future development holdout
+)
+
+
+def inspect_partial_history_candidate(
+    orders: pd.DataFrame,
+) -> list[tuple[str, int, int]]:
+    """Check a relaxed-coverage design without using protected final-test labels."""
+    first_training, validation, holdout = (
+        pd.Timestamp(date) for date in PARTIAL_HISTORY_CANDIDATE
+    )
+    if (
+        PredictionWindow.from_date(first_training).label_end > validation
+        or PredictionWindow.from_date(validation).label_end > holdout
+        or PredictionWindow.from_date(holdout).label_end
+        > pd.Timestamp(FINAL_TEST_SNAPSHOT)
+    ):
+        raise AssertionError("Relaxed candidate violates label availability")
+
+    rows = []
+    for snapshot in PARTIAL_HISTORY_CANDIDATE:
+        labels = build_churn_labels(orders, PredictionWindow.from_date(snapshot))
+        rows.append((snapshot, len(labels), int(labels["churn"].sum())))
+    return rows
+
 def main() -> None:
     orders = DatasetLoader.load_orders()
     first_order = orders["OrderDate"].min().normalize()
@@ -90,6 +121,12 @@ def main() -> None:
         "temporal model selection completed before shared evaluation, "
         "no development label crossing the protected final-test date."
     )
+    print()
+    print("=== Partial-History Candidate (Different Assumption) ===")
+    print("12-month lookback formulas remain, but early history is incomplete.")
+    for snapshot, eligible, churners in inspect_partial_history_candidate(orders):
+        print(f"{snapshot}: {eligible} eligible, {churners} churners")
+    print("Feasibility only; not a model-performance comparison.")
     print("No models trained; no protected final-test labels accessed.")
 
 
