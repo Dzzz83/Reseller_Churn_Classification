@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reseller-churn-classification"
+version = "0.1.0"
+description = "Fixed ten-feature reseller churn pipeline"
+requires-python = ">=3.11"
+dependencies = ["joblib", "numpy", "pandas", "scikit-learn"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+reseller-churn = "reseller_churn.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["reseller_churn*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

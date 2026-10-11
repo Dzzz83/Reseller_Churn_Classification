@@ -1,0 +1,33 @@
+name: Final pipeline checks
+
+on:
+  push:
+    branches: [main, final-pipeline-preparation]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install final package and tests
+        run: python -m pip install ".[dev]"
+      - name: Run final pipeline tests
+        run: python -m pytest -q
+      - name: Check Python formatting and imports
+        run: |
+          ruff check reseller_churn pipeline tests
+          ruff format --check reseller_churn pipeline tests
+      - name: Run synthetic end-to-end smoke
+        run: python pipeline/smoke_test.py
+      - name: Check installed command
+        run: reseller-churn --help
