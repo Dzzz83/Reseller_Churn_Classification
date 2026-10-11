@@ -31,6 +31,13 @@ def test_threshold_equality_counts_and_original_roles():
     assert primary.precision == pytest.approx(1 / 3)
     assert primary.original_evaluation_role == "primary"
     assert len(decisions) == 12
+    result_types = decisions[decisions.cutoff.eq(0.06)].set_index("StoreID").result_type
+    assert result_types.to_dict() == {
+        1: "caught_churn",
+        2: "false_alert",
+        3: "missed_churn",
+        4: "false_alert",
+    }
     assert (
         decisions[
             (decisions.StoreID == 1) & (decisions.cutoff == 0.06)
