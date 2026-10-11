@@ -3,7 +3,7 @@ name: 02 Full Development Pipeline
 on:
   push:
     branches:
-      - pipeline_preparation
+      - experimental_research
     paths:
       - "reseller_churn/**"
       - "pipeline/**"

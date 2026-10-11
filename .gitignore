@@ -20,6 +20,9 @@ bi_venv/
 /.aws/
 /.codex/
 
+# Additional local Git checkouts share this repository's history.
+/.worktrees/
+
 # Experiment artifacts are reproducible; verified processed data stays tracked.
 results/
 models/provisional/

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - data_preparation
-      - pipeline_preparation
+      - experimental_research
   pull_request:
 
 jobs:

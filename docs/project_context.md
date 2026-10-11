@@ -50,7 +50,7 @@ The boundaries are implemented in
 | `.github/workflows/` | Regression tests, separate research audits, and bounded development smoke checks |
 | `AGENTS.md` | Engineering and research rules for collaborators |
 
-The working branch is `pipeline_preparation`. It must not be merged into `main`
+The working branch is `experimental_research`. It must not be merged into `main`
 automatically. The repository is a Python package defined by
 [pyproject.toml](../pyproject.toml), requiring Python 3.11 or later.
 
