@@ -1,3 +1,7 @@
+from pathlib import Path
+import subprocess
+import sys
+
 import pandas as pd
 import pytest
 
@@ -8,6 +12,25 @@ from comparisons.validation_schedule_audit import (
 )
 from reseller_churn.data.dataset_loader import DatasetLoader
 from reseller_churn.features.feature_pipeline import FeaturePipeline
+
+
+def test_schedule_audit_runs_directly_from_another_directory(tmp_path):
+    script = (
+        Path(__file__).resolve().parents[2]
+        / "comparisons"
+        / "validation_schedule_audit.py"
+    )
+    result = subprocess.run(
+        [sys.executable, "-I", str(script)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Shared future holdout feasible: NO" in result.stdout
+    assert "No models trained; no protected final-test labels accessed." in result.stdout
 
 
 def test_actual_history_cannot_support_independent_pretest_holdout():

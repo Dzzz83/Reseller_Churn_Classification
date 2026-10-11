@@ -1,36 +1,103 @@
 # Development Pipeline
 
-Numbered directories show the **execution order** of experiments. Reusable
-implementation is kept in the unnumbered `reseller_churn/` package.
+The project has three phases. The supported runner executes preparation and
+model development; final evaluation runs separately under frozen methodology
+and explicit authorization. Reusable modeling and
+data logic lives in `reseller_churn/`, with orchestration in
+`pipeline/development_workflow.py`.
 
-| Stage | Purpose |
-| --- | --- |
-| 01 Data audit | Verify cleaned source data |
-| 02 Problem definition | Verify time windows, eligibility and labels |
-| 03 Feature engineering | Build past-only reseller features |
-| 04 ML dataset assembly | Build labeled development rows and unlabeled final-test features |
-| 05 Feature analysis | Analyze features and fold-2 classification errors |
-| 06 Model selection | Compare architectures; model-design-factor audit is optional |
-| 07 Feature selection | Compare predefined feature sets |
-| 08 Imbalance strategy | Compare class imbalance treatments |
-| 09 Hyperparameter tuning | Optional exhaustive development-only search |
-| 10 Threshold selection | Analyze provisional thresholds on development data |
-| 11 Provisional training | Train and evaluate development models |
-| 12 Final evaluation | Intentionally guarded; not executable |
+| Phase | Entry point | Purpose |
+| --- | --- | --- |
+| Prepare data | `pipeline/prepare_data.py` | Audit source files, build historical-only features and approved labeled development rows, compare with tracked references, and save generated files under one run ID |
+| Develop models | `pipeline/develop_models.py` | Compare complete candidate configurations on the registered temporal folds; report probability thresholds and precision-floor sensitivity; refit each unique selected candidate once |
+| Final evaluation | `debug/run_final_testing_evaluation.py`; instructions in `pipeline/12_final_evaluation/` | Authorized frozen-model October evaluation completed; excluded from the supported runner |
 
-Run from the repository root:
+## Run preparation and development
+
+Run the complete development workflow from the repository root:
 
 ```bash
 python pipeline/run_full_development_pipeline.py
 ```
 
-The runner executes the numbered stages except **09** (optional), **12**
-(protected final evaluation), and the optional additional model-design-factor
-comparison in Stage 06.
+The runner creates a unique run ID. Existing run directories are preserved;
+choose a new ID for another experiment. Reports and models are generated
+files ignored by Git; tracked datasets remain regression references.
 
-All labels and evaluation metrics in the runner belong to development
-snapshots. The protected final-test features may be assembled, but **final-test
-outcomes are never accessed**.
+## Search options
+
+The bounded default comparison crosses the three architectures, four named
+feature sets, and three imbalance strategies, using the baseline parameter
+settings and five seeds: 36 configurations. `--tune` expands this to 84 using a
+small parameter grid. Use `--architectures`, `--feature-sets`,
+`--imbalance-strategies`, and `--seeds` to restrict a run explicitly.
+
+`--precision-floors` controls the minimum precision scenarios. Defaults are
+0.10 through 0.90; the probability cutoff grid runs from 0.00 through 1.00 in
+0.01 steps. These are distinct settings. The
+[metric guide](../docs/evaluation_metrics.md#current-development-selection-reports)
+explains their meaning and the recall selection rule. The defaults are
+experimental values, not approved operating requirements.
+
+The preparation and development phases can be run separately with an explicit
+run ID:
+
+```bash
+python pipeline/prepare_data.py --run-id example-run
+python pipeline/develop_models.py --run-id example-run --precision-floors 0.3 0.5 0.7
+```
+
+For a small execution check, restrict the search explicitly. This is a smoke
+configuration and does not provide a model-quality comparison:
+
+```bash
+python pipeline/run_full_development_pipeline.py \
+  --architectures logistic_regression \
+  --feature-sets rfm \
+  --imbalance-strategies none \
+  --seeds 42 \
+  --precision-floors 0.2 0.8
+```
+
+## Read the outputs
+
+Start with `results/<run_id>/development/precision_floor_comparison.csv`. It
+shows the best-recall configuration for each minimum precision, its probability
+threshold, precision, recall, and alert counts. Infeasible scenarios have
+`status: no_feasible_candidate`. No single precision minimum is declared the
+operational winner.
+
+| Location within a run | Contents |
+| --- | --- |
+| `preparation/` | Generated features, labeled development data, unlabeled final-test features, source audit, and preparation manifest |
+| `development/candidate_configurations.csv` | Exact architectures, feature sets, strategies, parameters, and seeds searched |
+| `development/fold_ranking_metrics.csv` | Average precision and ROC-AUC for each candidate's seed-averaged scores in each fold |
+| `development/validation_predictions.csv` | Reseller identities, actual development labels, and candidate probabilities |
+| `development/threshold_tradeoffs.csv` | Per-fold and pooled metrics at every probability cutoff |
+| `development/selection/` | One configuration manifest per precision minimum, including explicit infeasible results |
+| `development/error_analysis_precision_*.csv` | Detected churn, missed churn, false alerts, and correct non-churn predictions for selected scenarios |
+| `development/recall_precision_tradeoffs.png` | Recall versus precision plot |
+| `development/development_manifest.json` | Run configuration, data identity, report names, and scenario statuses |
+| `evaluation/STATUS.md` | Records that protected final evaluation has not run |
+
+Each distinct selected ensemble is saved under `models/provisional/<run_id>/`.
+Scenarios selecting the same configuration share a bundle; their thresholds
+remain in their respective manifests. For the inputs of a particular saved
+predictor, read the manifest's `candidate.features`.
+
+All labels used by the runner belong to approved development snapshots.
+**The supported runner never accesses final-test outcomes.** Separate final evaluation requires the
+freeze and approval described in [Stage 12](12_final_evaluation/README.md).
+Development scores inform selection and are not independent estimates of
+future performance.
+
+## Historical diagnostics and separate research
+
+The numbered scripts are available separately and are not used by the
+supported runner. Their preset configurations and result protocols remain
+historical. Stages 03 and 04 write generated preparation CSVs to
+`results/legacy_preparation/`. Other historical commands retain their own
+report locations.
 
 Additional research-only commands:
 
@@ -40,14 +107,107 @@ python comparisons/validation_schedule_audit.py
 python pipeline/09_hyperparameter_tuning/01_tune_models.py
 ```
 
-Generated experiment reports go to `results/`, and provisional model objects
-go to `models/provisional/`. These are reproducible outputs and are ignored by
-Git. See the root README for the regression references, evaluation policies,
-and the two different validation questions.
+These commands use their own research assumptions and do not select the
+supported runner's models. See [project context](../docs/project_context.md)
+for validation questions and [data analysis](../docs/data_analysis.md) for
+source provenance and tracked references.
 
-The schedule audit tests whether a complete 12-month lookback and two resolved
-six-month label windows can support selecting both validation procedures **before**
-a shared development holdout. With orders starting 2011-05-31 and a protected
-final-test snapshot of 2013-10-01, the earliest temporal results arrive after
-the latest permitted development holdout. This is a time-coverage constraint,
-not evidence that either validation method has better predictive performance.
+## Debugging and feature experiments
+
+The latest completed research uses root `debug/`, separately from the supported
+runner. It compares the seven Pruned features with ten features (Pruned plus
+three discount inputs) using temporal validation and stratified folds grouped
+by StoreID. The ten-feature set is defined in the debug comparison, not in
+the main `FEATURE_SETS` registry; it is not a supported `--feature-sets ten`
+option. These experiments write predictions and reports, not promoted model
+bundles.
+
+| Script in `debug/` | Purpose | Reports under `results/debugging/` |
+| --- | --- | --- |
+| `diagnose_april_missed_churners.py` | Describe missed April churners using saved RFM predictions | `april_2013_precision_030/` |
+| `compare_rfm_seven_features.py` | Fixed weighted Logistic Regression comparison of RFM and seven inputs | `rfm_vs_seven_features_precision_030/` |
+| `inventory_companyx.py` | Read local CompanyX table, column, key, and order-field metadata | `companyx_features/source/` |
+| `extract_companyx_history.py` | Retrieve reseller order headers/lines before 2013-04-01 and source profiles | `companyx_features/source/` |
+| `build_companyx_features.py` | Preserve existing clean orders, reconcile details, and construct 11 historical candidates | `companyx_features/` |
+| `evaluate_companyx_features.py` | Associations and separate basket/discount/diversity comparisons against seven inputs | `companyx_features/` |
+| `compare_seven_ten_features.py` | Three architectures, seven/ten inputs, two validation methods, fixed 30% precision floor | `seven_vs_ten_features/` |
+| `verify_companyx_outputs.py`, `verify_seven_ten_outputs.py` | Check saved hashes, metrics, populations, and report links without training | Their respective experiment folders |
+
+### Prerequisites and reproduction
+
+The scripts currently use fixed paths rather than a general run-ID interface.
+They require the existing preparation/selection artifacts under
+`results/codex-luna-verification-20261010-1/` and tracked clean orders. The latest
+comparison additionally requires the saved CompanyX feature data, its manifest,
+and earlier validation predictions under `results/debugging/companyx_features/`.
+Generated inputs are ignored by Git, so a fresh checkout does not contain a
+complete runnable experiment. Preserve the original restricted run used by
+these scripts; a new preparation run with a different ID is not automatically
+selected by them.
+
+SQL extraction requires the existing local `companyx-audit` Docker container,
+restored `CompanyX_Audit` database, configured container credential, and Docker
+access. `companyx_readonly.py` executes the defined SELECT queries without
+printing the credential. Cleaning and model comparisons use saved CSVs and do
+not require Docker once extraction is complete. Association screening uses
+SciPy in the project environment.
+
+With these prerequisites, rebuild the research artifacts in this order:
+
+```bash
+bi_venv/bin/python debug/compare_rfm_seven_features.py
+bi_venv/bin/python debug/inventory_companyx.py
+bi_venv/bin/python debug/extract_companyx_history.py
+bi_venv/bin/python debug/build_companyx_features.py
+bi_venv/bin/python debug/evaluate_companyx_features.py
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/compare_seven_ten_features.py
+bi_venv/bin/python debug/verify_companyx_outputs.py
+bi_venv/bin/python debug/verify_seven_ten_outputs.py
+```
+
+The latest comparison performs 154 fits: deterministic Logistic Regression once
+per fold and five-seed ensembles for each tree architecture. Its outputs include
+the frozen protocol, fold membership/counts, averaged and individual-seed
+predictions, operating selections, threshold grids, subgroup metrics, feature
+deltas, paired changes, and hashes. Rerunning a debug script replaces its own
+fixed output files, unlike the supported runner's unique-run directory policy.
+
+Debug tests are outside the default `pytest` test path. Both CI workflows run
+`python -m pytest -q tests debug` to cover the development and synthetic debug
+safeguards without requiring saved experiment outputs or the audit database.
+The original development
+comparison passed 39 focused tests; the authorized final evaluation adds eight
+synthetic safeguards, giving **47 passing focused tests** with the same command:
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python -m pytest -q debug tests/step_04_evaluation/test_recall_selection.py tests/step_04_evaluation/test_metrics_consistency.py
+```
+
+Read [latest metrics](../docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+for results and [debugging.md](../docs/debugging.md) for the full evidence chain.
+Both validation methods reuse inspected development labels; grouped scores
+are not estimates of future-period performance. Protected final evaluation
+remains guarded.
+
+## Completed final testing evaluation
+
+The user authorized the 2026-10-11 final test and fixed the ten-feature boosting
+model and grouped-development cutoffs before outcome access. The separate
+entry point `debug/run_final_testing_evaluation.py` prepared and checkpointed
+five refitted models and 492 unlabeled predictions, then verified their hashes
+before its label-evaluation stage. It preserves fixed outputs and rejects
+overwriting an existing preparation or completed evaluation.
+
+Reports are in `results/final_evaluation/gb10_grouped_20261011/`, with the model
+bundle in `models/provisional/gb10_grouped_20261011/ensemble.joblib`. Primary
+recall is 93.48%, but precision is 28.48%, below the intended 30%. It catches
+43 of 46 churners, misses three, and produces 108 false alarms. The October
+test outcomes are now inspected and remain excluded from development training
+and selection. See [Stage 12](12_final_evaluation/README.md) and
+[final results](../docs/evaluation_metrics.md#final-test-evaluation--2026-10-11).
+
+Use the saved-output verifier rather than rerunning the completed final test:
+
+```bash
+bi_venv/bin/python debug/verify_final_testing_outputs.py
+```

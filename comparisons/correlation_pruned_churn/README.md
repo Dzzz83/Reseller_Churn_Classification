@@ -1,6 +1,18 @@
 # Alternative Churn Method — Verification and Validation Comparison
 
-Research branch: `research/churn-method-comparison`
+Original research branch: `research/churn-method-comparison`
+
+This audit retains its own feature definitions and validation/selection rules.
+For the latest seven-versus-ten discount-feature experiment and the supported
+pipeline status, see [current results](../../docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+and [project context](../../docs/project_context.md). The grouped validation in
+that newer experiment uses StratifiedGroupKFold; this audit uses GroupKFold.
+
+The separate authorized October final test completed on 2026-10-11; its
+outcomes are now inspected. Statements below about keeping October untouched
+record the original audit scope, not the current status of that cohort. These
+audit scripts still do not evaluate October outcomes. See
+[final-evaluation record](../../docs/evaluation_metrics.md#final-test-evaluation--2026-10-11).
 
 Source: [CurrentTopicTest](https://github.com/pnn-re1506/CurrentTopicTest),
 especially `6-6/reseller_churn_phase1_v2.ipynb` and
@@ -79,7 +91,9 @@ algorithm used to generate fold indices.
   quantities, plus explicitly windowed 12m/6m variables.
 - `obs6`: only the preceding six months, with 6m/3m variables.
 - `historical_only`: features constructed from prior orders plus
-  `store_age` from YearOpened. Historical order territory and
+  `store_age` from YearOpened under the project's documented
+  [opening-year assumption](../../docs/data_analysis.md#opening-year-assumption-and-provenance-limits).
+  Historical order territory and
   salesperson are derived from the last **past** order.
 - `unverified_store_profile_diagnostic`: adds the original static store
   attributes (including AnnualSales and categorial store metadata).
