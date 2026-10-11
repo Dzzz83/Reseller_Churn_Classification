@@ -1,5 +1,6 @@
 """Descriptive cutoff reports from saved scores and supplied complete outcomes."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
@@ -12,24 +13,27 @@ from reseller_churn.artifacts import (
     write_manifest,
 )
 from reseller_churn.config import ORIGINAL_RULES, ORIGINAL_TEST_SNAPSHOT
-from reseller_churn.data import KEYS, date, require_columns, unique_ids
+from reseller_churn.data import KEYS, DateLike, date, require_columns, unique_ids
 
 
-def compare_cutoffs(
-    predictions: pd.DataFrame,
-    outcomes: pd.DataFrame,
-    cutoffs,
-    outcomes_through,
-    cohort_status="inspected",
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Require identical account/snapshot populations and mature observed outcomes."""
-    cutoffs = tuple(float(value) for value in cutoffs)
+def _validated_cutoffs(cutoffs: Iterable[float]) -> tuple[float, ...]:
+    values = tuple(float(value) for value in cutoffs)
     if (
-        not cutoffs
-        or len(set(cutoffs)) != len(cutoffs)
-        or any(not np.isfinite(value) or not 0 <= value <= 1 for value in cutoffs)
+        not values
+        or len(set(values)) != len(values)
+        or any(not np.isfinite(value) or not 0 <= value <= 1 for value in values)
     ):
         raise ValueError("Cutoffs must be unique finite values in [0, 1].")
+    return values
+
+
+def _validated_cases(
+    predictions: pd.DataFrame,
+    outcomes: pd.DataFrame,
+    outcomes_through: DateLike,
+    cohort_status: str,
+) -> pd.DataFrame:
+    """Validate evaluation inputs and return the matched account population."""
     if cohort_status not in {"inspected", "independent"}:
         raise ValueError("Declare whether the cohort was previously inspected.")
     predictions, outcomes = predictions.copy(), outcomes.copy()
@@ -78,70 +82,97 @@ def compare_cutoffs(
     )
     if not cases["_merge"].eq("both").all():
         raise ValueError("Prediction and outcome populations differ.")
-    cases = cases.drop(columns="_merge")
+    return cases.drop(columns="_merge")
+
+
+def _cutoff_decisions(cohort: pd.DataFrame, cutoff: float) -> pd.DataFrame:
+    """Classify each account at one cutoff for the detailed decision output."""
+    decision = cohort.copy()
+    decision["cutoff"] = cutoff
+    decision["predicted_churn"] = decision.churn_probability.ge(cutoff).astype(int)
+    positive = decision.actual_churn.eq(1)
+    alert = decision.predicted_churn.eq(1)
+    decision["result_type"] = np.select(
+        [positive & alert, positive & ~alert, ~positive & alert],
+        ["caught_churn", "missed_churn", "false_alert"],
+        default="correct_non_churn",
+    )
+    return decision
+
+
+def _cohort_subgroups(cohort: pd.DataFrame) -> tuple[tuple[str, pd.DataFrame], ...]:
+    return (
+        ("overall", cohort),
+        ("purchased_in_3m", cohort[cohort.n_orders_3m.gt(0)]),
+        ("no_purchase_in_3m", cohort[cohort.n_orders_3m.eq(0)]),
+    )
+
+
+def _metric_row(
+    snapshot: pd.Timestamp,
+    cutoff: float,
+    cohort_status: str,
+    subgroup: str,
+    group: pd.DataFrame,
+) -> dict[str, object]:
+    positive = group.actual_churn.eq(1)
+    alert = group.churn_probability.ge(cutoff)
+    tp = int((positive & alert).sum())
+    fp = int((~positive & alert).sum())
+    fn = int((positive & ~alert).sum())
+    tn = int((~positive & ~alert).sum())
+    original_role = (
+        ORIGINAL_RULES.get(cutoff, "additional")
+        if snapshot == date(ORIGINAL_TEST_SNAPSHOT)
+        else "user_supplied"
+    )
+    return {
+        "snapshot": snapshot,
+        "cutoff": cutoff,
+        "original_evaluation_role": original_role,
+        "cohort_status": cohort_status,
+        "subgroup": subgroup,
+        "rows": len(group),
+        "churners": int(positive.sum()),
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "precision": tp / max(1, tp + fp),
+        "recall": tp / max(1, tp + fn),
+        "f1": 2 * tp / max(1, 2 * tp + fp + fn),
+        "alert_count": tp + fp,
+        "alert_rate": (tp + fp) / len(group),
+        "average_precision": float(
+            average_precision_score(positive, group.churn_probability)
+        )
+        if positive.any()
+        else None,
+        "roc_auc": float(roc_auc_score(positive, group.churn_probability))
+        if positive.nunique() == 2
+        else None,
+    }
+
+
+def compare_cutoffs(
+    predictions: pd.DataFrame,
+    outcomes: pd.DataFrame,
+    cutoffs: Iterable[float],
+    outcomes_through: DateLike,
+    cohort_status: str = "inspected",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare cutoffs on matched populations with mature observed outcomes."""
+    cutoffs = _validated_cutoffs(cutoffs)
+    cases = _validated_cases(predictions, outcomes, outcomes_through, cohort_status)
     rows, decisions = [], []
     for snapshot, cohort in cases.groupby("snapshot", sort=True):
         for cutoff in cutoffs:
-            decision = cohort.copy()
-            decision["cutoff"] = cutoff
-            decision["predicted_churn"] = decision.churn_probability.ge(cutoff).astype(
-                int
-            )
-            positive, alert = (
-                decision.actual_churn.eq(1),
-                decision.predicted_churn.eq(1),
-            )
-            decision["result_type"] = np.select(
-                [positive & alert, positive & ~alert, ~positive & alert],
-                ["caught_churn", "missed_churn", "false_alert"],
-                default="correct_non_churn",
-            )
-            decisions.append(decision)
-            for subgroup, group in [
-                ("overall", cohort),
-                ("purchased_in_3m", cohort[cohort.n_orders_3m.gt(0)]),
-                ("no_purchase_in_3m", cohort[cohort.n_orders_3m.eq(0)]),
-            ]:
+            decisions.append(_cutoff_decisions(cohort, cutoff))
+            for subgroup, group in _cohort_subgroups(cohort):
                 if group.empty:
                     continue
-                positive = group.actual_churn.eq(1)
-                alert = group.churn_probability.ge(cutoff)
-                tp, fp = int((positive & alert).sum()), int((~positive & alert).sum())
-                fn, tn = int((positive & ~alert).sum()), int((~positive & ~alert).sum())
-                original_role = (
-                    ORIGINAL_RULES.get(cutoff, "additional")
-                    if snapshot == date(ORIGINAL_TEST_SNAPSHOT)
-                    else "user_supplied"
-                )
                 rows.append(
-                    {
-                        "snapshot": snapshot,
-                        "cutoff": cutoff,
-                        "original_evaluation_role": original_role,
-                        "cohort_status": cohort_status,
-                        "subgroup": subgroup,
-                        "rows": len(group),
-                        "churners": int(positive.sum()),
-                        "tp": tp,
-                        "fp": fp,
-                        "fn": fn,
-                        "tn": tn,
-                        "precision": tp / max(1, tp + fp),
-                        "recall": tp / max(1, tp + fn),
-                        "f1": 2 * tp / max(1, 2 * tp + fp + fn),
-                        "alert_count": tp + fp,
-                        "alert_rate": (tp + fp) / len(group),
-                        "average_precision": float(
-                            average_precision_score(positive, group.churn_probability)
-                        )
-                        if positive.any()
-                        else None,
-                        "roc_auc": float(
-                            roc_auc_score(positive, group.churn_probability)
-                        )
-                        if positive.nunique() == 2
-                        else None,
-                    }
+                    _metric_row(snapshot, cutoff, cohort_status, subgroup, group)
                 )
     return pd.DataFrame(rows), pd.concat(decisions, ignore_index=True)
 

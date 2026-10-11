@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import joblib
 import numpy as np
@@ -24,7 +25,7 @@ from reseller_churn.config import (
     TRAINING_SNAPSHOTS,
     model_configuration,
 )
-from reseller_churn.data import KEYS, date, require_columns, unique_ids
+from reseller_churn.data import KEYS, DateLike, date, require_columns, unique_ids
 
 
 def validate_features(frame: pd.DataFrame) -> pd.DataFrame:
@@ -63,10 +64,14 @@ def validate_features(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+class ProbabilityEstimator(Protocol):
+    def predict_proba(self, frame: pd.DataFrame) -> np.ndarray: ...
+
+
 @dataclass
 class FixedEnsemble:
-    models: tuple
-    configuration: dict
+    models: tuple[ProbabilityEstimator, ...]
+    configuration: dict[str, object]
 
     def probabilities(self, frame: pd.DataFrame) -> np.ndarray:
         features = validate_features(frame).loc[:, list(FEATURES)]
@@ -75,7 +80,7 @@ class FixedEnsemble:
         )
 
 
-def train(data_path: Path, output: Path, prediction_date) -> Path:
+def train(data_path: Path, output: Path, prediction_date: DateLike) -> Path:
     if Path(output).exists():
         raise FileExistsError("Model output already exists; choose a new directory.")
     data = validate_features(pd.read_csv(data_path))
