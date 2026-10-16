@@ -3,7 +3,7 @@
 This document owns the detailed debugging evidence and preserves each completed
 experiment under its original configuration. The main feature catalog is in
 [feature_analysis.md](feature_analysis.md); the current result summary is in
-[evaluation_metrics.md](evaluation_metrics.md#final-test-evaluation--2026-10-11).
+[evaluation_metrics.md](evaluation_metrics.md#nested-grouped-revenue-comparison--2026-10-15).
 
 Completed investigations, in order:
 
@@ -12,6 +12,11 @@ Completed investigations, in order:
 3. [CompanyX data discovery and 11 candidate features](#companyx-feature-discovery-and-usefulness-experiment--2026-10-10).
 4. [Seven versus ten across three models and both validations](#seven-versus-ten-features-across-models-and-validation-methods--2026-10-10).
 5. [Authorized final testing evaluation](#final-testing-evaluation--2026-10-11).
+6. [Additional RF7 evaluation on the inspected October cohort](evaluation_metrics.md#additional-rf7-evaluation-on-the-inspected-final-cohort--2026-10-14), completed on 2026-10-14.
+7. [SubTotal versus TotalDue grouped comparison](#completed-grouped-revenue-comparison--2026-10-14).
+8. [Retrospective October revenue comparison](#authorized-retrospective-october-extension--2026-10-15).
+9. [Repeated nested grouped revenue study](#completed-nested-grouped-study--2026-10-15).
+10. [Held-out SHAP explanations](#completed-held-out-shap-analysis--2026-10-16).
 
 The development comparison completed 154 fits with 39 focused tests passing.
 The subsequent authorized final evaluation refitted five boosting models,
@@ -20,7 +25,8 @@ The user froze grouped-development thresholds for this final test, with 30%
 primary and 20%, 40%, 50% secondary. The October outcomes are now inspected
 and must not be called an untouched test in further research. No production
 model promotion has been performed. Earlier sections preserve their original
-development settings, results, and verification records.
+development settings, results, and verification records. The latest nested
+study excludes October data and does not establish reliable TotalDue dominance.
 
 ## Original April 2013 missed-churn diagnosis
 
@@ -1067,3 +1073,536 @@ and cutoffs, confusion counts, average precision, ROC-AUC, and output hashes.
 Final preparation and source-reconciled evaluation completed successfully.
 The full regression suite, supported full pipeline, parameter tuning, and any
 post-test model/threshold changes were not run.
+
+## SubTotal versus TotalDue: planned grouped comparison — 2026-10-14
+
+Status: protocol recorded before implementation or training; matched data
+preparation and the grouped comparison are complete. Work remains on
+`experimental_research`;
+the fixed pipeline on `main` is unchanged.
+
+### Question and controlled change
+
+Does replacing merchandise spending with the full order amount improve
+development recall for seven-feature Random Forest or ten-feature histogram
+gradient boosting under the existing 30% per-fold precision constraint?
+
+Compare four configurations: each architecture with SubTotal and with TotalDue.
+The forest uses `PRUNED_FEATURES`; boosting adds the three discount features
+defined in `debug/build_companyx_features.py`. Replace only `revenue_3m` and
+`revenue_12m` with sums of TotalDue in the alternative. Preserve column order,
+all other values, eligibility, labels, and account/snapshot populations.
+Category-share denominators remain SubTotal, and discount formulas remain
+unchanged. Do not add tax/freight ratios or tune model settings in this experiment.
+Interpret revenue-definition differences within each architecture; differences
+between architectures also include their different feature sets.
+
+### Sources and preparation safeguards
+
+Use the saved `results/debugging/companyx_features/development_features.csv`
+as the baseline, checking its recorded input hash before use. Use accepted IDs
+from `datasets/orders_clean.csv` to define the order population. Read CompanyX
+order headers through the existing read-only helper, restricted to orders
+strictly before 2013-04-01, the latest feature snapshot in this experiment.
+Extract order ID, reseller ID, order date, SubTotal, TaxAmt, Freight, and TotalDue.
+Do not extract October test outcomes or build new final-test labels.
+
+Require unique header IDs, complete matching accepted historical orders, matching
+reseller/date/subtotal values, and finite positive accepted amounts. Check
+`TotalDue = SubTotal + TaxAmt + Freight` within rounding tolerance. Save the
+extracted historical headers and their hashes under a new experiment directory.
+Aggregate only orders in each snapshot's half-open three- and twelve-month
+history windows; no recent orders means zero recent revenue. Verify exact parity
+for labels, keys, and every unchanged feature, including missing discount values.
+Retain the documented assumption that order-time monetary facts were available
+at prediction time; a later database extract does not prove recording chronology.
+
+### Training and validation
+
+At the user's request, use grouped validation only; temporal validation is
+outside this experiment. Match the existing seven-versus-ten grouped setup:
+`StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)`, grouped by
+`StoreID`. This is stratified grouped validation, not plain `GroupKFold`.
+
+Use all 1,375 development rows from July/October 2012 and January/April 2013,
+covering 422 reseller identities and 212 churn cases. Sort by snapshot and
+StoreID before generating the splits, matching the previous implementation.
+Generate folds once and use identical memberships for all four configurations.
+Keep every snapshot of a reseller together; require disjoint training/validation
+reseller identities, both classes on each side, and exactly one held-out
+prediction per development row per configuration.
+
+These folds evaluate unseen reseller identities across mixed historical periods.
+They do not enforce training-label availability by each held-out snapshot and
+must not be interpreted as later-period performance estimates. Historical
+feature windows still exclude information at or after their own snapshot.
+Reuse `ModelFactory` and the baseline settings used in the seven-versus-ten
+comparison:
+
+- Forest: 300 trees, unlimited depth, minimum leaf size 1, `max_features="sqrt"`,
+  training-only median imputation with missing indicators.
+- Boosting: learning rate 0.1, 100 iterations, 31 maximum leaf nodes, minimum
+  leaf size 20, L2 regularization 0, early stopping disabled, native missing values.
+- Both: balanced sample weights computed from each training fold's labels;
+  seeds 42, 78, 88, 1034, and 2026; average predicted probabilities across seeds.
+
+This requires 100 fits: two architectures × two definitions × five folds × five
+seeds. No tuning, resampling, additional feature search, or final refitting.
+
+### Selection and reporting
+
+For each of the four ensemble configurations, independently choose one common
+cutoff across all five folds using `evaluation/selection.py`: search 0.00–1.00 in
+0.01 steps, maximize mean fold recall with precision at least 0.30 in every fold,
+and break ties by worst-fold recall, mean precision, then stable selection ID.
+Report infeasible configurations rather than relaxing the floor.
+
+Save fold memberships, individual-seed and ensemble probabilities, all cutoff
+tradeoffs, selected cutoffs, and matched account-level decision changes. Report
+per-fold and pooled confusion counts, precision, recall, F1, alert counts/rates,
+average precision, and ROC-AUC; distinguish fold means from pooled scores.
+Apply each ensemble's selected cutoff to recent-active and inactive subgroups
+using the existing three-month order-count definition. Report seed variation
+at the corresponding ensemble cutoff without choosing a preferred seed.
+Also compare both definitions at the SubTotal ensemble's selected cutoff as a
+secondary diagnostic, separating score changes from cutoff-selection changes.
+
+Use a new `results/debugging/subtotal_vs_totaldue/<run_id>/` directory and reject
+existing output directories. Record protocol, input/code hashes, parameters,
+runtime versions, fitted-model count, and checks. Preserve earlier experiments.
+Verify fold memberships and baseline consistency against saved seven-versus-ten
+grouped predictions;
+investigate differences rather than assuming historical numerical parity.
+
+Compare recall changes alongside false alerts, fold/subgroup variation, and
+ranking quality. These are exploratory comparisons on previously inspected
+development labels, not significance claims or independent test estimates.
+Do not promote a replacement into `main` from this experiment alone.
+
+### Completed matched data preparation — 2026-10-14
+
+`debug/prepare_subtotal_totaldue.py` implements the source reconciliation and
+paired revenue construction above. Run it with a new ID:
+
+```bash
+bi_venv/bin/python debug/prepare_subtotal_totaldue.py --run-id <new-run-id>
+bi_venv/bin/python -m pytest -q debug/test_prepare_subtotal_totaldue.py
+```
+
+The completed run is under
+`results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01/`.
+It contains the raw historical headers, accepted headers, SubTotal and TotalDue
+development CSVs, a copy of the protocol, and a hashed preparation manifest.
+CompanyX returned 1,892 reseller orders before 2013-04-01; 1,886 are accepted,
+and the six established excluded orders remain excluded. Both datasets have
+1,375 rows, 422 reseller identities, and 212 churn cases. TotalDue changes
+three-month revenue for 1,221 rows and twelve-month revenue for all 1,375 rows.
+
+All 13 focused tests passed, covering half-open history boundaries, zero recent
+revenue, unchanged missing discount values, source mismatches, missing/duplicate
+orders, invalid amounts, and overwrite protection. The real-data preparation
+passed baseline hash/count checks, source reconciliation, and SubTotal
+reconstruction. A separate saved-artifact check confirmed exact full baseline
+parity, unchanged-column parity between variants, and every output hash.
+No models were fitted during preparation and no October test outcomes were
+accessed. The subsequent grouped comparison is recorded below.
+
+### Completed grouped revenue comparison — 2026-10-14
+
+The runner `debug/compare_subtotal_totaldue.py` completed all 100 planned fits
+under `results/debugging/subtotal_vs_totaldue/revenue-comparison-20261014-01/`.
+Its shared fold memberships match the earlier seven-versus-ten grouped run
+exactly. Reproduced SubTotal ensemble scores differ from saved scores by at
+most 3.34e-16 for forest and 1.12e-16 for boosting. All four configurations
+meet the 30% precision floor in every fold at their selected cutoffs.
+
+| Architecture / inputs | Amount | Cutoff | Mean fold recall | Mean fold precision | Caught cases | False alerts | Missed cases |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random Forest / seven | SubTotal | 0.26 | 75.55% | 34.47% | 160 | 318 | 52 |
+| Random Forest / seven | TotalDue | 0.29 | 71.78% | 36.31% | 152 | 277 | 60 |
+| Histogram boosting / ten | SubTotal | 0.06 | 75.51% | 33.45% | 160 | 324 | 52 |
+| Histogram boosting / ten | TotalDue | 0.08 | 73.17% | 34.51% | 155 | 300 | 57 |
+
+Counts are summed account/snapshot cases across folds, not distinct identities.
+Forest loses 3.77 percentage points of mean recall, misses eight previously
+caught cases, and removes 41 false alerts. Boosting loses 2.35 points, newly
+catches two cases but misses seven previously caught cases, and removes a net
+24 false alerts. Forest recall falls in all five folds; boosting recall is
+unchanged in two and falls in three. Mean fold average precision falls from
+0.4722 to 0.4712 for forest and from 0.4827 to 0.4695 for boosting.
+
+The shared-cutoff diagnostic shows why constrained selection matters. At 0.26,
+TotalDue forest catches 159 cases with 317 false alerts, versus SubTotal's
+160 / 318. At 0.06, TotalDue boosting catches 160 with 319 false alerts, versus
+SubTotal's 160 / 324. However, TotalDue precision in fold 2 is 28.87% for forest
+and 29.17% for boosting at these cutoffs, so neither shared-cutoff alternative
+is eligible under the frozen rule. These diagnostics do not replace the
+independently selected results.
+
+At selected cutoffs, pooled recently active recall falls from 58.68% (71/121)
+to 52.07% (63/121) for forest and 55.37% (67/121) for boosting. Active false
+alerts fall from 256 to 216 for forest and 263 to 240 for boosting. Both retain
+low active precision (21–23%). Individual-seed mean recall differences at each
+variant's ensemble-selected cutoff are negative for all five seeds; these
+diagnostics do not establish separate seed-specific precision feasibility.
+
+Keep SubTotal under this experiment's recall-first objective: replacement with
+TotalDue does not improve constrained recall for either architecture. This
+does not test added tax/freight features, tuning, alternate floors, or new
+independent cohorts. October outcomes were not accessed, no final model was
+refitted, and no changes were promoted to `main`.
+
+Commands (use a new comparison run ID):
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/compare_subtotal_totaldue.py --preparation results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01 --run-id <new-comparison-run-id>
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/verify_subtotal_totaldue_outputs.py --output results/debugging/subtotal_vs_totaldue/revenue-comparison-20261014-01
+```
+
+Saved reports include seed/ensemble probabilities, fold memberships/counts,
+all threshold tradeoffs, selections, fold/pooled/subgroup metrics, seed metrics
+at ensemble cutoffs, shared-cutoff diagnostics, matched decisions, and hashes.
+The initial focused suite passed 37 tests (seven new runner tests plus existing
+preparation, model smoke, selection, and metric checks). Two additional checks
+for changed input hashes and modified saved metrics were then added; all nine
+runner tests passed. No full development pipeline or full regression suite ran.
+The saved-output verifier passed input/code/output hashes, fold separation and
+coverage, seed averaging, recomputed cutoff grids/selections, all reported
+fold/pooled/subgroup/seed metrics, shared-cutoff diagnostics, and paired decisions.
+
+### Authorized retrospective October extension — 2026-10-15
+
+The user requested evaluation on the final test set after the grouped revenue
+comparison. Freeze all four configurations and their existing 30% development
+rules: RF7 SubTotal 0.26, RF7 TotalDue 0.29, GB10 SubTotal 0.06, GB10 TotalDue
+0.08. No new floors or cutoff search using October outcomes are included.
+Refit each configuration on its matched 1,375 development rows with the same
+parameters, balanced training weights, preprocessing, and five seeds (20 fits).
+
+Use the saved October feature rows as the SubTotal baseline, and replace only
+the two revenue columns for TotalDue using accepted orders strictly before
+2013-10-01. Save protocol, models, scores, decisions, and a checkpoint before
+loading the existing 492-account/46-churner labels. Reconcile historical source
+amounts and reproduce the original GB10 and additional RF7 SubTotal predictions.
+The entry point is `debug/evaluate_revenue_final_test.py`; it rejects existing
+evaluation/model directories and never extracts outcome-window orders.
+
+This authorization covers retrospective reuse of an already-inspected cohort,
+not an independent final evaluation. Preserve all existing artifacts, disclose
+prior inspection, report overall and recent-activity metrics, and do not select
+new methodology or promote a replacement to `main` from these October results.
+
+The completed extension is under
+`results/final_evaluation/revenue-final-retrospective-20261015-02/`, with four
+five-model bundles under `models/provisional/revenue-final-retrospective-20261015-02/`.
+All 20 refits completed. The historical query returned 2,729 headers; 2,723
+accepted orders were reconciled. SubTotal RF7 scores reproduce the previous
+evaluation within 2.23e-16; SubTotal GB10 scores reproduce exactly.
+
+| Model | Amount | Frozen cutoff | October recall | October precision | Caught | Missed | False alerts |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RF7 | SubTotal | 0.26 | 91.30% | 26.42% | 42 | 4 | 117 |
+| RF7 | TotalDue | 0.29 | 89.13% | 28.67% | 41 | 5 | 102 |
+| GB10 | SubTotal | 0.06 | 93.48% | 28.48% | 43 | 3 | 108 |
+| GB10 | TotalDue | 0.08 | 93.48% | 30.07% | 43 | 3 | 100 |
+
+TotalDue boosting catches the same churners and removes eight false alerts,
+all from recently active accounts. Active recall remains 72.73% (8/11), and
+active precision rises only from 7.55% to 8.16% (90 false alerts). TotalDue forest
+newly catches one churner and newly misses two: net one fewer caught, with
+15 fewer false alerts. Its active recall falls from 72.73% (8/11) to 63.64%
+(7/11), with false alerts falling from 109 to 94; active precision remains
+6.93%. Neither forest variant meets 30% overall test precision. TotalDue
+boosting just exceeds 30% on this cohort; that is not a guarantee elsewhere.
+
+These October findings differ from grouped development, where TotalDue reduced
+recall for both models. Preserve both results and their populations. The
+retrospective boosting improvement is descriptive evidence, not grounds for a
+new independent-performance claim or automatic replacement on `main`.
+
+The first attempt (`revenue-final-retrospective-20261015-01`) remains preserved.
+It fitted 20 models but stopped before its label-loading stage because default
+CSV parsing changed 15 GB10 baseline scores. A focused reproduction using the
+same saved models showed round-trip feature parsing restored all original GB10
+scores exactly. The corrected run uses round-trip parsing for scoring and saved
+scores, with a regression test for serialized feature precision. No labels were
+used to diagnose or repair this parsing issue and no settings/cutoffs changed.
+
+The initial focused suite passed 24 tests. After the parsing correction, all
+eight extension tests passed. The saved-output verifier passed input/code/output
+and model hashes, checkpoint chronology, model-reload scores, seed means,
+fixed-cutoff decisions, exact unchanged-feature parity, matched labels, and all
+12 overall/subgroup metric rows. Syntax and diff checks passed; the full
+regression suite and any independent final evaluation were not run.
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/evaluate_revenue_final_test.py --preparation results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01 --comparison results/debugging/subtotal_vs_totaldue/revenue-comparison-20261014-01 --run-id <new-retrospective-run-id>
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/verify_revenue_final_outputs.py --output results/final_evaluation/revenue-final-retrospective-20261015-02
+```
+
+## Nested grouped revenue study: protocol — 2026-10-15
+
+Status: protocol recorded before implementation and execution; the study is now
+complete. The user defines better
+as higher recall without lower precision, or higher precision without lower
+recall, at the 30% target floor. Compare SubTotal and TotalDue within RF7 and
+GB10, preserving the prepared datasets, feature sets, model parameters, balanced
+training weights, five model seeds, and native/training-only missing handling.
+No October features, predictions, or outcomes enter this study.
+
+Use three predefined split repeats (42, 78, 88), each with five outer and five
+inner StratifiedGroupKFold splits by StoreID. Keep all reseller snapshots
+together and use identical splits for both models and both revenue definitions.
+Inner folds contain only outer-training identities. Select one cutoff per outer
+fold/configuration using mean inner fold recall, precision >=0.30 in every inner
+fold, and the existing tie rule/grid. Refit on all outer-training rows and score
+the untouched outer fold with that cutoff. Do not retune using outer outcomes.
+Each repeat requires 600 fits: four configurations × five outer folds ×
+(five inner fits plus one outer refit) × five model seeds. Total: 1,800 fits.
+Run one complete repeat first to check execution and measure runtime, then
+continue the remaining predefined repeats without changing the protocol.
+
+Report selected threshold and inner selection status for every outer fold,
+alongside recall, precision, confusion counts, alert rate, ranking scores,
+30% outer-floor feasibility, and recent-activity subgroup results. Infeasible
+inner selections remain explicit with no fallback cutoff or alert decision.
+Save their outer scores, but do not create a pooled operating metric from an
+incomplete repeat. A pooled repeat report uses its five different frozen outer
+cutoffs; record this as variable thresholds, not a single deployable threshold.
+Report threshold ranges and medians only as descriptive stability diagnostics.
+
+Summarize equal-weight means of repeat-level pooled recall/precision, retaining
+per-repeat and per-fold metrics and floor failures. Estimate paired uncertainty
+by resampling the 422 reseller identities with replacement, retaining all their
+snapshots and repeat predictions together. Use 5,000 deterministic bootstrap
+draws (seed 20261015), with no model refitting or threshold reselection in the
+bootstrap. Report 95% descriptive intervals and conservative 98.75% marginal
+intervals for the four metric differences (two models × recall/precision) as
+an approximate multiplicity adjustment. These intervals condition on fitted
+models/cutoffs; overlapping training sets and three split repeats do not supply
+independent replications or measure full training-procedure uncertainty.
+
+For a conservative development recommendation, require complete feasible inner
+selections, pooled outer precision >=0.30 for both variants in every repeat,
+nonnegative adjusted lower interval bounds for both metric differences, and
+at least a one-percentage-point mean gain in recall or precision. The one-point
+minimum is a practical default for this study, not an approved outreach-cost
+target. Report any outer-fold floor failures even when pooled floors pass.
+Apply the same symmetric criterion to SubTotal; otherwise classify the result
+as tradeoff or inconclusive. Do not declare equivalence from a nonsignificant
+result. Freeze a separate development cutoff only after this study; do not
+average outer cutoffs into a deployment rule. Independent confirmation still
+needs a new authorized holdout.
+
+Use new directories under `results/debugging/subtotal_vs_totaldue/<run_id>/`,
+with immutable protocol/input/code identities, separate per-repeat reports,
+and a final analysis directory. Completed repeats are verified and preserved
+when continuing; unfinished repeat directories are not overwritten. Retain
+execution timing, individual/mean probabilities, memberships, inner cutoff
+grids/selections, and all outer decisions.
+
+### Completed nested grouped study — 2026-10-15
+
+`debug/nested_revenue_comparison.py` completed all 1,800 fits under
+`results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01/`.
+The first repeat completed in 376 seconds and passed saved-output verification
+before the other two frozen repeats ran (339 and 340 seconds). Completed repeat
+files were preserved and checked on resume. All 60 inner selections were
+feasible; no fallback cutoffs were used. October inputs/outcomes were excluded.
+
+The following are equal-weight means of three repeat-level pooled operating
+metrics. Each repeat pools decisions from its five independently selected outer
+cutoffs; these are not metrics at one averaged threshold or on averaged-repeat
+probabilities. Threshold ranges cover all 15 outer fits per configuration, and
+medians are descriptive only.
+
+| Model | Amount | Mean repeat pooled recall | Mean repeat pooled precision | Threshold range | Median threshold | Outer folds meeting 30% precision |
+| --- | --- | ---: | ---: | --- | ---: | ---: |
+| RF7 | SubTotal | 73.11% | 34.53% | 0.18–0.35 | 0.28 | 14/15 |
+| RF7 | TotalDue | 72.48% | 34.38% | 0.18–0.35 | 0.28 | 14/15 |
+| GB10 | SubTotal | 75.63% | 33.47% | 0.04–0.23 | 0.06 | 13/15 |
+| GB10 | TotalDue | 75.63% | 34.25% | 0.04–0.24 | 0.07 | 12/15 |
+
+Every repeat's pooled precision exceeds 30%, but outer-fold failures remain.
+Boosting's TotalDue recall difference is -3.30, +4.72, and -1.42 percentage
+points in repeats 42, 78, and 88; the equal mean does not establish unchanged
+recall in each split. Its precision difference is -0.36, +0.79, and +1.91 points.
+Forest's recall difference is -0.94, 0.00, and -0.94 points, with precision
+slightly lower for TotalDue in every repeat.
+
+The paired intervals below concern TotalDue minus SubTotal, in percentage
+points, with 5,000 reseller-cluster draws preserving snapshots and repeat
+predictions together. They condition on the saved fitted models/cutoffs and
+do not measure full retraining/reselection uncertainty. The 98.75% marginal
+intervals are an approximate adjustment for four comparisons (two architectures
+× two metrics); they are not independently calibrated joint confidence regions.
+
+| Model | Metric difference | Mean difference | 95% interval | Adjusted 98.75% interval |
+| --- | --- | ---: | --- | --- |
+| RF7 | Recall | -0.63 | -1.41 to 0.00 | -1.64 to +0.29 |
+| RF7 | Precision | -0.15 | -0.56 to +0.26 | -0.67 to +0.36 |
+| GB10 | Recall | 0.00 | -1.80 to +1.76 | -2.30 to +2.23 |
+| GB10 | Precision | +0.78 | +0.04 to +1.57 | -0.16 to +1.78 |
+
+Neither architecture satisfies the frozen dominance criterion. Boosting has a
+small observed precision benefit at equal mean recall, but it is below the
+one-point practical minimum; uncertainty permits recall loss, and the adjusted
+precision interval includes zero. Forest's point estimates favor SubTotal, but
+the adjusted intervals do not establish strict superiority in both metrics.
+Both conclusions are inconclusive under this criterion, not equivalence or
+proof that any observed change is luck. There is no reliable development
+evidence to replace SubTotal. No new final cutoff/model was selected or promoted.
+
+For review, `report/outer_fold_results.csv` consolidates all 60 overall fold rows
+with repeat, selected threshold, recall, precision, floor status, and confusion
+counts; `report/outer_subgroup_results.csv` retains all 180 subgroup rows.
+The report manifest hashes its source repeat files and exports. `analysis/`
+contains all selections, threshold stability, repeat pooled metrics, paired
+intervals, and comparison summary. Individual/mean inner/outer scores, every
+inner threshold grid, memberships, and completion hashes remain per repeat.
+
+All 16 focused tests passed, including nested identity isolation, precision
+tie-breaking, infeasible selections, changed input/report safeguards, and paired
+bootstrap checks. Duplicating identical repeats does not artificially narrow
+the cluster intervals. `debug/verify_nested_revenue_outputs.py --require-complete`
+passed all three repeats: input/code/output hashes, regenerated nested
+memberships, complete seed coverage/means, independently reconstructed inner
+confusion grids, selected cutoffs, held-out populations/decisions/metrics,
+pooled results, threshold summaries, and reproduced bootstrap intervals.
+Syntax and diff checks passed. The full regression suite and independent
+holdout confirmation were not run.
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/nested_revenue_comparison.py --preparation results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01 --run-id <new-nested-run-id> --first-repeat-only
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/nested_revenue_comparison.py --preparation results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01 --run-id <same-nested-run-id> --resume
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/verify_nested_revenue_outputs.py --output results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01 --require-complete
+```
+
+## Held-out SHAP explanations: protocol — 2026-10-16
+
+Explain the ten-feature SubTotal boosting ensembles from nested repeat 42.
+The nested study saved predictions rather than fitted outer models, so reproduce
+its five outer ensembles (25 refits), check score parity, and preserve model
+bundles separately. Explain only the 1,375 held-out development rows; no October
+features or outcomes enter the analysis. Retain each fold's already-selected
+cutoff and classify its examples without further selection or tuning.
+
+SHAP 0.53.0, slicer 0.0.8, and tqdm 4.70.1 are optional research dependencies
+installed under ignored `results/debugging/shap_analysis/runtime-shap-0.53.0/`.
+The existing modeling environment is unchanged. A compatibility probe with
+TreeExplainer probability output on eight native-missing GB10 rows failed
+reconstruction (maximum error 0.01558); the precise library incompatibility was
+not diagnosed. Those TreeExplainer attributions are excluded from reporting.
+
+Use PermutationExplainer calling each seed model's `predict_proba` directly,
+with 20 uniformly sampled rows from its outer-training fold as the shared
+reference, sampling/permutation seed 42 + fold, and max_evals=210. Preserve
+native missing values. This approximates probability-scale Shapley contributions;
+verify every seed's baseline plus contributions reconstructs its prediction
+within 1e-8, and that its baseline equals mean background predicted probability.
+Average the five seed bases and contributions to explain the mean probability;
+do not average raw log-odds explanations and transform them afterward.
+
+The walkthrough is the highest-score recently active false alert (ties by
+StoreID/snapshot). Also show the first StoreID/snapshot for caught churners,
+missed churners, and false alerts. These purposeful examples are not a
+representative performance sample. Make probability waterfall plots and held-out
+summary/importance plots; report variation by fold and error category. Repeat the
+walkthrough with max_evals=420 and permutation seed 78 to diagnose approximation
+sensitivity. Small backgrounds, dependent features, and varying fold-specific
+references limit interpretation; interventional masking can form implausible
+feature combinations. SHAP is not evidence of causation, probability calibration,
+or better model performance. Existing cutoffs and main remain unchanged.
+
+### Completed held-out SHAP analysis — 2026-10-16
+
+The run `results/debugging/shap_analysis/shap-gb10-heldout-20261016-01/`
+reproduced and explained all 1,375 held-out account/snapshot cases from repeat
+42. Its 25 refitted models are saved under
+`models/provisional/shap-gb10-heldout-20261016-01/`. This is an explanation of
+the existing validation models, not a new performance evaluation or a change
+to the supported pipeline. The analysis completed in 225 seconds, with maximum
+seed reconstruction error 5.56e-16. Reference backgrounds contain only training
+identities, and every ensemble score matches the earlier nested-study score.
+
+Start with reseller 752 at snapshot 2012-07-01, held out in outer fold 5. The
+model score is 0.98616, above its frozen 0.06 alert cutoff, but actual churn is
+zero: this is a false alert. The reference baseline is 0.25235, the mean model
+prediction over the fold's 20 background cases, not the observed churn rate.
+Approximate SHAP contributions explain the 73.38-percentage-point increase:
+
+| Feature | Reseller value | Contribution to model score, percentage points |
+| --- | ---: | ---: |
+| Bike revenue share | 99.94% | +31.26 |
+| Clothing revenue share | 0.064% | +8.51 |
+| Days since last order | 62 | +7.22 |
+| Recent weighted discount change | 0.34961 | +6.70 |
+| Discounted line share, twelve months | 0.17391 | +5.21 |
+| Twelve-month merchandise spending | 62,333.47 | +4.94 |
+| Three-month merchandise spending | 3,304.44 | +4.73 |
+| Recent weighted discount | 0.34961 | +3.84 |
+| Accessory revenue share | 0% | +1.09 |
+| Recent order count | 1 | -0.12 |
+
+The largest term is the model's attribution to near-exclusive bike purchasing
+relative to this reference. It does not establish that buying bikes causes
+churn; category shares and spending are related, and feature masking mixes
+their values. The high score is also not a validated 98.6% individual risk.
+The waterfall explains a wrong decision, rather than making it correct.
+
+Additional purposeful examples are saved with their original fold cutoffs:
+
+| Example | StoreID | Snapshot | Score | Cutoff | Actual churn |
+| --- | ---: | --- | ---: | ---: | ---: |
+| Caught churner | 306 | 2012-07-01 | 0.84660 | 0.06 | 1 |
+| Missed churner | 304 | 2013-04-01 | 0.03824 | 0.07 | 1 |
+| False alert | 292 | 2012-07-01 | 0.71540 | 0.10 | 0 |
+
+Across all held-out cases, mean absolute probability contributions rank recent
+spending first (8.48 percentage points), bike share second (5.81), recency third
+(5.04), annual spending fourth (4.82), and clothing share fifth (4.43). Recent
+order count is small (0.08 points) in these fitted models. These quantities
+measure attribution magnitude, not accuracy improvement or causal importance;
+they do not justify dropping a feature without a separate controlled comparison.
+Recent spending ranks first in four folds; bike share ranks first in fold 4.
+Fold/error-category tables retain that variation. The pooled summary combines
+different held-out models and fold-specific reference backgrounds, not one
+deployment model. Cases can repeat reseller identities at different snapshots.
+
+The walkthrough's largest attribution change with a different permutation seed
+and doubled evaluation budget is 1.44 probability percentage points. This is
+an approximation-sensitivity diagnostic, not a confidence interval, and does
+not measure sensitivity to different background samples. Additive reconstruction
+checks establish arithmetic consistency, not exact or causal attributions.
+
+The run includes seed/ensemble contributions, feature values, example metadata,
+background rows, reconstruction checks, importance by fold/error category,
+sampling diagnostics, and plots. Start with
+[the walkthrough waterfall](../results/debugging/shap_analysis/shap-gb10-heldout-20261016-01/plots/walkthrough_waterfall.png);
+then inspect [global importance](../results/debugging/shap_analysis/shap-gb10-heldout-20261016-01/plots/global_importance.png)
+and [the beeswarm](../results/debugging/shap_analysis/shap-gb10-heldout-20261016-01/plots/global_beeswarm.png).
+The [manifest](../results/debugging/shap_analysis/shap-gb10-heldout-20261016-01/manifest.json)
+records source/model/code/output hashes and runtime versions.
+
+All four focused tests passed, including native-missing probability explanations,
+incorrect reconstruction rejection, threshold equality, and deterministic case
+selection. Saved-artifact verification passed score reproduction, seed means,
+baseline/background agreement, per-seed and ensemble reconstruction, frozen
+thresholds/error categories, and recomputed importance tables. The walkthrough,
+global bar plot, and beeswarm were visually inspected. No October data or model
+search was used. The full regression suite was not rerun.
+
+Install the optional research packages without replacing existing model libraries:
+
+```bash
+bi_venv/bin/python -m pip install --target results/debugging/shap_analysis/runtime-shap-0.53.0 --no-deps shap==0.53.0 slicer==0.0.8 tqdm==4.70.1
+PYTHONPATH=results/debugging/shap_analysis/runtime-shap-0.53.0 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/explain_churn_shap.py --preparation results/debugging/subtotal_vs_totaldue/revenue-preparation-20261014-01 --nested results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01 --run-id <new-shap-run-id>
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python debug/verify_churn_shap_outputs.py --output results/debugging/shap_analysis/shap-gb10-heldout-20261016-01
+```
+
+Other dependencies use the existing project environment; the isolated install
+report is retained alongside the research packages. New explanation/model
+directories are required. Verification needs the saved models and base project
+libraries, but does not import SHAP or refit. See the official
+[PermutationExplainer documentation](https://shap.readthedocs.io/en/stable/generated/shap.PermutationExplainer.html)
+for the approximation and additivity properties.

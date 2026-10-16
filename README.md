@@ -15,7 +15,7 @@ and threshold choices remain provisional.
 - [Evaluation metrics](docs/evaluation_metrics.md): metric explanations, latest
   completed-run results, false alerts, and evaluation limitations.
 - [Debugging and feature experiments](docs/debugging.md): missed-churn diagnosis,
-  CompanyX feature discovery, and seven-versus-ten comparisons under both validations.
+  CompanyX feature discovery, feature comparisons, and the nested grouped revenue study.
 - [Pipeline execution](pipeline/README.md): supported preparation/development
   workflow, historical diagnostics, and optional commands.
 - [Controlled validation-strategy experiment](comparisons/validation_strategy_experiment.md):
@@ -25,7 +25,14 @@ and threshold choices remain provisional.
 
 ## Current development findings
 
-The latest completed development experiment compares seven purchasing features against
+The latest completed study compares SubTotal and TotalDue purchasing amounts
+for seven-feature Random Forest and ten-feature gradient boosting using repeated
+nested grouped validation. It found **no reliable TotalDue improvement** under
+the frozen recall/precision criterion. No revenue-feature replacement or new
+deployment cutoff was selected. See the
+[nested results and threshold reports](docs/evaluation_metrics.md#nested-grouped-revenue-comparison--2026-10-15).
+
+The earlier seven-versus-ten experiment compares seven purchasing features against
 those seven plus three discount features across Logistic Regression, Random
 Forest, and histogram gradient boosting. It uses temporal validation and five
 stratified folds grouped by reseller, maximizing mean recall with **precision
@@ -54,7 +61,13 @@ the high overall recall therefore needs subgroup context. The
 [debugging report](docs/debugging.md#recommended-follow-up--not-yet-executed)
 records the proposed follow-up diagnosis and need for a new independent holdout.
 
-Development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
+Subsequent RF7 and revenue-variant evaluations reuse these inspected October
+outcomes. TotalDue boosting reduced false alerts on that cohort, but the nested
+development study did not establish reliable improvement. These retrospective
+comparisons do not constitute new independent tests. See the
+[October revenue comparison](docs/evaluation_metrics.md#october-revenue-comparison-on-inspected-outcomes--2026-10-15).
+
+Development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#seven-versus-ten-feature-comparison).
 The ten-feature comparison runs through root `debug/`; the supported pipeline
 still registers RFM, Pruned, Reduced, and Full. See the
 [debug execution guide](pipeline/README.md#debugging-and-feature-experiments).

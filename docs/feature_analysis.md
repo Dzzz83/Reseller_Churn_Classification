@@ -132,9 +132,16 @@ Random Forest ensemble recall under both methods. Individual forest-seed
 benefits vary. The discount bundle's value is therefore architecture-dependent;
 no isolated per-discount-feature contribution has been established.
 
-See [latest metrics](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+See [seven-versus-ten metrics](evaluation_metrics.md#seven-versus-ten-feature-comparison)
 for scores and costs, and [debugging.md](debugging.md) for all 11 candidate
 definitions, associations, paired prediction changes, and experiment limits.
+
+The later [held-out SHAP analysis](debugging.md#completed-held-out-shap-analysis--2026-10-16)
+explains GB10 SubTotal predictions from nested grouped repeat 42 using
+training-fold references. It describes how these models use the features,
+including a high-score false alert driven mainly by bike share. Attribution
+importance is not evidence of incremental predictive benefit, causation, or a
+reason to remove correlated features without a controlled comparison.
 
 ## Historical feature-set comparison
 

@@ -1,6 +1,7 @@
 # Project context
 
-Reviewed against the working tree and final-evaluation artifacts on 2026-10-11. This document owns the project
+Repository overview reviewed on 2026-10-11; research status updated against saved
+revenue-study results on 2026-10-15. This document owns the project
 overview and current research status. Database provenance belongs in
 [data_analysis.md](data_analysis.md); feature definitions and measured evidence
 belong in [feature_analysis.md](feature_analysis.md).
@@ -109,6 +110,17 @@ selection and refit path. Model settings live in
 
 ### Latest feature experiments and research direction
 
+The latest study compares SubTotal and TotalDue for seven-feature Random Forest
+and ten-feature boosting with three repeated nested grouped validations. Inner
+folds select thresholds under the 30% precision rule; outer resellers are held
+out from both training and selection. The 1,800-fit study found no reliable
+dominance under the frozen criterion. Its thresholds vary by outer fold, and
+some outer folds miss the precision floor despite pooled repeat precision above
+30%. See [nested results](evaluation_metrics.md#nested-grouped-revenue-comparison--2026-10-15)
+and the [protocol and verification](debugging.md#completed-nested-grouped-study--2026-10-15).
+This study uses grouped validation only at the user's request; the supported
+runner's temporal workflow and earlier results remain unchanged.
+
 The [debugging record](debugging.md) documents the RFM missed-churn diagnosis,
 the seven-feature improvement, CompanyX order-line extraction and 11 candidate
 features, and the completed seven-versus-ten comparison. The latter tests three
@@ -120,7 +132,7 @@ Discounts help gradient boosting under both methods, while seven-feature Random
 Forest retains the highest temporal mean recall in this comparison. Ten-feature
 boosting is a candidate for further focused development, with the seven-feature
 forest retained as a baseline. A model promotion or exclusive architecture
-choice has not been implemented. See [latest measured results](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
+choice has not been implemented. See [the seven-versus-ten results](evaluation_metrics.md#seven-versus-ten-feature-comparison).
 
 The ten-feature set is defined locally in
 [compare_seven_ten_features.py](../debug/compare_seven_ten_features.py). It is
@@ -159,11 +171,27 @@ The primary result is 93.48% recall but 28.48% precision, below its intended
 Among recently active accounts, it catches eight of 11 churners but produces
 98 false alarms. See [final metrics](evaluation_metrics.md#final-test-evaluation--2026-10-11)
 for all four frozen rules and subgroup limitations.
+
+On 2026-10-14, the user requested an additional seven-feature Random Forest
+evaluation on this inspected cohort, using its grouped-development cutoffs.
+Its primary rule catches 42 of 46 churners, misses four, and produces 117 false
+alerts: 91.30% recall and 26.42% precision. The original boosting primary result
+catches one more churner with nine fewer false alerts. See
+[the RF7 results and comparison](evaluation_metrics.md#additional-rf7-evaluation-on-the-inspected-final-cohort--2026-10-14)
+for all four rules and the retrospective evaluation limits.
+
+On 2026-10-15, the authorized revenue comparison reused the same inspected
+labels with four already-selected development cutoffs. TotalDue boosting's
+October false-alert reduction is retrospective evidence; it does not establish
+the reliable dominance sought in the nested development study. See
+[the October revenue results](evaluation_metrics.md#october-revenue-comparison-on-inspected-outcomes--2026-10-15).
+
 The protocol and predictions were checkpointed before outcome
-access; rules were not changed afterward. These October outcomes are now
-inspected, so subsequent model changes need a new independent period for an
-untouched final-performance claim. Existing code continues to exclude this
-snapshot from development. The model remains provisional. Follow
+access in the original boosting evaluation; rules were not changed afterward.
+These October outcomes are now inspected, so subsequent model changes need a
+new independent period for an untouched final-performance claim. Existing code
+continues to exclude this snapshot from development. The model remains
+provisional. Follow
 [Stage 12 instructions](../pipeline/12_final_evaluation/README.md).
 
 ## Execution and maintenance

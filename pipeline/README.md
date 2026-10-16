@@ -114,13 +114,20 @@ source provenance and tracked references.
 
 ## Debugging and feature experiments
 
-The latest completed research uses root `debug/`, separately from the supported
-runner. It compares the seven Pruned features with ten features (Pruned plus
-three discount inputs) using temporal validation and stratified folds grouped
+The earlier seven-versus-ten research uses root `debug/`, separately from the
+supported runner. It compares the seven Pruned features with ten features
+(Pruned plus three discount inputs) using temporal validation and stratified folds grouped
 by StoreID. The ten-feature set is defined in the debug comparison, not in
 the main `FEATURE_SETS` registry; it is not a supported `--feature-sets ten`
 option. These experiments write predictions and reports, not promoted model
 bundles.
+
+The later revenue studies also remain in root `debug/`. The latest uses repeated
+nested grouped validation to compare SubTotal and TotalDue for RF7 and GB10,
+with an inner-selected cutoff reported for every outer fold. Its execution
+commands and verification are in the
+[nested study record](../docs/debugging.md#completed-nested-grouped-study--2026-10-15);
+the supported runner's temporal workflow is unchanged.
 
 | Script in `debug/` | Purpose | Reports under `results/debugging/` |
 | --- | --- | --- |
@@ -183,7 +190,7 @@ synthetic safeguards, giving **47 passing focused tests** with the same command:
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 bi_venv/bin/python -m pytest -q debug tests/step_04_evaluation/test_recall_selection.py tests/step_04_evaluation/test_metrics_consistency.py
 ```
 
-Read [latest metrics](../docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+Read [seven-versus-ten metrics](../docs/evaluation_metrics.md#seven-versus-ten-feature-comparison)
 for results and [debugging.md](../docs/debugging.md) for the full evidence chain.
 Both validation methods reuse inspected development labels; grouped scores
 are not estimates of future-period performance. Protected final evaluation

@@ -38,11 +38,30 @@ rule misses the intended 30% precision requirement. See
 [final metrics and limitations](../../docs/evaluation_metrics.md#final-test-evaluation--2026-10-11)
 and [the full record](../../docs/debugging.md#final-testing-evaluation--2026-10-11).
 
+An additional user-authorized RF7 evaluation completed on 2026-10-14 through
+[evaluate_rf7_final_test.py](../../debug/evaluate_rf7_final_test.py), reusing saved
+October features and already-inspected labels. It refits five forests and applies
+their grouped-development cutoffs; it preserves the original GB10 run. Its
+separate artifacts are under `results/final_evaluation/rf7_grouped_20261014/`.
+See [the RF7 results and comparison](../../docs/evaluation_metrics.md#additional-rf7-evaluation-on-the-inspected-final-cohort--2026-10-14).
+
 The outcome window is [2013-10-01, 2014-04-01), with 46 churners among 492
 accounts. Outcomes are **now inspected**. Do not treat rerunning this cohort or
 using its results to choose new parameters/cutoffs as another untouched test.
 Development guards continue to exclude these outcomes. A future independent
 evaluation requires an appropriate new holdout and frozen methodology.
+
+The user-authorized SubTotal/TotalDue comparison on 2026-10-15 also reuses this
+inspected cohort, applying the four frozen 30% grouped-development rules.
+Its separate entry point is
+[evaluate_revenue_final_test.py](../../debug/evaluate_revenue_final_test.py),
+with completed artifacts under
+`results/final_evaluation/revenue-final-retrospective-20261015-02/`.
+It queries only pre-October history and loads existing labels after checkpointing
+scores; it performs no new protected outcome extraction or threshold selection.
+See [results and limitations](../../docs/evaluation_metrics.md#october-revenue-comparison-on-inspected-outcomes--2026-10-15).
+The verifier `debug/verify_revenue_final_outputs.py --output <completed-directory>`
+checks saved artifacts without training or database queries.
 
 Verification of the completed artifacts does not refit or reveal new outcomes:
 

@@ -1,10 +1,11 @@
 # Evaluation metrics and latest results
 
-Updated on 2026-10-11 against the saved authorized final evaluation and earlier
-development artifacts. The latest evaluation tests the frozen ten-feature
-boosting ensemble on October 2013, with grouped-development rules fixed before
-outcome access. Earlier seven-versus-ten validation experiments retain their
-own protocols below.
+Updated on 2026-10-15 against saved nested grouped revenue-study results and
+the authorized retrospective October revenue comparison. The nested study
+excludes October data and selects thresholds inside inner folds. October RF7
+and revenue comparisons reuse previously inspected outcomes; the original
+ten-feature boosting evaluation froze its rules before first outcome access.
+Each experiment below retains its own protocol, population, and aggregation.
 
 The historical provisional pipeline's latest available evaluation files are dated
 2026-10-07. Its results are recorded separately below because its models and
@@ -136,7 +137,166 @@ and [full final-testing record](debugging.md#final-testing-evaluation--2026-10-1
 **This test is now inspected**; future changes using these results cannot claim
 another untouched evaluation on the same outcomes. The model remains provisional.
 
-## Latest completed experiment: seven versus ten features
+## Additional RF7 evaluation on the inspected final cohort — 2026-10-14
+
+The user explicitly requested final-test results for the seven-feature Random
+Forest using grouped five-fold development rules at 20%, 30%, 40%, and 50%
+precision floors. This additional evaluation uses the same 492 October accounts
+and 46 churners as the original GB10 test. **October outcomes were already
+inspected, including in this chat; this is a retrospective additional-model
+evaluation, not another untouched final test.**
+
+The configuration matches the saved seven-versus-ten experiment: 300 trees,
+unlimited depth, min_samples_leaf=1, max_features=sqrt, training-fitted median
+imputation with missing indicators, balanced training sample weights, and mean
+probabilities across seeds 42, 78, 88, 1034, 2026. Each model refits on all 1,375
+approved development rows. The seven original predictors are retained; discounts
+are excluded.
+
+The cutoffs use only saved grouped development probabilities, maximizing mean
+fold recall subject to the specified minimum precision in every fold, with the
+existing tie-breaking rule. Recomputed development threshold metrics match the
+saved grid. The four rules and refitted October scores were checkpointed before
+loading the existing October labels in this run; prior inspection is disclosed
+and is not undone by this checkpoint. No settings or cutoffs change using test
+outcomes. Metrics below describe the single final cohort, not fold averages.
+
+| Development rule | Score cutoff | Test recall | Test precision | Caught | Missed | False alerts | Total alerts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 20% precision floor | 0.07 | 100.00% | 13.77% | 46 | 0 | 288 | 334 |
+| **30% floor — primary** | **0.26** | **91.30%** | **26.42%** | **42** | **4** | **117** | **159** |
+| 40% precision floor | 0.49 | 65.22% | 44.12% | 30 | 16 | 38 | 68 |
+| 50% precision floor | 0.76 | 36.96% | 70.83% | 17 | 29 | 7 | 24 |
+
+The RF7 primary rule fails its 30% precision floor on the final cohort; the 20%
+rule also falls below its development floor. Primary F1 is 0.410. Among recently
+active accounts, primary recall is 72.73% (8/11), with 109 false alerts and 6.84%
+precision. The original GB10 primary result catches one more churner (43 versus
+42) and generates nine fewer false alerts (108 versus 117). RF7's narrow grouped
+development advantage therefore does not carry through to these primary October
+results. At the 20% rule, RF7 catches one additional churner but generates 115
+additional false alerts. At the 40% rule, GB10 catches three more churners with
+13 fewer false alerts; at the 50% rule, it catches three more with one fewer
+false alert. These comparisons apply each model's own development-selected
+cutoff to the same final cohort. They use inspected outcomes and do not establish
+an independent future-performance claim or select a new deployed model.
+
+The entry point is [evaluate_rf7_final_test.py](../debug/evaluate_rf7_final_test.py):
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bi_venv/bin/python debug/evaluate_rf7_final_test.py --run-id rf7_grouped_20261014
+```
+
+The completed run rejects overwriting its directories. Its
+[protocol](../results/final_evaluation/rf7_grouped_20261014/frozen_protocol.json),
+[metrics](../results/final_evaluation/rf7_grouped_20261014/final_test_metrics.csv),
+[predictions](../results/final_evaluation/rf7_grouped_20261014/final_test_predictions.csv),
+and [manifest](../results/final_evaluation/rf7_grouped_20261014/evaluation_manifest.json)
+are saved separately from the original GB10 artifacts. The ensemble is under
+`models/provisional/rf7_grouped_20261014/ensemble.joblib`. Source hashes, feature
+parity, training-label availability, ensemble reload parity, and confusion-count
+reconciliation were checked during execution. Saved predictions were independently
+checked against the reloaded ensemble and the reported metrics after execution.
+
+## SubTotal versus TotalDue grouped comparison — 2026-10-14
+
+The matched comparison replaces only three- and twelve-month revenue totals
+with TotalDue for seven-feature Random Forest and ten-feature histogram boosting.
+Category shares retain SubTotal denominators. All configurations use the same
+five StratifiedGroupKFold splits by StoreID, baseline parameters, balanced
+training weights, and five-seed mean probabilities. Cutoffs are independently
+selected to maximize mean fold recall with at least 30% precision in every fold.
+All 100 planned fits completed, and reproduced SubTotal scores match historical
+scores within 3.34e-16. No October outcomes were accessed.
+
+| Model | Amount | Cutoff | Mean fold recall | Mean fold precision | Caught cases | False alerts | Missed cases |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random Forest, seven | SubTotal | 0.26 | 75.55% | 34.47% | 160 | 318 | 52 |
+| Random Forest, seven | TotalDue | 0.29 | 71.78% | 36.31% | 152 | 277 | 60 |
+| Histogram boosting, ten | SubTotal | 0.06 | 75.51% | 33.45% | 160 | 324 | 52 |
+| Histogram boosting, ten | TotalDue | 0.08 | 73.17% | 34.51% | 155 | 300 | 57 |
+
+Counts are summed account/snapshot cases, not distinct resellers. TotalDue
+reduces mean recall by 3.77 percentage points for forest and 2.35 for boosting,
+with fewer false alerts. At the original SubTotal cutoffs, results are closer,
+but TotalDue fails the 30% floor in fold 2 for both models. Keep SubTotal for the
+agreed constrained-recall objective; this is exploratory development evidence
+on mixed periods, not a new future-period or independent final-test estimate.
+The [owning experiment record](debugging.md#completed-grouped-revenue-comparison--2026-10-14)
+contains subgroup results, shared-cutoff diagnostics, verification, and commands.
+Primary artifacts are the
+[selection summary](../results/debugging/subtotal_vs_totaldue/revenue-comparison-20261014-01/selection_summary.csv)
+and [execution manifest](../results/debugging/subtotal_vs_totaldue/revenue-comparison-20261014-01/experiment_manifest.json).
+
+### October revenue comparison on inspected outcomes — 2026-10-15
+
+The user authorized an additional retrospective comparison on the same 492
+October accounts and 46 churners. Each configuration refits on all matched
+development rows and applies its already-selected 30% grouped rule. No test
+outcomes select settings or cutoffs; no new outcome-window extraction occurs.
+
+| Model | Amount | Cutoff | Test recall | Test precision | Caught | Missed | False alerts |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RF7 | SubTotal | 0.26 | 91.30% | 26.42% | 42 | 4 | 117 |
+| RF7 | TotalDue | 0.29 | 89.13% | 28.67% | 41 | 5 | 102 |
+| GB10 | SubTotal | 0.06 | 93.48% | 28.48% | 43 | 3 | 108 |
+| GB10 | TotalDue | 0.08 | 93.48% | 30.07% | 43 | 3 | 100 |
+
+TotalDue boosting catches the same churners with eight fewer false alerts,
+while TotalDue forest catches one fewer churner with 15 fewer false alerts.
+Recently active precision remains low: 8.16% for TotalDue boosting and 6.93%
+for TotalDue forest. Boosting's October benefit does not reverse its lower
+grouped development recall or establish independent future performance.
+No replacement was promoted. Both SubTotal baselines reproduce earlier final
+scores, and all saved metrics were verified. See the
+[extension record](debugging.md#authorized-retrospective-october-extension--2026-10-15)
+for the parsing correction, checks, and commands, and the
+[saved metrics](../results/final_evaluation/revenue-final-retrospective-20261015-02/final_test_metrics.csv).
+
+## Nested grouped revenue comparison — 2026-10-15
+
+The repeated nested study excludes October data. Three predefined split seeds
+(42, 78, 88) use five outer and five inner StratifiedGroupKFold splits by reseller.
+Inner folds select cutoffs under the 30% per-fold rule; outer resellers are
+excluded from training and cutoff selection. All 1,800 fits completed, with
+60 feasible inner selections. Model settings and feature variants remain fixed.
+
+| Model | Amount | Mean repeat pooled recall | Mean repeat pooled precision | Outer threshold range | Outer folds reaching 30% precision |
+| --- | --- | ---: | ---: | --- | ---: |
+| RF7 | SubTotal | 73.11% | 34.53% | 0.18–0.35 | 14/15 |
+| RF7 | TotalDue | 72.48% | 34.38% | 0.18–0.35 | 14/15 |
+| GB10 | SubTotal | 75.63% | 33.47% | 0.04–0.23 | 13/15 |
+| GB10 | TotalDue | 75.63% | 34.25% | 0.04–0.24 | 12/15 |
+
+Metrics average the three pooled repeat scores; each repeat uses five different
+frozen outer cutoffs. Threshold ranges are descriptive, not deployment rules.
+Every repeat's pooled precision passes 30%; some outer folds fail it.
+
+TotalDue boosting's observed precision gain is 0.78 percentage points at equal
+mean recall, but recall varies by split. Adjusted paired reseller-bootstrap
+intervals permit both recall loss (-2.30 to +2.23 points) and precision loss
+(-0.16 to +1.78 points). Forest's point estimates favor SubTotal, but its adjusted
+intervals also cross zero. Neither variant establishes dominance under the
+frozen criterion; this is inconclusive evidence, not proof of equivalence.
+The criterion requires no loss in either metric within the adjusted intervals
+and at least a one-percentage-point mean gain in one metric. That practical
+minimum is a study default, not an approved business operating requirement.
+The approximate 98.75% marginal intervals adjust for the four metric comparisons
+(two models × recall/precision). The unadjusted 95% boosting precision interval
+is positive, but its recall interval permits loss; it does not establish joint
+dominance. The bootstrap conditions on fitted scores/cutoffs and repeats are
+dependent; it does not estimate full retraining/reselection uncertainty.
+There is no independent future-period performance claim or promotion to main.
+
+See the [owning study record](debugging.md#completed-nested-grouped-study--2026-10-15)
+for the protocol, complete intervals, verification, and commands. All
+[60 outer-fold result rows](../results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01/report/outer_fold_results.csv)
+include the selected threshold, recall, precision, confusion counts, and floor
+status. The [summary](../results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01/analysis/comparison_summary.csv)
+and [paired intervals](../results/debugging/subtotal_vs_totaldue/nested-revenue-20261015-01/analysis/paired_intervals.csv)
+are saved separately from earlier experiments.
+
+## Seven versus ten feature comparison
 
 The [experiment implementation](../debug/compare_seven_ten_features.py) tests
 Logistic Regression, Random Forest, and histogram gradient boosting, using

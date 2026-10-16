@@ -88,7 +88,7 @@ root `debug/` and write under `results/debugging/`. They use the existing model
 factory and recall selection helpers, but do not register a ten-feature set
 in the supported runner or promote a new model. Their completed-run evidence
 and 39 focused checks are in [debugging.md](debugging.md), with current results
-in [evaluation_metrics.md](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+in [evaluation_metrics.md](evaluation_metrics.md#seven-versus-ten-feature-comparison)
 and execution prerequisites in [pipeline/README.md](../pipeline/README.md#debugging-and-feature-experiments).
 The 39 focused checks and the earlier 67-test refactor suite have different
 scopes; neither count describes a new full-suite run for this documentation

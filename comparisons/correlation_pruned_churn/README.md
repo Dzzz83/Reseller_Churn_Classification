@@ -4,7 +4,7 @@ Original research branch: `research/churn-method-comparison`
 
 This audit retains its own feature definitions and validation/selection rules.
 For the latest seven-versus-ten discount-feature experiment and the supported
-pipeline status, see [current results](../../docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+pipeline status, see [current results](../../docs/evaluation_metrics.md#nested-grouped-revenue-comparison--2026-10-15)
 and [project context](../../docs/project_context.md). The grouped validation in
 that newer experiment uses StratifiedGroupKFold; this audit uses GroupKFold.
 

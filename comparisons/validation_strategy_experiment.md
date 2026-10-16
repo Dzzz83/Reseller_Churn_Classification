@@ -4,7 +4,7 @@ This registered retrospective protocol is separate from the latest seven-versus-
 feature study in root `debug/`. It uses ordinary GroupKFold, a common April
 evaluation population, and alert-budget selection. The latest study uses
 StratifiedGroupKFold and a precision-floor threshold rule. See
-[current results](../docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+[current results](../docs/evaluation_metrics.md#nested-grouped-revenue-comparison--2026-10-15)
 and [debug execution](../pipeline/README.md#debugging-and-feature-experiments).
 The protocol below retains its original assumptions and settings.
 
