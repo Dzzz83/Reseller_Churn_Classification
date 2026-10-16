@@ -1,15 +1,62 @@
 # Feature definitions and development evidence
 
-Reviewed on 2026-10-10 against current code and existing local result artifacts.
-No models were retrained for this documentation. Definitions come from executable
+Updated on 2026-10-16 with verified grouped-study and ablation findings. No new
+models were trained for this documentation update. Definitions come from executable
 code; measured usefulness comes from completed development reports. Possible
 explanations are identified as hypotheses rather than established causes.
+
+The later October evaluation fails the precision-improvement objective for
+the cadence/regularization candidate. Development feature contributions below
+remain evidence within that study; they do not establish better performance
+on new populations or identify which feature caused the October failure.
+Follow [the lessons and research rules](research_rules.md) for further selection:
+uncertain usefulness is not proof that a feature should be removed, and October
+error profiles must not select the next feature set.
 
 The authorized 2026-10-11 final evaluation now uses the same ten-feature
 definitions with historical October inputs and saves a separate provisional
 ensemble. It does not register a new main-pipeline feature set. October outcomes
 are now inspected; the earlier development comparisons below retain their
 original evidence. See [final results](evaluation_metrics.md#final-test-evaluation--2026-10-11).
+
+## Grouped-study cadence features and contribution evidence
+
+The latest research candidate retains the original ten inputs and adds three
+cadence features. These standalone research comparisons do not register a new
+feature set in the supported pipeline or replace its operational model.
+
+| Addition | Exact research formula | Missing handling |
+| --- | --- | --- |
+| `n_orders_12m` | Unique accepted `SalesOrderID` count in `[t - 12 months, t)` | Eligible accounts have observed annual orders |
+| `overdue_ratio` | `recency_days / mean_gap`, with gaps between distinct pre-snapshot order dates in the 12-month history | Missing when no positive mean gap is available |
+| `gap_cv` | Sample standard deviation of those gaps / positive mean gap | Missing when too few gaps exist to estimate sample standard deviation |
+
+Duplicate order dates are removed before calculating gaps. Discount absence
+and undefined cadence quantities stay missing for native estimator handling.
+No future purchases enter feature construction. The research implementation
+is [current_model_diagnosis.py](../debug/current_model_diagnosis.py).
+
+The bounded feature comparison also tests `revenue_ratio_3m` (recent-quarter
+subtotal / previous-quarter subtotal), `orders_ratio_3m` (the analogous order
+count ratio), and `last_order_revenue_ratio` (last order subtotal / mean order
+subtotal in the 12-month history). Quarter ratios are missing when the prior
+denominator is not positive. The final full-development inner selection chooses
+the three cadence additions, not those spending additions.
+
+Component ablations hold grouped validation and inner cutoff selection fixed.
+Purchase-gap variation contributes +1.14 precision points in the full context
+(adjusted interval +0.36 to +1.98), and overdue ratio +0.88 (+0.17 to +1.63).
+Both have positive adjusted precision intervals as individual additions too.
+Annual count's +0.26-point full-context effect has an interval crossing zero.
+These are contextual model/operating-point effects, not causal purchasing
+explanations or uniquely additive feature importance.
+
+Seven leaves mainly help observed recall; L2's precision effect remains
+uncertain after adjustment. Gap variation alone is a simpler development
+hypothesis (92.14% recall / 28.89% precision), without established equivalence
+to the full candidate. See [all ablations and definitions](../comparisons/grouped_ablation.md)
+and [latest metric results](evaluation_metrics.md#grouped-precision-and-ablation-results--2026-10-16).
+The saved research candidate and final testing are unchanged by the ablation.
 
 ## How features enter the current workflow
 
@@ -132,7 +179,7 @@ Random Forest ensemble recall under both methods. Individual forest-seed
 benefits vary. The discount bundle's value is therefore architecture-dependent;
 no isolated per-discount-feature contribution has been established.
 
-See [latest metrics](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+See [earlier comparison metrics](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
 for scores and costs, and [debugging.md](debugging.md) for all 11 candidate
 definitions, associations, paired prediction changes, and experiment limits.
 

@@ -1,15 +1,24 @@
 # Evaluation metrics and latest results
 
-Updated on 2026-10-11 against the saved authorized final evaluation and earlier
-development artifacts. The latest evaluation tests the frozen ten-feature
-boosting ensemble on October 2013, with grouped-development rules fixed before
-outcome access. Earlier seven-versus-ten validation experiments retain their
-own protocols below.
+Updated on 2026-10-16 against the grouped studies, component ablations,
+October follow-up and failure diagnosis. The research objective maximizes
+precision subject to recall above 90%,
+using nested reseller-grouped validation only. No final testing is used for
+these development studies. A subsequent authorized frozen-candidate evaluation
+on the inspected October cohort is recorded separately below. The original
+2026-10-11 October test record and earlier
+seven-versus-ten experiments retain their separate protocols and results below.
 
 The historical provisional pipeline's latest available evaluation files are dated
 2026-10-07. Its results are recorded separately below because its models and
 evaluation summaries differ. See [project_context.md](project_context.md) for
 data roles and [feature_analysis.md](feature_analysis.md) for model inputs.
+
+**Current conclusion:** grouped development gains did not establish better
+October precision. The frozen candidate fails the precision-improvement goal
+on that inspected cohort. [Lessons and research rules](research_rules.md) own
+the requirements for subsequent experiments; historical tables below retain
+their original protocols and are not updated into new independent claims.
 
 ## What the metrics mean
 
@@ -53,7 +62,163 @@ explicit TP, FP, FN, TN, alert count, and alert rate. The historical `pr_auc`
 key remains as a compatibility alias for the accurately named
 `average_precision` value.
 
+## Frozen candidate October follow-up — 2026-10-16
+
+After development and ablations, the user explicitly authorized evaluating
+the saved candidate. Its 13 features, seven leaves, L2=1, five-model ensemble,
+and cutoff `0.21655335464238584` remain frozen. Evaluation fits no model and
+optimizes no cutoff. Supplied outcomes are joined only after saving and
+verifying an unlabeled prediction checkpoint.
+
+| Rule | Recall | Precision | Caught | Missed | False alerts | Alerts | AP |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original 0.06 rule | 93.48% | 28.48% | 43 | 3 | 108 | 151 | 0.7013 |
+| Frozen cadence candidate | 97.83% | 20.09% | 45 | 1 | 179 | 224 | 0.7892 |
+
+Precision decreases 8.39 percentage points while recall increases 4.35 points.
+Two additional caught churners cost 71 net additional false alerts. Both rules
+catch all 35 inactive churners with ten false alerts. Active false alerts rise
+from 98 to 169; active precision falls from 7.55% to 5.59% while recall rises
+from 72.73% to 90.91%. Active AP falls from 0.1553 to 0.0765 while inactive AP
+rises from 0.8870 to 0.9469. Aggregate ranking improvement does not establish
+a better frozen operating point. The candidate **fails the requested precision
+improvement**; no test-driven adjustment or replacement is made.
+
+October outcomes were already inspected, so this is descriptive reuse, not a
+new independent test. Baseline scores are a local reproduction matching
+original counts; exact original artifact identity is unavailable. Outcomes
+reuse an earlier accepted-orders reconstruction without fresh database
+reconciliation. See [the evaluation record](../comparisons/frozen_october_evaluation.md)
+for guards, provenance, commands, results, and independent verification.
+
+### What the failure diagnosis adds
+
+| Candidate, active resellers | Grouped validation | October |
+| --- | ---: | ---: |
+| Churn prevalence | 9.91% | 2.46% |
+| Recall | 91.18% | 90.91% |
+| False-positive rate | 38.42% | 38.76% |
+| Precision | 20.70% | 5.59% |
+
+Validation entries are means across repeats except prevalence, which describes
+their shared population. Similar recall and false-positive rates can yield
+very different precision when churn becomes rarer. At prevalence `p`, with
+recall `r` and false-positive rate `f`, implied precision is
+`r*p / (r*p + f*(1-p))`, assuming those operating rates remain applicable.
+This does not account for every possible population or relationship change.
+
+Applying development active/inactive rates to October subgroup counts gives
+20.17% overall precision versus 20.09% observed. This is post-hoc explanatory
+standardization, not a prospective estimate, model fix or instruction to
+rebalance the test set. Both models face the same October population; the
+candidate still produces more active false alerts than the original rule.
+
+The development baseline uses inner-selected high-recall cutoffs, whereas the
+October original uses 0.06. Do not attribute their cross-population differences
+solely to added features or parameters. Future comparisons must use matched
+policies and report any fixed-cutoff reference separately. Active precision
+also declines in two development snapshots despite overall gains. See
+[the diagnosis](../comparisons/frozen_failure_diagnosis.md) for the supporting
+tables, unresolved causes, source limitations and verification scope.
+
+## Grouped precision and ablation results — 2026-10-16
+
+The development population has 1,375 account/snapshot rows, 422 resellers, and
+212 churn cases across July/October 2012 and January/April 2013. Three repeat
+seeds (42, 78, 88) each use five outer StratifiedGroupKFold folds; three inner
+grouped folds use seed 78. Each reseller's snapshots stay together at both
+levels. Training-only balanced weights and native missing handling are preserved.
+
+For each configuration, inner OOF predictions select the cutoff maximizing
+precision subject to pooled recall **strictly >90%**. Feature/parameter choices
+also use only inner predictions. The selected configuration and cutoff are
+then scored on the outer validation rows. This differs from the historical
+recall-first, minimum-precision workflow below.
+
+### Repeated grouped comparison
+
+| Repeat seed | Baseline recall | Baseline precision | Adaptive recall | Adaptive precision | Fewer false alerts |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 42 | 91.98% | 26.90% | 91.51% | 29.48% | 66 |
+| 78 | 90.57% | 27.87% | 92.92% | 29.62% | 29 |
+| 88 | 91.98% | 26.71% | 90.09% | 30.13% | 92 |
+| Mean | 91.51% | 27.16% | 91.51% | 29.74% | 62.33 |
+
+Baseline and adaptive procedures use the same inner cutoff objective. The
+adaptive procedure selects among eight predefined feature/regularization
+configurations inside training. Its mean precision gain is **2.59 percentage
+points**, with a conditional paired reseller-cluster 95% interval of
+**+1.67 to +3.52 points**. Each repetition's pooled recall exceeds 90%; only
+11/15 individual outer folds do so, with minimum fold recall 71.43%.
+
+These are arithmetic means of repeat-level pooled metrics. Every repetition
+evaluates the same development population; 4,125 repeated predictions do not
+constitute independent new cases. Each outer fold has a training-selected
+cutoff, so the table does not evaluate one universal deployment cutoff.
+
+Full-development inner selection subsequently freezes a 13-feature research
+candidate: the original ten plus overdue ratio, annual order count, and gap
+variation; seven leaves, L2=1, and cutoff `0.21655335464238584`. It is selected
+by the evaluated procedure, but the table is not a separate validation of that
+single full-data refit. See [the protocol and results](../comparisons/grouped_precision_recall.md).
+
+The fixed configuration's separate grouped summary is 94.65% recall / 29.31%
+precision. It uses the same development population, not a second independent
+validation set. It evaluates that configuration across outer refits and selected
+cutoffs; the adaptive row evaluates the selection process. Choosing or explaining
+the fixed configuration after examining development results does not turn its
+summary into independent confirmation of the final fitted model. Future reports
+must name which object each number evaluates.
+
+### Component ablation
+
+Fourteen fixed configurations isolate five changes, using the same grouped
+splits and inner cutoff objective. Seventeen contrasts cover single additions,
+one-component removals, bundles, and interactions. Fifty thousand whole-reseller
+bootstrap draws preserve each reseller's snapshots and repeat predictions;
+Bonferroni percentile tails adjust precision intervals across the 17 contrasts.
+
+| Component | Full-context precision inclusion effect | Adjusted interval | Full-context recall effect |
+| --- | ---: | --- | ---: |
+| Purchase-gap variation | +1.14 points | +0.36 to +1.98 | +0.94 points |
+| Overdue ratio | +0.88 points | +0.17 to +1.63 | 0.00 points |
+| Annual order count | +0.26 points | -0.28 to +0.83 | -0.63 points |
+| Seven leaves rather than 31 | -0.08 points | -1.38 to +1.32 | +5.19 points |
+| L2=1 rather than zero | +0.77 points | -0.003 to +1.52 | -0.94 points |
+
+An inclusion effect is the complete candidate minus the candidate without that
+component; positive means restoring it helps precision. Intervals are in
+percentage points. Gap variation and overdue also have positive adjusted
+precision intervals as standalone additions. Fewer leaves chiefly support
+recall feasibility: removing that change lowers mean recall to 89.47% from
+94.65%. Annual count and L2 remain uncertain; no tested precision interaction
+has an adjusted interval excluding zero. Recall effects are descriptive
+secondary evidence, without confirmatory multiplicity-adjusted claims.
+
+The fixed complete candidate has mean recall **94.65%** and precision **29.31%**.
+Gap variation alone gives **92.14% / 28.89%**, versus baseline **91.51% / 27.16%**,
+and exceeds 90% recall in all repetitions. Its equivalence to the complete
+candidate is unproven. Fixed-configuration results cannot be substituted for
+the adaptive procedure's result or summed into shares of its gain.
+
+On identical baseline scores, cutoff-only retuning changes recall from 77.36%
+to 91.51% and precision from 32.96% to 27.16%, with unchanged AP. Gap variation
+alone raises AP from 0.4843 to 0.5107. AP differences are descriptive ranking
+evidence; decision effects include each configuration's inner cutoff adaptation.
+See [the ablation record](../comparisons/grouped_ablation.md) for all contrasts,
+error changes, interpretation, and reproduction commands.
+
+Both studies reuse inspected development data. Cluster intervals condition on
+saved fits/cutoffs and exclude retraining/reselection uncertainty; repetitions
+are dependent. Bonferroni bootstrap intervals have approximate coverage and
+do not undo earlier exploration. The ablation does not replace the research
+candidate or access final testing. No new independent final result is claimed.
+
 ## Current development selection reports
+
+This section describes the historical supported runner's precision-floor
+sensitivity workflow. The latest grouped studies above use the opposite
+constraint: maximize precision while recall exceeds 90%.
 
 Two settings have different purposes:
 
@@ -136,7 +301,9 @@ and [full final-testing record](debugging.md#final-testing-evaluation--2026-10-1
 **This test is now inspected**; future changes using these results cannot claim
 another untouched evaluation on the same outcomes. The model remains provisional.
 
-## Latest completed experiment: seven versus ten features
+<a id="latest-completed-experiment-seven-versus-ten-features"></a>
+
+## Earlier seven-versus-ten feature experiment
 
 The [experiment implementation](../debug/compare_seven_ten_features.py) tests
 Logistic Regression, Random Forest, and histogram gradient boosting, using
@@ -208,8 +375,10 @@ that ranking improves across all operating points.
 Grouped and temporal scores are not comparable deployment estimates: they
 evaluate different rows, training sizes, and chronology. Grouped folds may
 train on later-period records than a held-out row and do not enforce historical
-label availability. Temporal remains primary for the stated future-churn goal;
-both methods are retained for development reporting.
+label availability. That earlier experiment treated temporal validation as
+primary and retained both methods for reporting. The current precision-improvement
+research uses grouped validation by user choice; these historical results do
+not change that selection design.
 
 Ten-feature boosting is worth further investigation, while seven-feature forest
 remains the temporal comparison baseline. No architecture or feature set has

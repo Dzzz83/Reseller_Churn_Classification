@@ -1,5 +1,14 @@
 # 12. Final Evaluation — Guarded Stage
 
+Current evaluation and reporting requirements are in
+[the lessons and research rules](../../docs/research_rules.md). October 2013
+is already inspected. The completed entry point below is historical evidence,
+not authorization to construct new protected outcomes or rerun candidate
+selection on October. A new independent evaluation needs frozen methodology,
+an untouched cohort, explicit user approval and supplied outcomes joined only
+after predictions are checkpointed; automatic protected-label construction is
+not supported. Diagnostic findings do not authorize deployment.
+
 The user-authorized October evaluation completed on 2026-10-11 through the
 guarded entry point in root `debug/`. The supported development runner still
 does not execute final evaluation automatically.
@@ -49,3 +58,19 @@ Verification of the completed artifacts does not refit or reveal new outcomes:
 ```bash
 bi_venv/bin/python debug/verify_final_testing_outputs.py
 ```
+
+## Authorized frozen-candidate follow-up — 2026-10-16
+
+The user subsequently requested evaluation of the already saved development
+candidate. This uses [a separate two-stage checkpointed command](../../comparisons/evaluate_frozen_october.py)
+and [independent verifier](../../comparisons/verify_frozen_october.py), preserving
+the original stage-12 files. It accepts supplied inspected outcomes and never
+constructs labels, queries the source database, trains, or optimizes cutoffs.
+
+The fixed 13-feature cadence/regularization model scores at its development
+cutoff 0.21655335464238584. On the 492-account October cohort it achieves
+97.83% recall and 20.09% precision, catching 45 churners with 179 false alerts.
+This fails the intended precision improvement over the original rule. The
+model/cutoff are unchanged after evaluation; no alternative test winner is
+selected. This is descriptive reuse of inspected October outcomes, not a new
+independent test. See [results, provenance, commands, and checks](../../comparisons/frozen_october_evaluation.md).

@@ -14,8 +14,14 @@ and threshold choices remain provisional.
   extraction formulas, alternative features, and measured development evidence.
 - [Evaluation metrics](docs/evaluation_metrics.md): metric explanations, latest
   completed-run results, false alerts, and evaluation limitations.
+- [Lessons and research rules](docs/research_rules.md): what the experiments
+  established, the failed generalization, and requirements for future comparisons.
 - [Debugging and feature experiments](docs/debugging.md): missed-churn diagnosis,
-  CompanyX feature discovery, and seven-versus-ten comparisons under both validations.
+  CompanyX feature discovery, grouped precision improvement, and component ablations.
+- [Repeated grouped precision study](comparisons/grouped_precision_recall.md):
+  nested feature/parameter selection with recall above 90%.
+- [Component ablation study](comparisons/grouped_ablation.md): contributions of
+  cadence features, tree size, and L2, including adjusted uncertainty.
 - [Pipeline execution](pipeline/README.md): supported preparation/development
   workflow, historical diagnostics, and optional commands.
 - [Controlled validation-strategy experiment](comparisons/validation_strategy_experiment.md):
@@ -25,7 +31,55 @@ and threshold choices remain provisional.
 
 ## Current development findings
 
-The latest completed development experiment compares seven purchasing features against
+**Current conclusion:** the candidate improved grouped development validation
+but failed to improve October precision. The gains below are development
+evidence, not a demonstrated improvement on new populations or a deployment
+recommendation. Follow the [research rules](docs/research_rules.md) for further work.
+
+The latest studies maximize precision while maintaining **grouped recall above
+90%**, using development data only. Three repetitions of five outer reseller
+folds use three inner grouped folds for feature, parameter, and cutoff selection.
+All snapshots of a reseller stay together; outer labels never tune cutoffs.
+
+| Development comparison | Mean recall | Mean precision |
+| --- | ---: | ---: |
+| Original ten features, training-selected cutoff | 91.51% | 27.16% |
+| Adaptive inner feature/parameter selection | 91.51% | 29.74% |
+| Fixed cadence/regularization configuration | 94.65% | 29.31% |
+| Original ten plus purchase-gap variation only | 92.14% | 28.89% |
+
+The adaptive procedure improves precision by **2.59 percentage points** at
+unchanged mean recall, with about 62 fewer false alerts per repetition. Every
+repetition exceeds 90% recall, although the weakest is 90.09% and four of 15
+individual folds fall below 90%. The fixed-configuration rows describe separate
+ablations; they are not alternative names for the adaptive procedure's result.
+
+Fourteen controlled ablations identify **purchase-gap variation and overdue
+ratio** as the clearest precision contributors. Seven leaves mainly help
+recall; annual order count and L2 precision effects remain uncertain after
+adjusting across 17 comparisons. The current research candidate keeps the
+original ten features plus three cadence features, seven leaves, L2=1, and a
+development-selected cutoff. The subsequent October follow-up below finds
+lower precision at that frozen cutoff; it is not installed into the operational
+pipeline.
+
+The adaptive and fixed-configuration rows use the same development dataset,
+not two independent validation sets. They evaluate different objects: a
+configuration-selection process versus one configuration across outer refits.
+Neither directly evaluates the single full-development fitted bundle. The
+development baseline uses high-recall training-selected cutoffs, whereas the
+October historical baseline uses 0.06; the differences do not isolate the
+feature/parameter effect under a common operating policy.
+
+See the [latest metrics](docs/evaluation_metrics.md#grouped-precision-and-ablation-results--2026-10-16),
+[grouped study](comparisons/grouped_precision_recall.md), and
+[ablation findings](comparisons/grouped_ablation.md#completed-results--2026-10-16)
+for exact protocols, repeat results, uncertainty, and limitations. These are
+exploratory development findings; no new independent final performance is claimed.
+
+### Earlier development comparisons
+
+The earlier seven-versus-ten experiment compares seven purchasing features against
 those seven plus three discount features across Logistic Regression, Random
 Forest, and histogram gradient boosting. It uses temporal validation and five
 stratified folds grouped by reseller, maximizing mean recall with **precision
@@ -38,7 +92,36 @@ Discounts improve boosting, preserve Logistic Regression's temporal recall
 with fewer false alerts, and reduce the forest's mean recall. No universal
 ten-feature replacement or deployment model has been selected.
 
-## Authorized final testing
+## Frozen candidate October follow-up
+
+The user authorized evaluating the saved candidate after development and
+ablations. At its unchanged cutoff it catches 45 of 46 churners with 179 false
+alerts: **97.83% recall and 20.09% precision**, versus the original rule's
+93.48% / 28.48% with 108 false alerts. It catches two more churners but adds
+71 net false alerts, so **it fails the precision-improvement objective on
+October**. Overall AP improves, but active-subgroup AP worsens.
+
+This is descriptive reuse of already inspected October outcomes. No model is
+refitted, no cutoff is changed, and no alternative is selected from these
+results. See [the evaluation record](comparisons/frozen_october_evaluation.md).
+
+The [failure diagnosis](comparisons/frozen_failure_diagnosis.md) explains the
+validation-to-October precision drop using saved predictions, audits the
+different baseline cutoff policies, and identifies development subgroup
+instability. It changes no model or cutoff.
+
+Candidate active false-positive rates are about 38% in both validation and
+October, while active churn rates fall from 9.91% to 2.46%. Development subgroup
+operating rates applied to October counts imply 20.17% precision, close to
+20.09% observed. This supports a population explanation without proving one
+cause. Both models face the same October accounts, and the original rule still
+produces fewer false alerts. Future comparisons must use matched cutoff policies,
+report subgroup weaknesses and prevalence sensitivity, and preserve untouched
+data for independent evaluation; see [the full rules](docs/research_rules.md).
+
+<a id="authorized-final-testing"></a>
+
+## Original authorized final testing
 
 On 2026-10-11, the user froze ten-feature gradient boosting with the grouped
 30% precision rule as primary and three predeclared secondary rules. The
@@ -51,15 +134,25 @@ See [final metrics](docs/evaluation_metrics.md#final-test-evaluation--2026-10-11
 
 Recently active accounts account for eight caught churners and 98 false alarms;
 the high overall recall therefore needs subgroup context. The
-[debugging report](docs/debugging.md#recommended-follow-up--not-yet-executed)
-records the proposed follow-up diagnosis and need for a new independent holdout.
+[debugging report](docs/debugging.md#development-precision-diagnosis--2026-10-16)
+records the subsequent development diagnosis and need for an untouched cohort
+for an independent final claim. The grouped improvement and ablation studies
+do not access final testing.
 
-Development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
-The ten-feature comparison runs through root `debug/`; the supported pipeline
+Earlier development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
+The historical ten-feature comparison runs through root `debug/`; the supported pipeline
 still registers RFM, Pruned, Reduced, and Full. See the
 [debug execution guide](pipeline/README.md#debugging-and-feature-experiments).
 
 ## Set up and run
+
+The standalone grouped studies have [reproduction commands](comparisons/grouped_ablation.md#execution-and-verification).
+This research checkout's full suite currently encounters a module/package
+collision at `TRAINING_SNAPSHOTS`; the latest diagnostic verification passed
+39 focused study, ablation, evaluation and diagnosis tests. This is a scoped
+check, not a passing full repository suite.
+Duplicate TOML tables and initializer conflict markers were repaired. See
+[execution status](pipeline/README.md#grouped-precision-and-ablation-studies).
 
 Use Python 3.11 or later in a project virtual environment:
 

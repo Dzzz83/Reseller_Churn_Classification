@@ -1067,3 +1067,252 @@ and cutoffs, confusion counts, average precision, ROC-AUC, and output hashes.
 Final preparation and source-reconciled evaluation completed successfully.
 The full regression suite, supported full pipeline, parameter tuning, and any
 post-test model/threshold changes were not run.
+
+## Development precision diagnosis — 2026-10-16
+
+The user clarified the improvement target: increase precision while maintaining
+recall **strictly above 90%**, selecting all changes on development data before
+any final test. Work stays on `pipeline_preparation`; main and the operational
+model are unchanged.
+
+An earlier reproduction in this session, authorized before that clarification,
+reused October's already inspected cohort and matched its recorded primary
+counts. That analysis is set aside. The completed development-only runner below
+does not construct October scoring rows or October outcomes, and does not read
+test predictions or test feature references. October cannot become independent
+again; a final selected model needs an untouched cohort and a frozen procedure.
+
+### Development errors
+
+On five grouped outer folds with seed 42, the inherited model/cutoff catches
+160 of 212 development churn cases, misses 52, and produces 324 false alerts.
+**50 of 52 misses are recent purchasers.** Their median history is four annual
+orders and 32-day recency. Across all misses, 26 have flat or rising recent
+versus previous-quarter revenue, 14 decline at least 25%, two have smaller
+declines, and ten lack a positive prior-quarter denominator. There is no single
+spending-decline pattern shared by the missed churners.
+
+Among active accounts, false alerts have median recent spending 744.27,
+compared with 1,308.94 for caught churners, 2,275.86 for missed churners, and
+19,662.66 for correctly retained accounts. Each group has median recency 32
+days. These profiles support investigating confusion between small continuing
+accounts and active accounts about to stop; they do not establish causation.
+
+### Controlled exploratory comparison
+
+The candidate adds recent/previous-quarter revenue and order ratios, annual
+order count, overdue ratio, purchase-gap variation, and last-order relative
+spending. The fixed boosting parameters, five seeds, native missing handling,
+and training-only class weights remain identical to the control. This is a
+research candidate, not a change to the frozen ten-feature model.
+
+Three inner grouped folds select each candidate's cutoff to maximize precision
+subject to pooled inner recall >90%, then apply it to the outer validation rows.
+The five outer grouped folds hold each reseller entirely outside training.
+Two chronological checks use only training labels matured by their prediction
+date: July trains January; July and October train April. Outer validation
+outcomes do not select features, fitted parameters, or cutoffs.
+
+| Validation | Candidate under the same inner selection policy | Recall | Precision | Caught | False alerts |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Grouped | Current ten features | 91.98% | 26.90% | 195 | 530 |
+| Grouped | Behavioral additions | 92.92% | 28.55% | 197 | 493 |
+| Chronological | Current ten features | 61.80% | 21.48% | 55 | 201 |
+| Chronological | Behavioral additions | 66.29% | 22.43% | 59 | 204 |
+
+These are pooled account/snapshot metrics with fold-specific cutoffs, not one
+deployment cutoff. The grouped candidate newly catches six cases and newly
+misses four, removes 102 false alerts and adds 65: net two more caught and 37
+fewer false alerts. It fails >90% recall in one of five grouped folds and both
+chronological periods (88.00% January, 57.81% April). Its pooled chronological
+average precision also decreases, from 0.2470 to 0.2168. This is a modest grouped
+gain, **not a reliable achievement of the requested target**.
+
+There are only four development dates and 422 distinct resellers. Active churn
+rates vary from 4.18% to 17.20% across dates. The grouped question differs from
+future-period prediction, and the chronological models have smaller training
+sets. Five model seeds give identical predictions in these fits; averaging them
+adds no observed prediction diversity and is not independent robustness evidence.
+
+Prioritize more mature historical development periods, repeated nested and
+chronological comparisons, compact behavioral ablations, and regularization.
+An active/inactive interaction or partially pooled risk heads is a candidate
+experiment, with global recall constrained during training-only selection.
+Forward-available sales-contact, inquiry, credit/payment, or service signals may
+help when purchases remain normal; these are hypotheses requiring timestamped
+data and controlled tests. No replacement or new cutoff is selected here.
+
+### Reproduction and checks
+
+At the initial diagnostic run, this checkout had committed initializer conflict
+markers and duplicate TOML tables, so the runner was kept standalone. Those
+two issues were repaired during the subsequent grouped study. The full pytest
+command now reaches a separate `TRAINING_SNAPSHOTS` import collision; see
+[current execution status](../pipeline/README.md#grouped-precision-and-ablation-studies).
+The independent diagnosis and comparison tests remain runnable.
+
+```powershell
+$env:OMP_NUM_THREADS = '1'
+$env:OPENBLAS_NUM_THREADS = '1'
+.venv/Scripts/python.exe debug/current_model_diagnosis.py --headers inputs/regeneration-20261016/order_headers.csv --lines inputs/regeneration-20261016/order_lines.csv --source-manifest inputs/regeneration-20261016/source_manifest.json --output results/development-precision-diagnosis-NEW
+.venv/Scripts/python.exe debug/report_development_diagnosis.py results/development-precision-diagnosis-NEW
+.venv/Scripts/python.exe -m pytest -c debug/diagnosis_pytest.ini debug/test_current_model_diagnosis.py -q
+```
+
+Six focused synthetic tests pass, including future-feature isolation,
+development-label boundaries, protected-date rejection, and strict >90% recall
+cutoff selection and score/cutoff CSV round-trip precision. Source exports
+reconcile with clean accepted orders; coverage
+declarations and export hashes are checked. All seven base features and labels
+match the 1,375-row development reference. All 280 diagnostic estimator fits
+complete. Ruff checks and diff checks pass. Smoke/test execution is not evidence
+of improved model quality.
+
+The full local report is
+`results/development-precision-diagnosis/diagnosis.md`. The same ignored run
+directory contains development case lists, profiles, fold and pooled metrics,
+predictions, paired changes, the pre-fit protocol, fitted estimator identities,
+and input/code/runtime/output hashes. Generated artifacts are not committed.
+The expanded original ten-feature training file and original fitted model are
+unavailable, so exact original artifact identity is not claimed. These findings
+remain exploratory and do not establish new independent final performance.
+
+## Repeated grouped precision study — 2026-10-16
+
+The user requested grouped validation only, with precision improvement while
+pooled recall stays above 90% in every repetition. The frozen protocol,
+implementation, commands, and completed results are recorded in
+[the grouped precision study](../comparisons/grouped_precision_recall.md).
+
+Three repetitions of five outer grouped folds and three inner grouped folds
+compare eight predefined feature/regularization configurations. Selection of
+configuration and cutoff happens inside training. The primary adaptive procedure
+increases mean precision from **27.16% to 29.74%** at unchanged mean recall
+**91.51%**. Adaptive repeat recalls are 91.51%, 92.92%, and 90.09%; precision
+improves in all three repetitions. The paired reseller-cluster precision-gain
+interval is +1.67 to +3.52 percentage points, conditional on fitted models and
+cutoffs. Eleven of 15 individual folds exceed 90% recall; the rule is pooled
+per repetition, so it does not establish an every-fold guarantee.
+
+The predeclared evidence criteria pass. Full-development inner selection freezes
+a research cadence/regularization candidate and cutoff, without opening final
+testing. The operational ten-feature model and main branch remain unchanged.
+The run and local report are under `results/repeated-grouped-precision/`.
+
+During execution, the user also requested repair of the duplicate TOML sections.
+The project metadata tables and initializer conflict markers were consolidated.
+Normal pytest now reaches a separate research-package/final-module collision
+at `TRAINING_SNAPSHOTS`; the standalone study is unaffected. Fourteen focused
+study/diagnosis tests pass. No final testing, push, or merge was performed.
+
+## Grouped component ablation — 2026-10-16
+
+The user requested attribution of the observed improvement before changing
+the candidate again. The frozen 14-configuration ablation and full results are
+in [the component ablation record](../comparisons/grouped_ablation.md).
+It reuses four compatible configurations and fits ten additional configurations
+on the same three repetitions of nested grouped development validation.
+All 3,000 new estimator fits completed; 1,200 fits were reused exactly.
+
+Purchase-gap variation and overdue ratio have the clearest precision evidence:
+their full-context inclusion effects are +1.14 and +0.88 percentage points,
+with positive family-adjusted intervals across 17 predeclared precision
+contrasts. Both also help when added alone. Seven leaves principally help
+recall: restoring that setting adds 5.19 observed recall points with little
+precision change. Annual count remains uncertain; L2's full-context precision
+gain is suggestive but its adjusted interval nearly touches zero. None of the
+tested precision interactions has an adjusted interval excluding zero.
+
+Gap variation alone is the simplest supported individual addition in these
+data (92.14% recall, 28.89% precision; >90% recall in all repetitions), but its
+equivalence to the full cadence/regularization candidate is not established.
+Keep the existing research candidate while treating count/L2 removal and
+further simplification as hypotheses. Effects depend on context and cannot
+be summed into unique shares of the earlier adaptive procedure's gain.
+
+All 20 focused tests pass. Independent verification passed 756 metric rows,
+group/population/cutoff checks, source reuse, and fit accounting. The local
+report is `results/grouped-component-ablation/report.md`. Final testing, main,
+and the previously frozen research model are unchanged. No push or merge occurs.
+
+## Frozen candidate October follow-up — 2026-10-16
+
+After development and ablation work, the user explicitly requested evaluation
+using the final test set. The saved 13-feature cadence/regularization ensemble
+and cutoff 0.21655335464238584 were loaded unchanged. A prediction stage verified
+model/runtime/feature identities and checkpointed unlabeled predictions; a
+separate approved evaluation stage joined supplied previously inspected
+outcomes. No models were fitted, cutoffs optimized, or labels constructed.
+
+The candidate catches 45/46 churners with 179 false alerts: **97.83% recall and
+20.09% precision**, versus original-rule 43 caught and 108 false alerts
+(93.48% / 28.48%). It gains two caught churners at 71 net extra false alerts,
+failing the precision-improvement objective. All extra net false alerts occur
+among active accounts, whose precision falls to 5.59%. Overall AP improves to
+0.7892 from 0.7013, but active AP decreases to 0.0765 from 0.1553; aggregate
+ranking does not establish a better active-account operating rule.
+
+This is descriptive reuse of October outcomes already inspected earlier.
+The baseline and outcomes reuse the earlier local accepted-orders reconstruction;
+original baseline counts match, but exact original artifact identity and fresh
+database reconciliation are unavailable. No cutoff is adjusted or alternative
+candidate selected after this result. The frozen research bundle, operational
+model, and main branch remain unchanged.
+
+See [the full record](../comparisons/frozen_october_evaluation.md). The local
+run is `results/frozen-candidate-october-evaluation/`. Seven new synthetic tests
+pass; independent verification reproduces all scores exactly and all six metric
+rows. Synthetic smoke is execution evidence only. No push, merge, or deployment
+was performed.
+
+## Validation-to-October failure diagnosis — 2026-10-16
+
+The user authorized a descriptive diagnosis using saved artifacts, with no
+model or cutoff changes. The [diagnostic record](../comparisons/frozen_failure_diagnosis.md)
+separates population effects, comparison-policy differences and development
+instability. Candidate active recall/FPR are nearly unchanged: 91.18%/38.42%
+in grouped validation and 90.91%/38.76% in October. Applying validation
+active/inactive operating rates to October counts gives 20.17% expected
+precision, close to 20.09% observed. This does not explain away its inferior
+October precision versus the original rule on the same accounts.
+
+The development baseline uses inner-selected high-recall cutoffs, whereas
+the historical October baseline uses 0.06; the earlier improvement and the
+October comparison therefore have different baseline cutoff policies. Active
+precision deteriorates in two development snapshots despite aggregate gains.
+Existing ablations support cadence's average false-alert reduction and the
+regularization bundle's recall tradeoff, without establishing an October cause.
+
+Artifacts are under `results/frozen-candidate-failure-diagnosis-final/`.
+The diagnosis fits zero models, optimizes no cutoffs, constructs no outcomes,
+and evaluates no additional October candidates. Model, main and datasets are
+unchanged. October remains inspected; future independent claims require fresh
+evaluation data. Source completeness and individual-change causality remain
+unresolved.
+
+For this diagnostic, 39 focused tests pass, including 12 diagnostic tests.
+The separate existing grouped-study verifier performs five development-only
+fidelity refits; no model copies replace the bundle or receive October scores.
+Independent study, ablation and frozen evaluation audits pass. Full pytest
+remains blocked by the existing `TRAINING_SNAPSHOTS` config import collision.
+
+## Lessons and future research rules — 2026-10-16
+
+The user requested an honest documentation update after the failed
+generalization. [Lessons and research rules](research_rules.md) now own the
+future requirements: matched populations and cutoff policies, nested grouped
+selection, subgroup/false-positive-rate reporting, predefined development-only
+prevalence and refit-stability checks, natural evaluation distributions, and
+explicit data roles and limitations. The adaptive procedure and fixed-configuration
+validation summaries are different evaluations on the same development set.
+Neither independently validates the single full-data fitted model.
+
+Development gains remain recorded, but do not establish a successful final
+replacement. No individual new feature is proven responsible for October's
+failure; uncertainty does not establish uselessness. October is inspected and
+cannot independently validate a method informed by its errors. A future final
+claim needs frozen methodology, a fresh untouched cohort and explicit approval.
+These rules do not silently add a subgroup recall target or a practical-gain
+margin, and are documentation requirements rather than claims of new runtime
+enforcement. This update changes documentation only and leaves `AGENTS.md`
+unchanged; no training, scoring, data changes, push or merge is performed.

@@ -1,5 +1,10 @@
 # Development Pipeline
 
+Follow [the lessons and research rules](../docs/research_rules.md) for new
+research. Grouped development gains did not transfer to improved October
+precision. Preserve the completed results; do not rerun candidates on inspected
+October outcomes or treat a research bundle as a promoted operational model.
+
 The project has three phases. The supported runner executes preparation and
 model development; final evaluation runs separately under frozen methodology
 and explicit authorization. Reusable modeling and
@@ -11,6 +16,59 @@ data logic lives in `reseller_churn/`, with orchestration in
 | Prepare data | `pipeline/prepare_data.py` | Audit source files, build historical-only features and approved labeled development rows, compare with tracked references, and save generated files under one run ID |
 | Develop models | `pipeline/develop_models.py` | Compare complete candidate configurations on the registered temporal folds; report probability thresholds and precision-floor sensitivity; refit each unique selected candidate once |
 | Final evaluation | `debug/run_final_testing_evaluation.py`; instructions in `pipeline/12_final_evaluation/` | Authorized frozen-model October evaluation completed; excluded from the supported runner |
+
+## Grouped precision and ablation studies
+
+The latest user-requested studies are standalone research commands in
+`comparisons/`; they are not automatic stages of the supported runner.
+They maximize precision while requiring pooled recall >90% in each grouped
+repetition. Only the approved development CSV and saved development validation
+artifacts are inputs. No command below opens or evaluates final testing.
+
+The [repeated grouped study](../comparisons/grouped_precision_recall.md) records
+three repetitions of five outer and three inner grouped folds, the eight-cell
+search grid, trained research bundle, and verification. The
+[component study](../comparisons/grouped_ablation.md) records 14 fixed
+configurations, exact reuse, 17 contrasts, adjusted uncertainty, and conclusions.
+The latter does not automatically replace the saved candidate.
+
+```powershell
+$env:OMP_NUM_THREADS = '1'
+$env:OPENBLAS_NUM_THREADS = '1'
+.venv/Scripts/python.exe -m pytest -c comparisons/grouped_precision_pytest.ini comparisons/test_grouped_ablation.py comparisons/test_grouped_precision_recall.py debug/test_current_model_diagnosis.py -q
+.venv/Scripts/python.exe comparisons/grouped_precision_recall.py --development results/development-precision-diagnosis/development_features.csv --preparation-manifest results/development-precision-diagnosis/manifest.json --workers 4 --output results/repeated-grouped-precision-NEW
+.venv/Scripts/python.exe comparisons/verify_grouped_precision_recall.py results/repeated-grouped-precision-NEW
+.venv/Scripts/python.exe comparisons/grouped_ablation.py --source results/repeated-grouped-precision-NEW --workers 6 --output results/grouped-component-ablation-NEW
+.venv/Scripts/python.exe comparisons/verify_grouped_ablation.py results/grouped-component-ablation-NEW
+```
+
+Every output directory must be new. The required development feature artifact
+and its provenance are produced by the
+[development diagnosis preparation](../docs/debugging.md#development-precision-diagnosis--2026-10-16).
+The completed local runs are `results/repeated-grouped-precision/` and
+`results/grouped-component-ablation/`; each contains a protocol, saved
+predictions, metrics, hashes, verification, and a detailed report. Generated
+files stay ignored. Do not rerun completed experiments just to read results.
+
+The original study/ablation checks passed 20 focused tests and both standalone
+synthetic smoke checks. The subsequent evaluation and diagnosis expanded the
+focused suite to **39 passing tests**, last verified on 2026-10-16:
+
+```powershell
+.venv/Scripts/python.exe -m pytest -c comparisons/grouped_precision_pytest.ini comparisons/test_grouped_precision_recall.py comparisons/test_grouped_ablation.py comparisons/test_evaluate_frozen_october.py debug/test_current_model_diagnosis.py debug/test_diagnose_frozen_failure.py -q
+```
+
+These are historical verification results, not a test run performed by this
+documentation update. The grouped-study verifier also performs five
+development-only fidelity refits; it is not a read-only metrics check. Those
+copies verify saved-bundle reproducibility and are not additional model-quality
+evidence. The
+normal repository-wide pytest command currently fails on a research-package /
+merged-final-module collision: `reseller_churn.config` shadows `config.py`,
+preventing the final CLI from importing `TRAINING_SNAPSHOTS`. Duplicate TOML
+tables and initializer conflict markers were repaired; the broader package
+compatibility issue remains. These standalone comparisons do not import the
+conflicting package. Synthetic smoke checks execution, not model quality.
 
 ## Run preparation and development
 
@@ -114,7 +172,7 @@ source provenance and tracked references.
 
 ## Debugging and feature experiments
 
-The latest completed research uses root `debug/`, separately from the supported
+The earlier feature-comparison research uses root `debug/`, separately from the supported
 runner. It compares the seven Pruned features with ten features (Pruned plus
 three discount inputs) using temporal validation and stratified folds grouped
 by StoreID. The ten-feature set is defined in the debug comparison, not in

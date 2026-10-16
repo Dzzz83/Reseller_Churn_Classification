@@ -1,6 +1,9 @@
 # Project context
 
-Reviewed against the working tree and final-evaluation artifacts on 2026-10-11. This document owns the project
+Updated against the grouped studies, ablations, October follow-up and failure
+diagnosis on 2026-10-16. Current conclusions and future requirements are owned
+by [the lessons and research rules](research_rules.md).
+This document owns the project
 overview and current research status. Database provenance belongs in
 [data_analysis.md](data_analysis.md); feature definitions and measured evidence
 belong in [feature_analysis.md](feature_analysis.md).
@@ -10,10 +13,12 @@ Metric explanations and completed-run results belong in
 ## Purpose and prediction contract
 
 Predict whether an active reseller will place no orders during the next six
-months. The business priority is churn recall, with precision and false alerts
-reported alongside it. The current debugging experiments use an agreed **30%
-minimum precision in every validation fold**. A deployment alert budget and
-final operating requirement have not been established.
+months. The current user-approved research objective is to **maximize precision
+while maintaining pooled grouped recall strictly above 90% in every repetition**.
+Feature, parameter, and cutoff choices use inner training folds; outer grouped
+validation measures their performance. The older debug experiments used a 30%
+minimum precision in every validation fold. A deployment alert budget has not
+been established, and no research improvement has replaced the operational model.
 
 For prediction snapshot `t`:
 
@@ -22,8 +27,8 @@ For prediction snapshot `t`:
 - Target `churn = 1`: no orders in `[t, t + 6 months)`; otherwise `0`.
 - Both windows exclude their upper endpoint.
 - Fit preprocessing, resampling, and models using training rows only within
-  each fold. Development validation rows score candidates and select their
-  configurations and probability thresholds.
+  each fold. In the latest studies, inner OOF predictions select configurations
+  and probability cutoffs; outer validation outcomes are excluded from selection.
 
 The boundaries are implemented in
 [prediction_window.py](../reseller_churn/data/prediction_window.py),
@@ -78,14 +83,65 @@ Counts are registered in
 [TemporalDataset](../reseller_churn/data/temporal_dataset.py) checks that every
 training label window ends by the validation snapshot. Chronological validation
 asks about later periods. GroupKFold by `StoreID`, used in older comparisons,
-and StratifiedGroupKFold, used in the latest seven-versus-ten experiment, ask
-about unseen reseller identities within mixed historical periods. The latest
-grouped run uses five folds, shuffle=True, random_state=42, and all 1,375
-development rows. Temporal validation scores 683 January/April rows and remains
-the primary evidence for future predictions. Internal scores answer different
-questions and cannot establish a universal winner between validation methods.
+and StratifiedGroupKFold ask about unseen reseller identities within mixed
+historical periods. The earlier seven-versus-ten comparison used one grouped
+split seed, 42. The latest precision study uses three repeat seeds (42, 78, 88),
+five outer grouped folds, and three inner grouped folds on all 1,375 rows.
+The user chose grouped validation as the criterion for this research; no temporal
+validation or final testing is run by the latest studies. The earlier temporal
+comparison scores 683 January/April rows and remains a separate historical
+experiment. Grouped results do not establish future-period performance.
 
 ## Current model status
+
+The latest repeated nested grouped procedure improves mean precision from
+27.16% to 29.74% at unchanged mean recall 91.51%, with all three repetitions
+above 90% recall. Its weakest repeat is 90.09%, and four individual outer folds
+are below 90%; the requirement is pooled per repetition. Full-development inner
+selection saves a 13-feature cadence/regularization research candidate with
+seven leaves, L2=1, and cutoff `0.21655335464238584`.
+
+The subsequent 14-configuration component ablation supports purchase-gap
+variation and overdue ratio as precision contributors. Fewer leaves mainly
+help observed recall; annual count and L2 precision contributions remain
+uncertain after adjusting 17 comparisons. The ablation changes no saved model.
+See [latest metrics](evaluation_metrics.md#grouped-precision-and-ablation-results--2026-10-16),
+[study specification](../comparisons/grouped_precision_recall.md), and
+[component evidence](../comparisons/grouped_ablation.md). All are exploratory
+development reuse; final testing remains outside selection.
+
+The user subsequently authorized scoring the unchanged frozen candidate on
+the already inspected October cohort. It reaches 97.83% recall but only 20.09%
+precision, catching 45 churners with 179 false alerts. The original rule catches
+43 with 108 false alerts (93.48% / 28.48%). This fails the precision-improvement
+objective on that cohort; the operational model is not replaced. See
+[the descriptive evaluation](../comparisons/frozen_october_evaluation.md).
+
+The development gains are not a proven replacement-model improvement. The
+adaptive selection procedure (91.51% recall / 29.74% precision) and the fixed
+configuration summary (94.65% / 29.31%) use the same development population
+but evaluate different objects. Neither separately validates the single
+full-data fitted bundle. The development baseline uses inner-selected high-recall
+cutoffs, while the October historical baseline uses 0.06.
+
+The [failure diagnosis](../comparisons/frozen_failure_diagnosis.md) finds similar
+candidate active recall/FPR across development and October, with substantially
+rarer active churn in October. Subgroup standardization closely reproduces its
+precision drop; it does not explain away its disadvantage to the original model
+on the same October accounts. Active precision already deteriorates in two
+development snapshots. No individual new feature is established as the cause,
+and source completeness remains unverified by a fresh audit.
+
+Future research must follow the [research rules](research_rules.md): matched
+cutoff policies, nested grouped selection, subgroup and false-positive-rate
+reporting, development-only prevalence and refit-stability checks, and no
+evaluation rebalancing or October-guided winner selection. The primary recall
+criterion is unchanged; additional subgroup or practical-gain requirements must
+be frozen before a new experiment. October is inspected, so an independent
+claim for a revised method needs a fresh cohort and explicit evaluation approval.
+
+The following describes the historical supported workflow, not the latest
+standalone study's selection objective.
 
 The supported development runner compares Logistic Regression, Random Forest,
 and HistGradientBoosting across the registered feature sets and imbalance
@@ -107,7 +163,7 @@ as historical diagnostics. They are not the configuration consumed by the new
 selection and refit path. Model settings live in
 [model_settings.py](../reseller_churn/config/model_settings.py).
 
-### Latest feature experiments and research direction
+### Earlier feature experiments and research direction
 
 The [debugging record](debugging.md) documents the RFM missed-churn diagnosis,
 the seven-feature improvement, CompanyX order-line extraction and 11 candidate
@@ -120,7 +176,7 @@ Discounts help gradient boosting under both methods, while seven-feature Random
 Forest retains the highest temporal mean recall in this comparison. Ten-feature
 boosting is a candidate for further focused development, with the seven-feature
 forest retained as a baseline. A model promotion or exclusive architecture
-choice has not been implemented. See [latest measured results](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
+choice has not been implemented. See [earlier measured results](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
 
 The ten-feature set is defined locally in
 [compare_seven_ten_features.py](../debug/compare_seven_ten_features.py). It is
@@ -131,6 +187,12 @@ not register a new runner feature set or deploy the predictor.
 
 ## Separate experiments
 
+- The [repeated grouped precision study](../comparisons/grouped_precision_recall.md)
+  evaluates inner feature/parameter/cutoff selection under recall >90% and
+  freezes a research candidate using development only.
+- The [component ablation](../comparisons/grouped_ablation.md) isolates cadence
+  additions and regularization, adjusts 17 precision contrasts, and leaves the
+  candidate unchanged while recording simplification hypotheses.
 - The [correlation-pruned audit](../comparisons/correlation_pruned_churn/README.md)
   reconstructs another method, with different feature windows, fold-local
   supervised pruning, and grouped/temporal validation. Its `full` window means
