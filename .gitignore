@@ -16,3 +16,7 @@ inputs/
 /.agents/
 /.codex/
 *.log
+
+# Local agent instructions
+AGENTS.md
+agents.md
