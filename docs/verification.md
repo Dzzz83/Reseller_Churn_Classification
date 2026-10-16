@@ -83,3 +83,28 @@ Body:
 Review the diff against main and the documented CLI/input contracts. The user
 will push the branch, create the PR, and decide whether to merge. No PR creation,
 push, or merge is part of this preparation.
+
+
+## Research-results documentation update — 2026-10-16
+
+The main-branch update summarizes the inspected October comparisons, repeated
+nested grouped revenue study, and held-out SHAP analysis in the existing
+[model/results document](model_and_results.md#later-research-findings). The
+separate research snapshot is commit `5cbd21f65912ef7d0f1b010eb585e18f950082a5`.
+Its 41 focused research tests passed before publication, including the optional
+SHAP smoke. These checks belong to the research implementation, not a new
+main-pipeline model-quality claim. Recorded experiment verifiers and their
+limitations remain in the linked research record.
+
+The update is documentation-only: no changes to package code, model settings,
+features, original cutoff, inputs, dependencies, tests, or workflows. Generated
+models, raw extracts, account-level predictions, and plots are not added to Git.
+The October comparisons remain retrospective; the nested study excludes October;
+SHAP describes model behavior without claiming causation or prediction correctness.
+
+Review checks for this documentation-only update: all 44 main-pipeline tests
+passed on Python 3.14; reported results were checked against saved research
+artifacts; all local documentation links/anchors and `git diff --check` passed.
+Only README.md, docs/model_and_results.md, and this verification document change.
+No training, evaluation, or independent holdout execution was performed for the
+documentation update.
