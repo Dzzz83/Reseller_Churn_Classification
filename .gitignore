@@ -14,4 +14,18 @@ bi_venv/
 # Experiment artifacts are reproducible; verified processed data stays tracked.
 results/
 models/provisional/
+.ruff_cache/
+*.egg-info/
+.venv/
+bi_venv/
+build/
+dist/
+results/
+models/
+inputs/
+.env
+.env.*
+/.aws/
+/.agents/
+/.codex/
 *.log
