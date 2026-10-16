@@ -2,8 +2,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
-from reseller_churn.data import build_development, build_features, date, load_sources
+from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.data.preparation import (
+    build_development,
+    build_features,
+    date,
+    load_sources,
+)
 
 
 def test_frozen_features_and_training_boundaries(source_paths):

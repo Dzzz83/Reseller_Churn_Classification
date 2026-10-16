@@ -1,11 +1,11 @@
 """Freeze and score the October holdout before a separate label-reveal stage."""
 
 import argparse
+import json
+import sys
 from dataclasses import asdict
 from datetime import datetime, timezone
-import json
 from pathlib import Path
-import sys
 
 import joblib
 import numpy as np
@@ -19,16 +19,23 @@ sys.path.insert(0, str(ROOT))
 from build_companyx_features import clean_extracts, period_totals
 from companyx_readonly import query
 from compare_seven_ten_features import FEATURE_SETS
+
+from reseller_churn.artifacts import file_sha256, write_json
 from reseller_churn.config.model_settings import BASELINE_GRADIENT_BOOSTING, MODEL_SEEDS
-from reseller_churn.config.validation_settings import EXPECTED_FINAL_TEST_ROWS, FINAL_TEST_SNAPSHOT
+from reseller_churn.config.validation_settings import (
+    EXPECTED_FINAL_TEST_ROWS,
+    FINAL_TEST_SNAPSHOT,
+)
 from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.prediction_window import PredictionWindow
-from reseller_churn.evaluation.metrics import calculate_ranking_metrics, calculate_threshold_metrics
+from reseller_churn.evaluation.metrics import (
+    calculate_ranking_metrics,
+    calculate_threshold_metrics,
+)
 from reseller_churn.evaluation.selection import select_for_precision_floor
 from reseller_churn.features.feature_pipeline import FeaturePipeline
-from reseller_churn.modeling.development import file_sha256, validate_labeled_development_data, write_json
+from reseller_churn.modeling.development import validate_labeled_development_data
 from reseller_churn.modeling.model_factory import ModelFactory
-
 
 OUTPUT = ROOT / "results/final_evaluation/gb10_grouped_20261011"
 MODEL_PATH = ROOT / "models/provisional/gb10_grouped_20261011/ensemble.joblib"

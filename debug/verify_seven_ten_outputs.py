@@ -6,10 +6,10 @@ import re
 
 import numpy as np
 import pandas as pd
-
 from compare_seven_ten_features import OUTPUT, ROOT
+
+from reseller_churn.artifacts import file_sha256
 from reseller_churn.config.validation_settings import LABELED_SNAPSHOTS
-from reseller_churn.modeling.development import file_sha256
 
 
 def main():

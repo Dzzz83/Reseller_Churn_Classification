@@ -8,10 +8,14 @@ measured results remain intact. No model is promoted by this document.
 
 ## What the experiments established
 
-The objective remains **improve precision while maintaining pooled grouped
-recall strictly above 90% in every development repetition**. This is an
-observed development acceptance rule, not a guarantee for every fold, subgroup
-or new population. Grouped validation remains the agreed selection design.
+The current user requirement is **reduce false alerts while matching or
+exceeding baseline recall on the same development validation splits**. Future
+comparisons must predeclare the common cutoff-selection policy and the exact
+paired acceptance calculation before fitting. The historical studies below
+used pooled grouped recall strictly above 90% in every repetition; their rules
+and recorded results are unchanged. Neither requirement guarantees performance
+for every subgroup or new population. Grouped validation remains the agreed
+selection design.
 
 | Evidence | Recall | Precision | What it establishes |
 | --- | ---: | ---: | --- |
@@ -89,8 +93,9 @@ See [the complete diagnosis](../comparisons/frozen_failure_diagnosis.md),
    Snapshot slices remain descriptive grouped results, not temporal validation.
    Report subgroup sample sizes and deterioration; do not hide an aggregate
    failure or select only favorable slices.
-5. **Check robustness before calling a candidate successful.** Retain the
-   existing pooled-per-repeat >90% recall rule. Examine uncertainty and variation
+5. **Check robustness before calling a candidate successful.** For new comparisons,
+   apply the user's paired baseline-recall requirement above; exceeding 90% alone
+   is insufficient. Examine uncertainty and variation
    in precision and false alarms, plus cutoff/refit stability within development.
    Freeze any additional practical-gain margin, subgroup constraint or worst-fold
    requirement before a new experiment. None is silently imposed here, and no

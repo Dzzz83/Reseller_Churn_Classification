@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
-from pathlib import Path
 import subprocess
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import joblib
@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from sklearn.utils.class_weight import compute_sample_weight
 
+from reseller_churn.artifacts import file_sha256
 from reseller_churn.config.feature_sets import FEATURE_SETS
 from reseller_churn.config.model_settings import (
     GradientBoostingSettings,
@@ -33,7 +34,6 @@ from reseller_churn.modeling.resampling import (
     balance_classes_by_random_oversampling,
 )
 
-
 RESERVED_COLUMNS = {"StoreID", "snapshot", "churn"}
 
 
@@ -42,9 +42,7 @@ def validate_labeled_development_data(data: pd.DataFrame) -> pd.DataFrame:
     required_columns = RESERVED_COLUMNS
     missing_columns = required_columns - set(data.columns)
     if missing_columns:
-        raise ValueError(
-            f"Labeled data is missing columns: {sorted(missing_columns)}"
-        )
+        raise ValueError(f"Labeled data is missing columns: {sorted(missing_columns)}")
 
     validated = data.copy()
     validated["snapshot"] = pd.to_datetime(validated["snapshot"]).dt.strftime(
@@ -98,14 +96,6 @@ def dataframe_sha256(data: pd.DataFrame) -> str:
     ordered = data.sort_values(["snapshot", "StoreID"]).reset_index(drop=True)
     payload = ordered.to_csv(index=False, date_format="%Y-%m-%d").encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
-
-
-def file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def repository_identity() -> dict[str, object]:
@@ -227,8 +217,7 @@ class FittedProbabilityEnsemble:
 
         selected_features = features.loc[:, list(self.features)]
         by_seed = [
-            model.predict_proba(selected_features)[:, 1]
-            for model in self.models
+            model.predict_proba(selected_features)[:, 1] for model in self.models
         ]
         return np.mean(by_seed, axis=0)
 
@@ -271,9 +260,7 @@ def fit_and_predict_candidate(
 ) -> tuple[np.ndarray, tuple[Any, ...]]:
     """Fit one candidate's seed ensemble and return averaged probabilities."""
     selected_features = training_features.loc[:, list(candidate.features)]
-    selected_validation_features = validation_features.loc[
-        :, list(candidate.features)
-    ]
+    selected_validation_features = validation_features.loc[:, list(candidate.features)]
     models = tuple(
         _fit_one_model(
             candidate,
@@ -329,7 +316,9 @@ def validate_selection_manifest(
     try:
         int(recorded_data_hash, 16)
     except ValueError as error:
-        raise ValueError("Manifest development data hash is not hexadecimal.") from error
+        raise ValueError(
+            "Manifest development data hash is not hexadecimal."
+        ) from error
     if manifest.get("data_sha256") != expected_data_sha256 and (
         expected_data_sha256 is not None
     ):
@@ -338,7 +327,9 @@ def validate_selection_manifest(
     fold_metrics = manifest.get("selected_fold_metrics", {})
     required_fold_names = {fold.name for fold in DEVELOPMENT_FOLDS}
     if set(fold_metrics) != required_fold_names:
-        raise ValueError("Manifest does not contain metrics for every development fold.")
+        raise ValueError(
+            "Manifest does not contain metrics for every development fold."
+        )
     for fold_name, metrics in fold_metrics.items():
         precision = metrics.get("precision")
         if not isinstance(precision, (int, float)) or not np.isfinite(precision):
@@ -372,9 +363,9 @@ def refit_selected_candidate(
     )
 
 
-def load_selected_predictor(manifest_path: Path) -> tuple[
-    dict[str, Any], FittedProbabilityEnsemble
-]:
+def load_selected_predictor(
+    manifest_path: Path,
+) -> tuple[dict[str, Any], FittedProbabilityEnsemble]:
     """Load a selected model bundle only when its manifest and checksum agree."""
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     candidate = validate_selection_manifest(manifest)
@@ -406,11 +397,3 @@ def load_selected_predictor(manifest_path: Path) -> tuple[
     if len(predictor.models) != len(candidate.seeds):
         raise ValueError("Saved model count does not match the manifest seed policy.")
     return manifest, predictor
-
-
-def write_json(path: Path, value: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )

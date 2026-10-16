@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -14,6 +13,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from reseller_churn.artifacts import file_sha256, write_json
 from reseller_churn.config.project_paths import (
     MODELS_DIR,
     get_run_directory,
@@ -41,13 +41,11 @@ from reseller_churn.modeling.candidates import (
 )
 from reseller_churn.modeling.development import (
     dataframe_sha256,
-    file_sha256,
     fit_and_predict_candidate,
     fold_manifest,
     refit_selected_candidate,
     repository_identity,
     validate_labeled_development_data,
-    write_json,
 )
 
 

@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import sklearn
 
+PACKAGE_HASH_FORMAT = "relative-python-paths-v1"
+
 
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -31,8 +33,10 @@ def source_identity() -> dict:
     )
     return {
         "revision": revision.stdout.strip() if revision.returncode == 0 else None,
+        "package_hash_format": PACKAGE_HASH_FORMAT,
         "package_sha256": {
-            p.name: file_sha256(p) for p in sorted(package.glob("*.py"))
+            p.relative_to(package).as_posix(): file_sha256(p)
+            for p in sorted(package.rglob("*.py"))
         },
         "versions": {
             "python": platform.python_version(),
@@ -59,6 +63,7 @@ def new_output_directory(path: Path) -> Path:
 
 
 def write_json(path: Path, value: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(
         json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n"
     )

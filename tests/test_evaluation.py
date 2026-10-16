@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from reseller_churn.evaluation import compare_cutoffs, evaluate
+from reseller_churn.evaluation.cutoff_evaluation import compare_cutoffs, evaluate
 
 
 def examples():

@@ -9,7 +9,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.data.churn_labels import build_churn_labels
+from reseller_churn.data.eligibility import get_eligible_store_ids
+from reseller_churn.data.prediction_window import PredictionWindow
 
 DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
 KEYS = ["StoreID", "snapshot"]
@@ -263,14 +266,11 @@ def _discount_statistics(
 def build_features(source: Sources, snapshot: DateLike) -> pd.DataFrame:
     """Build only the ten frozen inputs, preserving their original formulas."""
     snapshot = date(snapshot)
-    history_start = snapshot - pd.DateOffset(months=12)
+    window = PredictionWindow.from_date(snapshot)
+    history_start = window.history_start
     source.require_coverage(history_start, snapshot)
-    history = source.orders[
-        source.orders.OrderDate.ge(history_start) & source.orders.OrderDate.lt(snapshot)
-    ]
-    eligible = history.loc[
-        history.OrderDate.ge(snapshot - pd.DateOffset(months=6)), "StoreID"
-    ].unique()
+    history = window.select_history(source.orders)
+    eligible = get_eligible_store_ids(source.orders, window)
     history = history[history.StoreID.isin(eligible)]
     features = (
         history.groupby("StoreID")
@@ -330,14 +330,15 @@ def build_development(source: Sources) -> pd.DataFrame:
     """Construct only approved historical training outcomes, never final labels."""
     parts = []
     for snapshot in TRAINING_SNAPSHOTS:
-        start = date(snapshot)
-        end = start + pd.DateOffset(months=6)
-        source.require_coverage(start, end)
-        features = build_features(source, start)
-        retained = source.orders.loc[
-            source.orders.OrderDate.ge(start) & source.orders.OrderDate.lt(end),
-            "StoreID",
-        ].unique()
-        features["churn"] = (~features.StoreID.isin(retained)).astype(int)
-        parts.append(features)
+        window = PredictionWindow.from_date(snapshot)
+        source.require_coverage(window.label_start, window.label_end)
+        features = build_features(source, window.snapshot)
+        labels = build_churn_labels(source.orders, window)
+        parts.append(
+            features.merge(
+                labels[["StoreID", "churn"]],
+                on="StoreID",
+                validate="one_to_one",
+            )
+        )
     return pd.concat(parts, ignore_index=True)

@@ -1,8 +1,8 @@
 """Describe associations, then measure fixed feature groups against baseline."""
 
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -14,17 +14,22 @@ sys.path.insert(0, str(ROOT))
 
 from build_companyx_features import FEATURE_GROUPS, OUTPUT
 from compare_rfm_seven_features import operating_metrics
+
+from reseller_churn.artifacts import file_sha256, write_json
 from reseller_churn.config.feature_sets import PRUNED_FEATURES
 from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
 from reseller_churn.data.temporal_dataset import TemporalDataset
 from reseller_churn.evaluation.selection import (
-    SELECTION_RULE, THRESHOLDS, evaluate_threshold_tradeoffs, select_for_precision_floor,
+    SELECTION_RULE,
+    THRESHOLDS,
+    evaluate_threshold_tradeoffs,
+    select_for_precision_floor,
 )
 from reseller_churn.modeling.development import (
-    file_sha256, repository_identity, validate_labeled_development_data, write_json,
+    repository_identity,
+    validate_labeled_development_data,
 )
 from reseller_churn.modeling.model_factory import ModelFactory
-
 
 BASELINE_RUN = ROOT / "results/debugging/rfm_vs_seven_features_precision_030"
 NEW_FEATURES = [name for group in FEATURE_GROUPS.values() for name in group]

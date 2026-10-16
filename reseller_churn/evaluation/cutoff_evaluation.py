@@ -5,15 +5,24 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import average_precision_score, roc_auc_score
 
 from reseller_churn.artifacts import (
     input_identity,
     new_output_directory,
     write_manifest,
 )
-from reseller_churn.config import ORIGINAL_RULES, ORIGINAL_TEST_SNAPSHOT
-from reseller_churn.data import KEYS, DateLike, date, require_columns, unique_ids
+from reseller_churn.config.frozen_model import ORIGINAL_RULES, ORIGINAL_TEST_SNAPSHOT
+from reseller_churn.data.preparation import (
+    KEYS,
+    DateLike,
+    date,
+    require_columns,
+    unique_ids,
+)
+from reseller_churn.evaluation.metrics import (
+    calculate_ranking_metrics,
+    calculate_threshold_metrics,
+)
 
 
 def _validated_cutoffs(cutoffs: Iterable[float]) -> tuple[float, ...]:
@@ -115,12 +124,10 @@ def _metric_row(
     subgroup: str,
     group: pd.DataFrame,
 ) -> dict[str, object]:
-    positive = group.actual_churn.eq(1)
-    alert = group.churn_probability.ge(cutoff)
-    tp = int((positive & alert).sum())
-    fp = int((~positive & alert).sum())
-    fn = int((positive & ~alert).sum())
-    tn = int((~positive & ~alert).sum())
+    metrics = calculate_threshold_metrics(
+        group.actual_churn, group.churn_probability, cutoff
+    )
+    ranking = calculate_ranking_metrics(group.actual_churn, group.churn_probability)
     original_role = (
         ORIGINAL_RULES.get(cutoff, "additional")
         if snapshot == date(ORIGINAL_TEST_SNAPSHOT)
@@ -133,24 +140,10 @@ def _metric_row(
         "cohort_status": cohort_status,
         "subgroup": subgroup,
         "rows": len(group),
-        "churners": int(positive.sum()),
-        "tp": tp,
-        "fp": fp,
-        "fn": fn,
-        "tn": tn,
-        "precision": tp / max(1, tp + fp),
-        "recall": tp / max(1, tp + fn),
-        "f1": 2 * tp / max(1, 2 * tp + fp + fn),
-        "alert_count": tp + fp,
-        "alert_rate": (tp + fp) / len(group),
-        "average_precision": float(
-            average_precision_score(positive, group.churn_probability)
-        )
-        if positive.any()
-        else None,
-        "roc_auc": float(roc_auc_score(positive, group.churn_probability))
-        if positive.nunique() == 2
-        else None,
+        "churners": int(group.actual_churn.sum()),
+        **{name: value for name, value in metrics.items() if name != "accuracy"},
+        "average_precision": ranking["average_precision"],
+        "roc_auc": ranking["roc_auc"],
     }
 
 

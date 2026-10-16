@@ -6,8 +6,14 @@ and threshold choices remain provisional.
 
 ## Documentation
 
+- [2026-10-16 machine handoff](handoff/2026-10-16/README.md): restore the saved
+  research/data/presentation archives and continue from another checkout.
 - [Project context](docs/project_context.md): purpose, repository structure,
   prediction contract, model settings, validation, and research status.
+- [Code architecture](docs/code_architecture.md): module responsibilities, fixed
+  scoring versus research workflows, and saved-model compatibility.
+- [Baseline error diagnosis](comparisons/baseline_error_diagnosis.md): saved
+  development errors, ranking overlap, behavioral slices, and recurrence checks.
 - [Data analysis](docs/data_analysis.md): CompanyX backup provenance, source
   tables and columns, row counts, CSV mappings, cleaning, and availability assumptions.
 - [Feature analysis](docs/feature_analysis.md): candidate feature sets,
@@ -147,12 +153,11 @@ still registers RFM, Pruned, Reduced, and Full. See the
 ## Set up and run
 
 The standalone grouped studies have [reproduction commands](comparisons/grouped_ablation.md#execution-and-verification).
-This research checkout's full suite currently encounters a module/package
-collision at `TRAINING_SNAPSHOTS`; the latest diagnostic verification passed
-39 focused study, ablation, evaluation and diagnosis tests. This is a scoped
-check, not a passing full repository suite.
-Duplicate TOML tables and initializer conflict markers were repaired. See
-[execution status](pipeline/README.md#grouped-precision-and-ablation-studies).
+The module/package import collisions are resolved: frozen settings live in
+`config/frozen_model.py`, strict preparation in `data/preparation.py`, and
+explicit cutoff reports in `evaluation/cutoff_evaluation.py`. Both workflows
+use shared window, label, metric, and artifact helpers. See
+[code architecture](docs/code_architecture.md) for ownership and compatibility.
 
 Use Python 3.11 or later in a project virtual environment:
 
@@ -161,6 +166,11 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 python pipeline/run_full_development_pipeline.py
 ```
+
+For fixed ten-feature scoring, start with `python -m reseller_churn --help`
+or `reseller-churn --help`. These expose `prepare`, `features`, `train`,
+`predict`, and `evaluate`; they do not search models or select cutoffs.
+Required source inputs are documented in the [input contract](docs/input_contract.md).
 
 The runner prepares data and compares model configurations on temporal folds,
 prioritizing recall at several minimum precision levels. See the

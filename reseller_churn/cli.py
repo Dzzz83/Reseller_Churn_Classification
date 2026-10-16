@@ -11,9 +11,14 @@ from reseller_churn.artifacts import (
     new_output_directory,
     write_manifest,
 )
-from reseller_churn.config import TRAINING_SNAPSHOTS
-from reseller_churn.data import build_development, build_features, date, load_sources
-from reseller_churn.evaluation import evaluate
+from reseller_churn.config.frozen_model import TRAINING_SNAPSHOTS
+from reseller_churn.data.preparation import (
+    build_development,
+    build_features,
+    date,
+    load_sources,
+)
+from reseller_churn.evaluation.cutoff_evaluation import evaluate
 from reseller_churn.model import predict, train
 
 

@@ -11,13 +11,14 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.utils.class_weight import compute_sample_weight
 
 from reseller_churn.artifacts import (
+    PACKAGE_HASH_FORMAT,
     input_identity,
     new_output_directory,
     source_identity,
     verify_manifest,
     write_manifest,
 )
-from reseller_churn.config import (
+from reseller_churn.config.frozen_model import (
     DISCOUNT_FEATURES,
     FEATURES,
     PARAMETERS,
@@ -25,7 +26,13 @@ from reseller_churn.config import (
     TRAINING_SNAPSHOTS,
     model_configuration,
 )
-from reseller_churn.data import KEYS, DateLike, date, require_columns, unique_ids
+from reseller_churn.data.preparation import (
+    KEYS,
+    DateLike,
+    date,
+    require_columns,
+    unique_ids,
+)
 
 
 def validate_features(frame: pd.DataFrame) -> pd.DataFrame:
@@ -132,6 +139,11 @@ def load_model(directory: Path) -> tuple[FixedEnsemble, dict]:
     ):
         raise ValueError("Model configuration differs from the supported frozen model.")
     current_identity = source_identity()
+    if manifest["source"].get("package_hash_format") != PACKAGE_HASH_FORMAT:
+        raise ValueError(
+            "Legacy model source identity format; use its recorded package/environment "
+            "or refit explicitly. Existing manifests must not be rewritten."
+        )
     if manifest["source"]["package_sha256"] != current_identity["package_sha256"]:
         raise ValueError(
             "Model package code has changed; use its recorded version or refit explicitly."

@@ -11,6 +11,12 @@ and explicit authorization. Reusable modeling and
 data logic lives in `reseller_churn/`, with orchestration in
 `pipeline/development_workflow.py`.
 
+The fixed ten-feature CLI is separate: `python -m reseller_churn --help`
+lists its preparation, training, scoring, and explicit cutoff-evaluation commands.
+It uses `config/frozen_model.py`, `data/preparation.py`, `model.py`, and
+`evaluation/cutoff_evaluation.py`. See [code architecture](../docs/code_architecture.md)
+for shared helpers and saved-model compatibility.
+
 | Phase | Entry point | Purpose |
 | --- | --- | --- |
 | Prepare data | `pipeline/prepare_data.py` | Audit source files, build historical-only features and approved labeled development rows, compare with tracked references, and save generated files under one run ID |
@@ -63,12 +69,13 @@ documentation update. The grouped-study verifier also performs five
 development-only fidelity refits; it is not a read-only metrics check. Those
 copies verify saved-bundle reproducibility and are not additional model-quality
 evidence. The
-normal repository-wide pytest command currently fails on a research-package /
-merged-final-module collision: `reseller_churn.config` shadows `config.py`,
-preventing the final CLI from importing `TRAINING_SNAPSHOTS`. Duplicate TOML
-tables and initializer conflict markers were repaired; the broader package
-compatibility issue remains. These standalone comparisons do not import the
-conflicting package. Synthetic smoke checks execution, not model quality.
+normal repository-wide pytest command encountered a research-package /
+merged-final-module collision during those historical runs. The collision is
+now resolved by giving frozen configuration, strict preparation, and cutoff
+evaluation their own modules within the existing domain packages. Duplicate
+TOML tables and initializer conflict markers were repaired earlier.
+The [architecture record](../docs/code_architecture.md) describes the repair.
+Synthetic smoke checks execution, not model quality.
 
 ## Run preparation and development
 

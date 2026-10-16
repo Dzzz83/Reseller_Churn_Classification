@@ -1147,8 +1147,9 @@ data and controlled tests. No replacement or new cutoff is selected here.
 At the initial diagnostic run, this checkout had committed initializer conflict
 markers and duplicate TOML tables, so the runner was kept standalone. Those
 two issues were repaired during the subsequent grouped study. The full pytest
-command now reaches a separate `TRAINING_SNAPSHOTS` import collision; see
+command then reached a separate `TRAINING_SNAPSHOTS` import collision; see
 [current execution status](../pipeline/README.md#grouped-precision-and-ablation-studies).
+The subsequent [package repair](code_architecture.md) resolves that collision.
 The independent diagnosis and comparison tests remain runnable.
 
 ```powershell
@@ -1201,7 +1202,7 @@ The run and local report are under `results/repeated-grouped-precision/`.
 
 During execution, the user also requested repair of the duplicate TOML sections.
 The project metadata tables and initializer conflict markers were consolidated.
-Normal pytest now reaches a separate research-package/final-module collision
+Normal pytest then reached a separate research-package/final-module collision
 at `TRAINING_SNAPSHOTS`; the standalone study is unaffected. Fourteen focused
 study/diagnosis tests pass. No final testing, push, or merge was performed.
 
@@ -1294,7 +1295,9 @@ For this diagnostic, 39 focused tests pass, including 12 diagnostic tests.
 The separate existing grouped-study verifier performs five development-only
 fidelity refits; no model copies replace the bundle or receive October scores.
 Independent study, ablation and frozen evaluation audits pass. Full pytest
-remains blocked by the existing `TRAINING_SNAPSHOTS` config import collision.
+was then blocked by the `TRAINING_SNAPSHOTS` config import collision.
+The subsequent [package repair](code_architecture.md) resolves that collision;
+these diagnostic test counts remain historical.
 
 ## Lessons and future research rules — 2026-10-16
 

@@ -59,6 +59,12 @@ The working branch is `pipeline_preparation`. It must not be merged into `main`
 automatically. The repository is a Python package defined by
 [pyproject.toml](../pyproject.toml), requiring Python 3.11 or later.
 
+The fixed scoring CLI coexists with research through explicit domain modules:
+`config/frozen_model.py`, `data/preparation.py`, `model.py`, and
+`evaluation/cutoff_evaluation.py`. There are no same-name module/package pairs.
+Read [code architecture](code_architecture.md) for dependency ownership,
+shared behavior, and artifact identity requirements.
+
 ## Development datasets and validation
 
 The main labeled dataset has one row per eligible reseller and snapshot. A

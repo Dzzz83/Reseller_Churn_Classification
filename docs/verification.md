@@ -1,5 +1,10 @@
 # Final pipeline verification and review
 
+For the subsequent repair that lets the research and fixed workflows coexist
+in this checkout, see [code architecture and completed local checks](code_architecture.md#completed-local-checks--2026-10-16).
+That repair passed 191 combined tests; the narrower historical checks below
+describe the original final-pipeline preparation and its separate code state.
+
 Verified on 2026-10-11. Execution branch: `final-pipeline-preparation`.
 Base: refreshed `origin/main`, commit
 `b43e44d787236d77dc46fd9acc26b9ec831b3544`. Research source:

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from reseller_churn.cli import main
-from reseller_churn.evaluation import evaluate
+from reseller_churn.evaluation.cutoff_evaluation import evaluate
 
 
 def test_standalone_end_to_end_smoke_from_another_directory(tmp_path):

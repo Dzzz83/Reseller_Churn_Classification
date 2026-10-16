@@ -1,14 +1,14 @@
 """Verify frozen-model chronology and saved final-test accounting; no refitting."""
 
-from datetime import datetime
 import json
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from run_final_testing_evaluation import OUTPUT, verify_checkpoint
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from run_final_testing_evaluation import OUTPUT, ROOT, verify_checkpoint
-from reseller_churn.modeling.development import file_sha256
+from reseller_churn.artifacts import file_sha256
 
 
 def main():

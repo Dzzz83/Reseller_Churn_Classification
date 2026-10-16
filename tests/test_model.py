@@ -2,8 +2,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from reseller_churn.config import FEATURES, SEEDS
-from reseller_churn.data import build_development, build_features, load_sources
+from reseller_churn.config.frozen_model import FEATURES, SEEDS
+from reseller_churn.data.preparation import (
+    build_development,
+    build_features,
+    load_sources,
+)
 from reseller_churn.model import (
     FixedEnsemble,
     load_model,

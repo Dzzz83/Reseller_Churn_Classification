@@ -1,9 +1,9 @@
 """Fixed seven-versus-ten comparison under temporal and grouped validation."""
 
-from dataclasses import asdict
 import json
-from pathlib import Path
 import sys
+from dataclasses import asdict
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,20 +17,27 @@ sys.path.insert(0, str(ROOT))
 from build_companyx_features import FEATURE_GROUPS
 from compare_rfm_seven_features import operating_metrics
 from evaluate_companyx_features import paired_changes
+
+from reseller_churn.artifacts import file_sha256, write_json
 from reseller_churn.config.feature_sets import PRUNED_FEATURES
 from reseller_churn.config.model_settings import (
-    BASELINE_GRADIENT_BOOSTING, BASELINE_RANDOM_FOREST, MODEL_SEEDS,
+    BASELINE_GRADIENT_BOOSTING,
+    BASELINE_RANDOM_FOREST,
+    MODEL_SEEDS,
 )
 from reseller_churn.config.validation_settings import DEVELOPMENT_FOLDS
 from reseller_churn.data.temporal_dataset import TemporalDataset
 from reseller_churn.evaluation.selection import (
-    SELECTION_RULE, THRESHOLDS, evaluate_threshold_tradeoffs, select_for_precision_floor,
+    SELECTION_RULE,
+    THRESHOLDS,
+    evaluate_threshold_tradeoffs,
+    select_for_precision_floor,
 )
 from reseller_churn.modeling.development import (
-    file_sha256, repository_identity, validate_labeled_development_data, write_json,
+    repository_identity,
+    validate_labeled_development_data,
 )
 from reseller_churn.modeling.model_factory import ModelFactory
-
 
 SOURCE = ROOT / "results/debugging/companyx_features"
 OUTPUT = ROOT / "results/debugging/seven_vs_ten_features"

@@ -2,14 +2,13 @@
 
 import ast
 import json
-from pathlib import Path
 import re
 
 import numpy as np
 import pandas as pd
-
 from build_companyx_features import FEATURE_GROUPS, OUTPUT, ROOT
-from reseller_churn.modeling.development import file_sha256
+
+from reseller_churn.artifacts import file_sha256
 
 
 def main():
