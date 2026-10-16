@@ -27,3 +27,7 @@ bi_venv/
 results/
 models/provisional/
 *.log
+
+# Local agent instructions
+AGENTS.md
+agents.md
