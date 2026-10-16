@@ -17,7 +17,10 @@ class ModelFactory:
     """Create project models from explicit, reusable settings."""
 
     @staticmethod
-    def create_logistic_regression() -> Pipeline:
+    def create_logistic_regression(
+        c: float = 1.0,
+        max_iter: int = 2000,
+    ) -> Pipeline:
         return Pipeline(
             [
                 (
@@ -34,7 +37,8 @@ class ModelFactory:
                 (
                     "model",
                     LogisticRegression(
-                        max_iter=2000,
+                        C=c,
+                        max_iter=max_iter,
                         class_weight=None,
                     ),
                 ),

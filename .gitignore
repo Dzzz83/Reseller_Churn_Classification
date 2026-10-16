@@ -10,6 +10,15 @@ build/
 venv/
 bi_venv/
 .env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Local agent configuration and cloud credentials, not project source.
+/.agents/
+/.aws/
+/.codex/
 
 # Experiment artifacts are reproducible; verified processed data stays tracked.
 results/

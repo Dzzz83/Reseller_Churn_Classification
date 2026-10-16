@@ -8,6 +8,7 @@ import pandas as pd
 
 from reseller_churn.config.project_paths import (
     ALL_ENGINEERED_FEATURES_PATH,
+    LEGACY_ENGINEERED_FEATURES_PATH,
 )
 from reseller_churn.config.validation_settings import (
     ALL_FEATURE_SNAPSHOTS,
@@ -43,14 +44,18 @@ def main() -> None:
             "[PASS] Refactored features match the verified reference."
         )
 
+    LEGACY_ENGINEERED_FEATURES_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
     features.to_csv(
-        ALL_ENGINEERED_FEATURES_PATH,
+        LEGACY_ENGINEERED_FEATURES_PATH,
         index=False,
     )
 
     print(f"Rows: {len(features)}")
     print(f"Engineered features: {len(features.columns) - 2}")
-    print(f"Saved: {ALL_ENGINEERED_FEATURES_PATH}")
+    print(f"Saved generated features: {LEGACY_ENGINEERED_FEATURES_PATH}")
 
 
 if __name__ == "__main__":

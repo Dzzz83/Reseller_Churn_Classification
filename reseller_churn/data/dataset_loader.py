@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 from reseller_churn.config.project_paths import (
@@ -23,8 +25,11 @@ class DatasetLoader:
         return pd.read_csv(STORES_PATH)
 
     @staticmethod
-    def load_labeled_snapshots() -> pd.DataFrame:
-        data = pd.read_csv(LABELED_SNAPSHOTS_PATH)
+    def load_labeled_snapshots(
+        path: Path = LABELED_SNAPSHOTS_PATH,
+    ) -> pd.DataFrame:
+        """Load labeled development snapshots from a reference or run output."""
+        data = pd.read_csv(path)
         data["snapshot"] = pd.to_datetime(
             data["snapshot"]
         ).dt.strftime("%Y-%m-%d")

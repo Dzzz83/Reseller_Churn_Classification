@@ -7,9 +7,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import pandas as pd
 
 from reseller_churn.config.project_paths import (
-    ALL_ENGINEERED_FEATURES_PATH,
-    FINAL_TEST_FEATURES_PATH,
-    LABELED_SNAPSHOTS_PATH,
+    LEGACY_ENGINEERED_FEATURES_PATH,
+    LEGACY_FINAL_TEST_FEATURES_PATH,
+    LEGACY_LABELED_SNAPSHOTS_PATH,
 )
 from reseller_churn.data.dataset_loader import DatasetLoader
 from reseller_churn.data.ml_dataset_builder import build_ml_datasets
@@ -19,7 +19,7 @@ def main() -> None:
     print("=== 04. ML Dataset Assembly ===")
 
     engineered_features = pd.read_csv(
-        ALL_ENGINEERED_FEATURES_PATH,
+        LEGACY_ENGINEERED_FEATURES_PATH,
         parse_dates=["snapshot"],
     )
 
@@ -28,13 +28,17 @@ def main() -> None:
         engineered_features=engineered_features,
     )
 
+    LEGACY_LABELED_SNAPSHOTS_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
     labeled_data.to_csv(
-        LABELED_SNAPSHOTS_PATH,
+        LEGACY_LABELED_SNAPSHOTS_PATH,
         index=False,
     )
 
     final_test_features.to_csv(
-        FINAL_TEST_FEATURES_PATH,
+        LEGACY_FINAL_TEST_FEATURES_PATH,
         index=False,
     )
 
@@ -48,6 +52,7 @@ def main() -> None:
         f"Final-test feature rows: {len(final_test_features)}"
     )
     print("Final-test labels: NOT ACCESSED")
+    print(f"Saved generated data under: {LEGACY_LABELED_SNAPSHOTS_PATH.parent}")
 
 
 if __name__ == "__main__":
