@@ -3,8 +3,18 @@
 Predict six-month reseller churn using the fixed ten-feature histogram gradient
 boosting model. Save ranked scores once, then compare supplied probability
 cutoffs without retraining. This branch contains the final workflow; model
-searches and experiment history remain on `pipeline_preparation` at source
-commit `f53202d`.
+searches and experiment history remain on separate research branches. The
+original model source is `pipeline_preparation` at commit `f53202d`; later
+revenue comparisons and SHAP analysis are preserved on
+`research/revenue-shap-results-20261016`.
+
+## Latest research findings
+
+The repeated nested grouped comparison did not establish a reliable advantage
+from replacing SubTotal with TotalDue. SHAP explains how held-out predictions
+use the current features, including a high-score false alert; it does not prove
+causation or prediction correctness. These results do not change the fixed
+model or its original cutoff. See [results, thresholds, and limitations](docs/model_and_results.md#later-research-findings).
 
 ## Install and verify
 
