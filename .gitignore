@@ -9,3 +9,7 @@ build/
 .venv/
 venv/
 .env
+
+# Local agent instructions
+AGENTS.md
+agents.md
