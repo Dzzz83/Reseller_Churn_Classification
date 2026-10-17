@@ -21,10 +21,10 @@ def file_sha256(path: Path) -> str:
 
 
 def source_identity() -> dict:
-    package = Path(__file__).resolve().parent
+    package_directory = Path(__file__).resolve().parent
     revision = subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        cwd=package,
+        cwd=package_directory,
         capture_output=True,
         text=True,
         check=False,
@@ -32,7 +32,8 @@ def source_identity() -> dict:
     return {
         "revision": revision.stdout.strip() if revision.returncode == 0 else None,
         "package_sha256": {
-            p.name: file_sha256(p) for p in sorted(package.glob("*.py"))
+            source_file.name: file_sha256(source_file)
+            for source_file in sorted(package_directory.glob("*.py"))
         },
         "versions": {
             "python": platform.python_version(),
@@ -71,9 +72,9 @@ def write_manifest(directory: Path, metadata: dict) -> None:
             **metadata,
             "source": source_identity(),
             "outputs": {
-                p.name: file_sha256(p)
-                for p in sorted(directory.iterdir())
-                if p.is_file()
+                output_file.name: file_sha256(output_file)
+                for output_file in sorted(directory.iterdir())
+                if output_file.is_file()
             },
         },
     )
@@ -81,7 +82,10 @@ def write_manifest(directory: Path, metadata: dict) -> None:
 
 def verify_manifest(directory: Path) -> dict:
     manifest = json.loads((Path(directory) / "manifest.json").read_text())
-    for name, expected in manifest["outputs"].items():
-        if Path(name).name != name or file_sha256(Path(directory) / name) != expected:
-            raise ValueError(f"Artifact checksum mismatch: {name}")
+    for filename, expected_checksum in manifest["outputs"].items():
+        if Path(filename).name != filename:
+            raise ValueError(f"Artifact checksum mismatch: {filename}")
+        actual_checksum = file_sha256(Path(directory) / filename)
+        if actual_checksum != expected_checksum:
+            raise ValueError(f"Artifact checksum mismatch: {filename}")
     return manifest

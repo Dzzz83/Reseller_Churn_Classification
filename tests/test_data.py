@@ -3,7 +3,12 @@ import pandas as pd
 import pytest
 
 from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
-from reseller_churn.data import build_development, build_features, date, load_sources
+from reseller_churn.data import (
+    build_development,
+    load_sources,
+)
+from reseller_churn.dates import parse_calendar_date
+from reseller_churn.features import build_features
 
 
 def test_frozen_features_and_training_boundaries(source_paths):
@@ -20,7 +25,7 @@ def test_frozen_features_and_training_boundaries(source_paths):
     active = final[final.StoreID.eq(3)].iloc[0]
     assert active.weighted_discount_3m == pytest.approx(0.2)
     assert active.discount_change_3m == pytest.approx(0.1)
-    assert active.discounted_line_share_12m == 1
+    assert active.discount_frequency_12m == 1
 
 
 def test_future_orders_do_not_enter_features(source_paths):
@@ -99,7 +104,7 @@ def test_invalid_source_reconciliation(source_paths, mutation):
 )
 def test_invalid_calendar_dates(value):
     with pytest.raises(ValueError):
-        date(value)
+        parse_calendar_date(value)
 
 
 def test_eligibility_start_is_inclusive(source_paths):

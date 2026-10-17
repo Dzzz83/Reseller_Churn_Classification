@@ -84,6 +84,8 @@ parameters and original evaluation limitations.
 
 The bundle includes checksums, configuration, input hashes, package code
 hashes, and runtime versions. Loading rejects incompatible or modified bundles.
+Package-code changes, including readability refactors, invalidate existing bundles:
+use their recorded code version or explicitly retrain under the new version.
 Use only trusted model files: joblib deserialization can execute code.
 
 ## Build scoring features and save the ranked probabilities
@@ -156,6 +158,29 @@ ignored. Preserve tracked datasets as read-only source references.
 
 `reseller_churn/` contains the final implementation; `pipeline/` contains the
 source entry point, optional extraction SQL, and synthetic smoke. Tests and CI
-cover this workflow without research outputs or the audit database. Original
-experimental scripts, local evaluation artifacts, and hashes are preserved in
-the research checkout. See [verification and review](docs/verification.md).
+cover this workflow without research outputs or the audit database.
+
+For a code walkthrough, follow these responsibilities:
+
+| Module | Responsibilities and starting functions |
+| --- | --- |
+| `reseller_churn/cli.py` | `build_command_parser()` defines commands; `main()` dispatches them |
+| `reseller_churn/data.py` | `load_sources()` validates and reconciles CSVs; `build_development()` attaches historical churn labels to training samples |
+| `reseller_churn/features.py` | `build_features()` selects eligible history and combines `build_purchase_features()` with `build_discount_features()` |
+| `reseller_churn/model.py` | `train()` validates labels and fits the ensemble; `load_model()` checks bundle compatibility; `predict()` saves ranked scores |
+| `reseller_churn/evaluation.py` | `compare_cutoffs()` matches predictions to outcomes and computes reports; `evaluate()` reads and saves files |
+| `reseller_churn/config.py` | Purchase/discount feature groups, fixed feature order, model parameters, seeds, snapshots, and original cutoffs |
+| `reseller_churn/dates.py` | Shared calendar-date parsing |
+| `reseller_churn/artifacts.py` | Output directory creation, checksums, and run manifests |
+
+Each feature builder returns `StoreID` and only its own feature columns. The
+purchase builder receives eligible stores' twelve-month order history; the
+discount builder receives lines with reseller IDs and order dates. `build_features()`
+keeps every eligible reseller with a left join, adds the snapshot, and selects
+the fixed output schema. Missing discount periods remain missing rather than zero.
+
+Source windows include their start and exclude their end. The `end_date` variable
+marks where source orders stop; orders on or after that date are excluded.
+
+Original experimental scripts, local evaluation artifacts, and hashes are
+preserved in the research checkout. See [verification and review](docs/verification.md).

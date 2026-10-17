@@ -1,18 +1,16 @@
-"""Historical source validation, final features, and development-only labels."""
+"""Historical source validation and development-only training labels."""
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date as CalendarDate
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.config import TRAINING_SNAPSHOTS
+from reseller_churn.dates import DateLike, parse_calendar_date
+from reseller_churn.features import build_features
 
-DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
-KEYS = ["StoreID", "snapshot"]
 CATEGORIES = ["rev_bikes", "rev_components", "rev_clothing", "rev_accessories"]
 ORDER_COLUMNS = [
     "StoreID",
@@ -35,27 +33,21 @@ LINE_COLUMNS = [
 ]
 
 
-def date(value: DateLike) -> pd.Timestamp:
-    result = pd.Timestamp(value)
-    if pd.isna(result) or result.tzinfo is not None or result != result.normalize():
-        raise ValueError("Dates must be non-missing, timezone-naive calendar dates.")
-    return result
-
-
 def require_columns(frame: pd.DataFrame, columns: Iterable[str], name: str) -> None:
     missing = set(columns) - set(frame.columns)
     if missing:
         raise ValueError(f"{name} is missing columns: {sorted(missing)}")
 
 
-def unique_ids(frame: pd.DataFrame, columns: Iterable[str], name: str) -> None:
+def require_unique_keys(frame: pd.DataFrame, columns: Iterable[str], name: str) -> None:
+    """Require nonmissing, unique keys with positive integer IDs and valid snapshots."""
     columns = list(columns)
     require_columns(frame, columns, name)
     if frame[columns].isna().any().any() or frame.duplicated(columns).any():
         raise ValueError(f"{name} has missing or duplicate keys.")
     for column in columns:
         if column == "snapshot":
-            frame[column].map(date)
+            frame[column].map(parse_calendar_date)
             continue
         values = pd.to_numeric(frame[column], errors="raise").to_numpy(dtype=float)
         if (
@@ -66,13 +58,14 @@ def unique_ids(frame: pd.DataFrame, columns: Iterable[str], name: str) -> None:
             raise ValueError(f"{name}: {column} must contain positive integer IDs.")
 
 
-def finite_columns(
+def require_finite_values(
     frame: pd.DataFrame,
     columns: Iterable[str],
     name: str,
     *,
     positive: bool = False,
 ) -> None:
+    """Reject missing/infinite numbers and, when requested, values at or below zero."""
     values = frame[list(columns)].to_numpy(dtype=float)
     if not np.isfinite(values).all() or (positive and (values <= 0).any()):
         raise ValueError(f"{name} contains missing, nonfinite, or nonpositive values.")
@@ -80,6 +73,8 @@ def finite_columns(
 
 @dataclass
 class Sources:
+    """Reconciled accepted orders and lines, with declared complete source coverage."""
+
     orders: pd.DataFrame
     stores: pd.DataFrame
     headers: pd.DataFrame
@@ -88,8 +83,14 @@ class Sources:
     coverage_through: pd.Timestamp
     excluded_order_ids: tuple[int, ...] = ()
 
-    def require_coverage(self, start: DateLike, end: DateLike) -> None:
-        if date(start) < self.coverage_from or date(end) > self.coverage_through:
+    def require_coverage(
+        self, window_start: DateLike, window_end_exclusive: DateLike
+    ) -> None:
+        """Require complete source coverage of [window_start, window_end_exclusive)."""
+        if (
+            parse_calendar_date(window_start) < self.coverage_from
+            or parse_calendar_date(window_end_exclusive) > self.coverage_through
+        ):
             raise ValueError(
                 "Declared source coverage does not contain the complete required window."
             )
@@ -116,11 +117,11 @@ def _historical_rows(
     orders: pd.DataFrame,
     headers: pd.DataFrame,
     lines: pd.DataFrame,
-    cutoff: pd.Timestamp,
+    end_date: pd.Timestamp,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Return source rows belonging to orders strictly before the cutoff."""
-    orders = orders[orders.OrderDate.lt(cutoff)].copy()
-    headers = headers[headers.OrderDate.lt(cutoff)].copy()
+    """Keep orders before end_date and their matching lines."""
+    orders = orders[orders.OrderDate.lt(end_date)].copy()
+    headers = headers[headers.OrderDate.lt(end_date)].copy()
     lines = lines[lines.SalesOrderID.isin(headers.SalesOrderID)].copy()
     return orders, headers, lines
 
@@ -132,13 +133,13 @@ def _accepted_order_population(
     stores: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, tuple[int, ...]]:
     """Restrict raw headers and lines to the established clean order IDs."""
-    unique_ids(orders, ["SalesOrderID"], "orders")
-    unique_ids(headers, ["SalesOrderID"], "headers")
-    unique_ids(stores, ["StoreID"], "stores")
-    unique_ids(lines, ["SalesOrderDetailID"], "lines")
+    require_unique_keys(orders, ["SalesOrderID"], "orders")
+    require_unique_keys(headers, ["SalesOrderID"], "headers")
+    require_unique_keys(stores, ["StoreID"], "stores")
+    require_unique_keys(lines, ["SalesOrderDetailID"], "lines")
     if not orders.SalesOrderID.isin(headers.SalesOrderID).all():
         raise ValueError("Headers omit accepted clean orders.")
-    excluded = tuple(
+    excluded_order_ids = tuple(
         sorted(
             headers.loc[
                 ~headers.SalesOrderID.isin(orders.SalesOrderID), "SalesOrderID"
@@ -147,7 +148,7 @@ def _accepted_order_population(
     )
     headers = headers[headers.SalesOrderID.isin(orders.SalesOrderID)].copy()
     lines = lines[lines.SalesOrderID.isin(orders.SalesOrderID)].copy()
-    return headers, lines, excluded
+    return headers, lines, excluded_order_ids
 
 
 def _validate_source_values(
@@ -157,28 +158,30 @@ def _validate_source_values(
     lines: pd.DataFrame,
 ) -> None:
     for frame, name in [(orders, "orders"), (headers, "headers")]:
-        finite_columns(frame, ["StoreID", "SubTotal"], name, positive=True)
+        require_finite_values(frame, ["StoreID", "SubTotal"], name, positive=True)
         if not frame.StoreID.isin(stores.StoreID).all():
             raise ValueError(f"{name} references unknown stores.")
-    finite_columns(orders, ["qty", "n_lines"], "orders", positive=True)
-    finite_columns(orders, CATEGORIES, "orders")
+    require_finite_values(orders, ["qty", "n_lines"], "orders", positive=True)
+    require_finite_values(orders, CATEGORIES, "orders")
     if (orders[CATEGORIES] < 0).any().any():
         raise ValueError("Category revenue cannot be negative.")
     if not np.allclose(
         orders[CATEGORIES].sum(axis=1), orders.SubTotal, atol=0.01, rtol=0
     ):
         raise ValueError("Category revenue does not reconcile with clean subtotal.")
-    finite_columns(
+    require_finite_values(
         lines,
         ["ProductID", "OrderQty", "UnitPrice", "LineTotal"],
         "lines",
         positive=True,
     )
-    finite_columns(lines, ["UnitPriceDiscount"], "lines")
+    require_finite_values(lines, ["UnitPriceDiscount"], "lines")
     if not lines.UnitPriceDiscount.between(0, 1).all():
         raise ValueError("Discounts must be fractions in [0, 1].")
-    expected = lines.OrderQty * lines.UnitPrice * (1 - lines.UnitPriceDiscount)
-    if not np.allclose(expected, lines.LineTotal, atol=1e-5, rtol=1e-8):
+    expected_line_revenue = (
+        lines.OrderQty * lines.UnitPrice * (1 - lines.UnitPriceDiscount)
+    )
+    if not np.allclose(expected_line_revenue, lines.LineTotal, atol=1e-5, rtol=1e-8):
         raise ValueError("Order-line revenue formula does not reconcile.")
 
 
@@ -186,7 +189,7 @@ def _reconcile_accepted_orders(
     orders: pd.DataFrame, headers: pd.DataFrame, lines: pd.DataFrame
 ) -> None:
     """Verify that accepted order summaries agree with raw headers and lines."""
-    totals = lines.groupby("SalesOrderID").agg(
+    line_totals_by_order = lines.groupby("SalesOrderID").agg(
         qty=("OrderQty", "sum"),
         n_lines=("SalesOrderDetailID", "size"),
         detail_revenue=("LineTotal", "sum"),
@@ -195,7 +198,7 @@ def _reconcile_accepted_orders(
         headers, on="SalesOrderID", suffixes=("", "_header"), validate="one_to_one"
     )
     reconciled = reconciled.merge(
-        totals,
+        line_totals_by_order,
         on="SalesOrderID",
         how="left",
         suffixes=("", "_detail"),
@@ -204,140 +207,75 @@ def _reconcile_accepted_orders(
     for name in ["StoreID", "OrderDate"]:
         if not reconciled[name].eq(reconciled[f"{name}_header"]).all():
             raise ValueError(f"Clean orders and headers disagree on {name}.")
-    for left, right, atol in [
+    for order_column, source_column, absolute_tolerance in [
         ("SubTotal", "SubTotal_header", 1e-6),
         ("SubTotal", "detail_revenue", 0.02),
         ("qty", "qty_detail", 0),
         ("n_lines", "n_lines_detail", 0),
     ]:
-        if not np.allclose(reconciled[left], reconciled[right], atol=atol, rtol=1e-8):
-            raise ValueError(f"Source reconciliation failed for {left}/{right}.")
+        if not np.allclose(
+            reconciled[order_column],
+            reconciled[source_column],
+            atol=absolute_tolerance,
+            rtol=1e-8,
+        ):
+            raise ValueError(
+                f"Source reconciliation failed for {order_column}/{source_column}."
+            )
 
 
 def load_sources(
     paths: Mapping[str, Path],
     coverage_from: DateLike,
     coverage_through: DateLike,
-    needed_through: DateLike,
+    end_date: DateLike,
 ) -> Sources:
-    """Load and reconcile pre-cutoff source rows without exposing future facts.
+    """Load and reconcile source rows before the required exclusive endpoint.
 
     Coverage is an explicit completeness declaration, not inferred from the last
     transaction. Source headers may include established rejected orders; clean
     order IDs define the accepted population, preserving the original contract.
     """
-    start = date(coverage_from)
-    through = date(coverage_through)
-    cutoff = date(needed_through)
-    if start >= through or cutoff > through:
+    coverage_start = parse_calendar_date(coverage_from)
+    coverage_end_exclusive = parse_calendar_date(coverage_through)
+    # Orders on or after end_date are excluded.
+    end_date = parse_calendar_date(end_date)
+    if coverage_start >= coverage_end_exclusive or end_date > coverage_end_exclusive:
         raise ValueError("Invalid or insufficient source coverage.")
 
     orders, stores, headers, lines = _read_source_files(paths)
-    orders, headers, lines = _historical_rows(orders, headers, lines, cutoff)
-    headers, lines, excluded = _accepted_order_population(
+    orders, headers, lines = _historical_rows(orders, headers, lines, end_date)
+    headers, lines, excluded_order_ids = _accepted_order_population(
         orders, headers, lines, stores
     )
     _validate_source_values(orders, stores, headers, lines)
     _reconcile_accepted_orders(orders, headers, lines)
-    return Sources(orders, stores, headers, lines, start, through, excluded)
-
-
-@dataclass(frozen=True)
-class _DiscountStatistics:
-    weighted_discount: pd.Series
-    discounted_line_share: pd.Series
-
-
-def _discount_statistics(
-    details: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
-) -> _DiscountStatistics:
-    """Calculate reseller discount measures within a half-open date window."""
-    rows = details[details.OrderDate.ge(start) & details.OrderDate.lt(end)]
-    gross = rows.OrderQty * rows.UnitPrice
-    discount = (gross * rows.UnitPriceDiscount).groupby(rows.StoreID).sum()
-    denominator = gross.groupby(rows.StoreID).sum()
-    discounted_line_share = rows.UnitPriceDiscount.gt(0).groupby(rows.StoreID).mean()
-    return _DiscountStatistics(discount / denominator, discounted_line_share)
-
-
-def build_features(source: Sources, snapshot: DateLike) -> pd.DataFrame:
-    """Build only the ten frozen inputs, preserving their original formulas."""
-    snapshot = date(snapshot)
-    history_start = snapshot - pd.DateOffset(months=12)
-    source.require_coverage(history_start, snapshot)
-    history = source.orders[
-        source.orders.OrderDate.ge(history_start) & source.orders.OrderDate.lt(snapshot)
-    ]
-    eligible = history.loc[
-        history.OrderDate.ge(snapshot - pd.DateOffset(months=6)), "StoreID"
-    ].unique()
-    history = history[history.StoreID.isin(eligible)]
-    features = (
-        history.groupby("StoreID")
-        .agg(
-            last_order=("OrderDate", "max"),
-            revenue_12m=("SubTotal", "sum"),
-            rev_bikes=("rev_bikes", "sum"),
-            rev_accessories=("rev_accessories", "sum"),
-            rev_clothing=("rev_clothing", "sum"),
-        )
-        .reset_index()
-    )
-    features["snapshot"] = snapshot
-    features["recency_days"] = (snapshot - features.last_order).dt.days
-    recent_start = snapshot - pd.DateOffset(months=3)
-    recent = (
-        history[history.OrderDate.ge(recent_start)]
-        .groupby("StoreID")
-        .agg(
-            n_orders_3m=("SalesOrderID", "nunique"),
-            revenue_3m=("SubTotal", "sum"),
-        )
-    )
-    for name in ["n_orders_3m", "revenue_3m"]:
-        features[name] = features.StoreID.map(recent[name]).fillna(0)
-    features["n_orders_3m"] = features.n_orders_3m.astype(int)
-    for category in ["bikes", "accessories", "clothing"]:
-        features[f"share_{category}"] = (
-            features[f"rev_{category}"] / features.revenue_12m
-        )
-
-    details = source.lines.merge(
-        source.headers[["SalesOrderID", "StoreID", "OrderDate"]],
-        on="SalesOrderID",
-        validate="many_to_one",
+    return Sources(
+        orders=orders,
+        stores=stores,
+        headers=headers,
+        lines=lines,
+        coverage_from=coverage_start,
+        coverage_through=coverage_end_exclusive,
+        excluded_order_ids=excluded_order_ids,
     )
 
-    recent_discount = _discount_statistics(details, recent_start, snapshot)
-    previous_discount = _discount_statistics(
-        details, snapshot - pd.DateOffset(months=6), recent_start
-    )
-    annual_discount = _discount_statistics(details, history_start, snapshot)
-    features["weighted_discount_3m"] = features.StoreID.map(
-        recent_discount.weighted_discount
-    )
-    features["discount_change_3m"] = (
-        features.weighted_discount_3m
-        - features.StoreID.map(previous_discount.weighted_discount)
-    )
-    features["discounted_line_share_12m"] = features.StoreID.map(
-        annual_discount.discounted_line_share
-    )
-    return features[[*KEYS, *FEATURES]].sort_values("StoreID").reset_index(drop=True)
 
-
-def build_development(source: Sources) -> pd.DataFrame:
-    """Construct only approved historical training outcomes, never final labels."""
-    parts = []
+def build_development(sources: Sources) -> pd.DataFrame:
+    """Pair historical features with six-month labels for approved snapshots only."""
+    training_samples_by_snapshot = []
     for snapshot in TRAINING_SNAPSHOTS:
-        start = date(snapshot)
-        end = start + pd.DateOffset(months=6)
-        source.require_coverage(start, end)
-        features = build_features(source, start)
-        retained = source.orders.loc[
-            source.orders.OrderDate.ge(start) & source.orders.OrderDate.lt(end),
+        snapshot_date = parse_calendar_date(snapshot)
+        outcome_end_exclusive = snapshot_date + pd.DateOffset(months=6)
+        sources.require_coverage(snapshot_date, outcome_end_exclusive)
+        training_samples = build_features(sources, snapshot_date)
+        stores_with_future_purchases = sources.orders.loc[
+            sources.orders.OrderDate.ge(snapshot_date)
+            & sources.orders.OrderDate.lt(outcome_end_exclusive),
             "StoreID",
         ].unique()
-        features["churn"] = (~features.StoreID.isin(retained)).astype(int)
-        parts.append(features)
-    return pd.concat(parts, ignore_index=True)
+        training_samples["churn"] = (
+            ~training_samples.StoreID.isin(stores_with_future_purchases)
+        ).astype(int)
+        training_samples_by_snapshot.append(training_samples)
+    return pd.concat(training_samples_by_snapshot, ignore_index=True)
