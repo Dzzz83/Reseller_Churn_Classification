@@ -5,7 +5,7 @@ import pytest
 from reseller_churn.evaluation import compare_cutoffs, evaluate
 
 
-def examples():
+def evaluation_inputs():
     predictions = pd.DataFrame(
         {
             "StoreID": [1, 2, 3, 4],
@@ -19,7 +19,7 @@ def examples():
 
 
 def test_threshold_equality_counts_and_original_roles():
-    predictions, outcomes = examples()
+    predictions, outcomes = evaluation_inputs()
     metrics, decisions = compare_cutoffs(
         predictions, outcomes, [0.06, 0.55, 0.88], "2014-04-01"
     )
@@ -74,7 +74,7 @@ def test_saved_score_equal_to_cutoff_still_alerts_after_csv_reload(tmp_path):
 @pytest.mark.parametrize("cutoffs", [[], [0.1, 0.1], [np.nan], [np.inf], [-0.1], [1.1]])
 def test_invalid_cutoffs(cutoffs):
     with pytest.raises(ValueError, match="Cutoffs"):
-        compare_cutoffs(*examples(), cutoffs, "2014-04-01")
+        compare_cutoffs(*evaluation_inputs(), cutoffs, "2014-04-01")
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ def test_invalid_cutoffs(cutoffs):
     ],
 )
 def test_invalid_prediction_or_outcome_contract(mutation):
-    predictions, outcomes = examples()
+    predictions, outcomes = evaluation_inputs()
     if mutation == "duplicate":
         predictions = pd.concat([predictions, predictions.iloc[[0]]])
     elif mutation == "missing_outcome":
@@ -109,13 +109,13 @@ def test_invalid_prediction_or_outcome_contract(mutation):
 
 def test_mature_outcomes_required_and_original_cohort_is_inspected():
     with pytest.raises(ValueError, match="coverage"):
-        compare_cutoffs(*examples(), [0.06], "2014-03-31")
+        compare_cutoffs(*evaluation_inputs(), [0.06], "2014-03-31")
     with pytest.raises(ValueError, match="already inspected"):
-        compare_cutoffs(*examples(), [0.06], "2014-04-01", "independent")
+        compare_cutoffs(*evaluation_inputs(), [0.06], "2014-04-01", "independent")
 
 
 def test_multiple_snapshots_are_not_pooled_and_single_class_auc_is_missing():
-    predictions, outcomes = examples()
+    predictions, outcomes = evaluation_inputs()
     predictions = pd.concat([predictions, predictions.assign(snapshot="2014-01-01")])
     outcomes = pd.concat(
         [
@@ -133,3 +133,23 @@ def test_multiple_snapshots_are_not_pooled_and_single_class_auc_is_missing():
         .average_precision.isna()
         .all()
     )
+
+
+@pytest.mark.parametrize(
+    ("actual_labels", "cutoff", "expected_precision", "expected_recall", "expected_f1"),
+    [
+        ([1, 0, 1, 0], 1.0, 0.0, 0.0, 0.0),
+        ([0, 0, 0, 0], 0.0, 0.0, 0.0, 0.0),
+        ([1, 1, 1, 1], 0.0, 1.0, 1.0, 1.0),
+    ],
+)
+def test_metrics_with_no_alerts_or_single_class_outcomes(
+    actual_labels, cutoff, expected_precision, expected_recall, expected_f1
+):
+    predictions, outcomes = evaluation_inputs()
+    outcomes["actual_churn"] = actual_labels
+    metrics, _ = compare_cutoffs(predictions, outcomes, [cutoff], "2014-04-01")
+    overall = metrics[metrics.subgroup.eq("overall")].iloc[0]
+    assert overall.precision == expected_precision
+    assert overall.recall == expected_recall
+    assert overall.f1 == expected_f1

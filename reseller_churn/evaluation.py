@@ -12,11 +12,15 @@ from reseller_churn.artifacts import (
     new_output_directory,
     write_manifest,
 )
-from reseller_churn.config import ORIGINAL_RULES, ORIGINAL_TEST_SNAPSHOT
-from reseller_churn.data import KEYS, DateLike, date, require_columns, unique_ids
+from reseller_churn.config import KEYS, ORIGINAL_RULES, ORIGINAL_TEST_SNAPSHOT
+from reseller_churn.data import (
+    require_columns,
+    require_unique_keys,
+)
+from reseller_churn.dates import DateLike, parse_calendar_date
 
 
-def _validated_cutoffs(cutoffs: Iterable[float]) -> tuple[float, ...]:
+def _validate_cutoffs(cutoffs: Iterable[float]) -> tuple[float, ...]:
     values = tuple(float(value) for value in cutoffs)
     if (
         not values
@@ -27,7 +31,7 @@ def _validated_cutoffs(cutoffs: Iterable[float]) -> tuple[float, ...]:
     return values
 
 
-def _validated_cases(
+def _validate_evaluation_inputs(
     predictions: pd.DataFrame,
     outcomes: pd.DataFrame,
     outcomes_through: DateLike,
@@ -44,12 +48,31 @@ def _validated_cases(
     if predictions.empty or outcomes.empty:
         raise ValueError("Evaluation populations cannot be empty.")
     for frame, name in [(predictions, "predictions"), (outcomes, "outcomes")]:
-        frame["snapshot"] = frame.snapshot.map(date)
-        unique_ids(frame, KEYS, name)
+        frame["snapshot"] = frame.snapshot.map(parse_calendar_date)
+        require_unique_keys(frame, KEYS, name)
     if "actual_churn" in predictions or "churn" in predictions:
         raise ValueError("Pass unlabeled predictions separately from outcomes.")
     if not outcomes.actual_churn.isin([0, 1]).all():
         raise ValueError("Outcomes must contain nonmissing binary labels.")
+    _validate_prediction_values(predictions)
+    if (
+        cohort_status == "independent"
+        and predictions.snapshot.eq(parse_calendar_date(ORIGINAL_TEST_SNAPSHOT)).any()
+    ):
+        raise ValueError(
+            "October 2013 outcomes are already inspected, not independent."
+        )
+    outcomes_through = parse_calendar_date(outcomes_through)
+    if any(
+        snapshot + pd.DateOffset(months=6) > outcomes_through
+        for snapshot in predictions.snapshot.unique()
+    ):
+        raise ValueError("Incomplete six-month outcome coverage.")
+    return _match_predictions_and_outcomes(predictions, outcomes)
+
+
+def _validate_prediction_values(predictions: pd.DataFrame) -> None:
+    """Require finite probabilities and nonnegative integer recent-order counts."""
     scores = predictions.churn_probability.to_numpy(dtype=float)
     if not np.isfinite(scores).all() or ((scores < 0) | (scores > 1)).any():
         raise ValueError("Prediction scores must be finite in [0, 1].")
@@ -60,44 +83,41 @@ def _validated_cases(
         or (counts != np.floor(counts)).any()
     ):
         raise ValueError("Recent order counts must be nonnegative integers.")
-    if (
-        cohort_status == "independent"
-        and predictions.snapshot.eq(date(ORIGINAL_TEST_SNAPSHOT)).any()
-    ):
-        raise ValueError(
-            "October 2013 outcomes are already inspected, not independent."
-        )
-    outcomes_through = date(outcomes_through)
-    if any(
-        snapshot + pd.DateOffset(months=6) > outcomes_through
-        for snapshot in predictions.snapshot.unique()
-    ):
-        raise ValueError("Incomplete six-month outcome coverage.")
-    cases = predictions.merge(
+
+
+def _match_predictions_and_outcomes(
+    predictions: pd.DataFrame, outcomes: pd.DataFrame
+) -> pd.DataFrame:
+    """Require exactly one outcome per scored account, with no extra outcomes."""
+    matched_accounts = predictions.merge(
         outcomes[[*KEYS, "actual_churn"]],
         on=KEYS,
         how="outer",
         validate="one_to_one",
         indicator=True,
     )
-    if not cases["_merge"].eq("both").all():
+    if not matched_accounts["_merge"].eq("both").all():
         raise ValueError("Prediction and outcome populations differ.")
-    return cases.drop(columns="_merge")
+    return matched_accounts.drop(columns="_merge")
 
 
 def _cutoff_decisions(cohort: pd.DataFrame, cutoff: float) -> pd.DataFrame:
-    """Classify each account at one cutoff for the detailed decision output."""
-    decision = cohort.copy()
-    decision["cutoff"] = cutoff
-    decision["predicted_churn"] = decision.churn_probability.ge(cutoff).astype(int)
-    positive = decision.actual_churn.eq(1)
-    alert = decision.predicted_churn.eq(1)
-    decision["result_type"] = np.select(
-        [positive & alert, positive & ~alert, ~positive & alert],
+    """Classify each account at one cutoff for the detailed decisions output."""
+    decisions = cohort.copy()
+    decisions["cutoff"] = cutoff
+    decisions["predicted_churn"] = decisions.churn_probability.ge(cutoff).astype(int)
+    actually_churned = decisions.actual_churn.eq(1)
+    was_alerted = decisions.predicted_churn.eq(1)
+    decisions["result_type"] = np.select(
+        [
+            actually_churned & was_alerted,
+            actually_churned & ~was_alerted,
+            ~actually_churned & was_alerted,
+        ],
         ["caught_churn", "missed_churn", "false_alert"],
         default="correct_non_churn",
     )
-    return decision
+    return decisions
 
 
 def _cohort_subgroups(cohort: pd.DataFrame) -> tuple[tuple[str, pd.DataFrame], ...]:
@@ -113,44 +133,59 @@ def _metric_row(
     cutoff: float,
     cohort_status: str,
     subgroup: str,
-    group: pd.DataFrame,
+    accounts: pd.DataFrame,
 ) -> dict[str, object]:
-    positive = group.actual_churn.eq(1)
-    alert = group.churn_probability.ge(cutoff)
-    tp = int((positive & alert).sum())
-    fp = int((~positive & alert).sum())
-    fn = int((positive & ~alert).sum())
-    tn = int((~positive & ~alert).sum())
-    original_role = (
-        ORIGINAL_RULES.get(cutoff, "additional")
-        if snapshot == date(ORIGINAL_TEST_SNAPSHOT)
-        else "user_supplied"
+    """Summarize one nonempty snapshot/subgroup at one supplied cutoff."""
+    actually_churned = accounts.actual_churn.eq(1)
+    was_alerted = accounts.churn_probability.ge(cutoff)
+    true_positives = int((actually_churned & was_alerted).sum())
+    false_positives = int((~actually_churned & was_alerted).sum())
+    false_negatives = int((actually_churned & ~was_alerted).sum())
+    true_negatives = int((~actually_churned & ~was_alerted).sum())
+    alert_count = true_positives + false_positives
+    churn_count = true_positives + false_negatives
+
+    # Preserve the reporting convention: zero when a threshold metric is undefined.
+    precision = true_positives / max(1, alert_count)
+    recall = true_positives / max(1, churn_count)
+    f1 = (
+        2
+        * true_positives
+        / max(1, 2 * true_positives + false_positives + false_negatives)
     )
+    average_precision = None
+    if actually_churned.any():
+        average_precision = float(
+            average_precision_score(actually_churned, accounts.churn_probability)
+        )
+    roc_auc = None
+    if actually_churned.nunique() == 2:
+        roc_auc = float(roc_auc_score(actually_churned, accounts.churn_probability))
+
+    if snapshot == parse_calendar_date(ORIGINAL_TEST_SNAPSHOT):
+        original_role = ORIGINAL_RULES.get(cutoff, "additional")
+    else:
+        original_role = "user_supplied"
+
     return {
         "snapshot": snapshot,
         "cutoff": cutoff,
         "original_evaluation_role": original_role,
         "cohort_status": cohort_status,
         "subgroup": subgroup,
-        "rows": len(group),
-        "churners": int(positive.sum()),
-        "tp": tp,
-        "fp": fp,
-        "fn": fn,
-        "tn": tn,
-        "precision": tp / max(1, tp + fp),
-        "recall": tp / max(1, tp + fn),
-        "f1": 2 * tp / max(1, 2 * tp + fp + fn),
-        "alert_count": tp + fp,
-        "alert_rate": (tp + fp) / len(group),
-        "average_precision": float(
-            average_precision_score(positive, group.churn_probability)
-        )
-        if positive.any()
-        else None,
-        "roc_auc": float(roc_auc_score(positive, group.churn_probability))
-        if positive.nunique() == 2
-        else None,
+        "rows": len(accounts),
+        "churners": int(actually_churned.sum()),
+        "tp": true_positives,
+        "fp": false_positives,
+        "fn": false_negatives,
+        "tn": true_negatives,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "alert_count": alert_count,
+        "alert_rate": alert_count / len(accounts),
+        "average_precision": average_precision,
+        "roc_auc": roc_auc,
     }
 
 
@@ -162,30 +197,42 @@ def compare_cutoffs(
     cohort_status: str = "inspected",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Compare cutoffs on matched populations with mature observed outcomes."""
-    cutoffs = _validated_cutoffs(cutoffs)
-    cases = _validated_cases(predictions, outcomes, outcomes_through, cohort_status)
-    rows, decisions = [], []
-    for snapshot, cohort in cases.groupby("snapshot", sort=True):
-        for cutoff in cutoffs:
-            decisions.append(_cutoff_decisions(cohort, cutoff))
-            for subgroup, group in _cohort_subgroups(cohort):
-                if group.empty:
+    validated_cutoffs = _validate_cutoffs(cutoffs)
+    matched_accounts = _validate_evaluation_inputs(
+        predictions, outcomes, outcomes_through, cohort_status
+    )
+    metric_rows = []
+    decisions_by_snapshot_and_cutoff = []
+    for snapshot, cohort in matched_accounts.groupby("snapshot", sort=True):
+        for cutoff in validated_cutoffs:
+            decisions_by_snapshot_and_cutoff.append(_cutoff_decisions(cohort, cutoff))
+            for subgroup_name, subgroup_accounts in _cohort_subgroups(cohort):
+                if subgroup_accounts.empty:
                     continue
-                rows.append(
-                    _metric_row(snapshot, cutoff, cohort_status, subgroup, group)
+                metric_rows.append(
+                    _metric_row(
+                        snapshot,
+                        cutoff,
+                        cohort_status,
+                        subgroup_name,
+                        subgroup_accounts,
+                    )
                 )
-    return pd.DataFrame(rows), pd.concat(decisions, ignore_index=True)
+    metrics = pd.DataFrame(metric_rows)
+    decisions = pd.concat(decisions_by_snapshot_and_cutoff, ignore_index=True)
+    return metrics, decisions
 
 
 def evaluate(
     predictions_path: Path,
     outcomes_path: Path,
     output: Path,
-    cutoffs,
-    outcomes_through,
-    cohort_status,
-    approve_independent=False,
+    cutoffs: Iterable[float],
+    outcomes_through: DateLike,
+    cohort_status: str,
+    approve_independent: bool = False,
 ) -> Path:
+    """Save descriptive cutoff reports from separate prediction and outcome CSVs."""
     if cohort_status == "independent" and not approve_independent:
         raise ValueError(
             "Independent evaluation requires explicit approval and predeclared methodology/cutoffs."
@@ -197,25 +244,27 @@ def evaluate(
         outcomes_through,
         cohort_status,
     )
-    output = new_output_directory(output)
-    metrics.to_csv(output / "cutoff_metrics.csv", index=False)
-    decisions.to_csv(output / "cutoff_decisions.csv", index=False)
+    output_directory = new_output_directory(output)
+    metrics.to_csv(output_directory / "cutoff_metrics.csv", index=False)
+    decisions.to_csv(output_directory / "cutoff_decisions.csv", index=False)
+    if cohort_status == "inspected":
+        interpretation = "descriptive reuse of inspected outcomes"
+    else:
+        interpretation = "user-declared independent cohort; freeze and chronology must be established externally"
     write_manifest(
-        output,
+        output_directory,
         {
             "stage": "evaluate",
             "inputs": input_identity(
                 {"predictions": predictions_path, "outcomes": outcomes_path}
             ),
             "cutoffs": list(cutoffs),
-            "outcomes_through": str(date(outcomes_through).date()),
+            "outcomes_through": str(parse_calendar_date(outcomes_through).date()),
             "cohort_status": cohort_status,
             "models_fitted": 0,
             "thresholds_optimized": False,
             "independent_evaluation_approved": bool(approve_independent),
-            "interpretation": "descriptive reuse of inspected outcomes"
-            if cohort_status == "inspected"
-            else "user-declared independent cohort; freeze and chronology must be established externally",
+            "interpretation": interpretation,
         },
     )
-    return output
+    return output_directory

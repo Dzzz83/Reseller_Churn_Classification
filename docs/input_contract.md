@@ -47,7 +47,13 @@ handling; the seven base features must be finite.
 | revenue_12m | Sum of accepted subtotals in the preceding twelve months |
 | weighted_discount_3m | Sum(gross line value × discount) / sum(gross line value), gross = quantity × unit price |
 | discount_change_3m | Recent three-month weighted discount minus the preceding three-month weighted discount |
-| discounted_line_share_12m | Fraction of line rows in the preceding twelve months with discount > 0 |
+| discount_frequency_12m | Fraction of order lines in the preceding twelve months with discount > 0 |
+
+`discount_frequency_12m` was previously named `discounted_line_share_12m`; its
+formula and position in the feature schema are unchanged. Regenerate development
+and feature tables for the updated pipeline. Preserve historical artifacts with
+their original names and recorded code; existing model bundles still require
+their recorded code version or explicit retraining.
 
 Evaluation accepts saved unlabeled predictions with StoreID, snapshot,
 churn_probability, and n_orders_3m; rank is optional. The separate outcome CSV

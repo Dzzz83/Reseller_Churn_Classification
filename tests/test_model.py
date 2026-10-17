@@ -3,7 +3,8 @@ import pandas as pd
 import pytest
 
 from reseller_churn.config import FEATURES, SEEDS
-from reseller_churn.data import build_development, build_features, load_sources
+from reseller_churn.data import build_development, load_sources
+from reseller_churn.features import build_features
 from reseller_churn.model import (
     FixedEnsemble,
     load_model,
@@ -148,3 +149,32 @@ def test_training_rejects_ineligible_inputs(source_paths, tmp_path, mutation):
     with pytest.raises(ValueError):
         train(path, tmp_path / "model", prediction_date)
     assert not (tmp_path / "model").exists()
+
+
+@pytest.mark.parametrize(
+    ("identity_field", "error_message"),
+    [
+        ("package_sha256", "package code has changed"),
+        ("versions", "runtime versions differ"),
+    ],
+)
+def test_incompatible_bundle_rejected_before_deserialization(
+    source_paths, tmp_path, monkeypatch, identity_field, error_message
+):
+    import reseller_churn.model as model_module
+
+    training_samples, _ = training_data(source_paths)
+    training_path = tmp_path / "development.csv"
+    training_samples.to_csv(training_path, index=False)
+    model_directory = tmp_path / "model"
+    train(training_path, model_directory, "2013-10-01")
+    current_identity = model_module.source_identity()
+    current_identity[identity_field] = {"changed": "incompatible"}
+    monkeypatch.setattr(model_module, "source_identity", lambda: current_identity)
+
+    def unexpected_deserialization(*args, **kwargs):
+        pytest.fail("An incompatible bundle must be rejected before joblib.load")
+
+    monkeypatch.setattr(model_module.joblib, "load", unexpected_deserialization)
+    with pytest.raises(ValueError, match=error_message):
+        load_model(model_directory)

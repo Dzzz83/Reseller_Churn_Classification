@@ -1,6 +1,8 @@
 """Configuration frozen before the original October 2013 outcome access."""
 
-FEATURES = (
+KEYS = ["StoreID", "snapshot"]
+
+PURCHASE_FEATURES = (
     "n_orders_3m",
     "revenue_3m",
     "recency_days",
@@ -8,11 +10,14 @@ FEATURES = (
     "share_accessories",
     "share_clothing",
     "revenue_12m",
+)
+DISCOUNT_FEATURES = (
     "weighted_discount_3m",
     "discount_change_3m",
-    "discounted_line_share_12m",
+    "discount_frequency_12m",
 )
-DISCOUNT_FEATURES = FEATURES[-3:]
+# These groups fix both the input schema and the model column order.
+FEATURES = (*PURCHASE_FEATURES, *DISCOUNT_FEATURES)
 SEEDS = (42, 78, 88, 1034, 2026)
 PARAMETERS = {
     "learning_rate": 0.1,
@@ -34,6 +39,7 @@ ORIGINAL_RULES = {
 
 
 def model_configuration() -> dict:
+    """Describe the fixed methodology recorded and checked in model manifests."""
     return {
         "architecture": "hist_gradient_boosting",
         "features": list(FEATURES),
