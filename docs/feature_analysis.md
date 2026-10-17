@@ -322,3 +322,52 @@ feature, or declaring one unnecessary requires a documented development
 comparison with matched evaluation targets, fixed selection rules, and reported
 recall, precision, false alerts, and ranking metrics. The protected final test
 must not guide those choices.
+
+## Follow-up feature evidence — 2026-10-16
+
+[Persistent-error matching](../comparisons/persistent_error_investigation.md)
+suggested basket breadth omitted by the ten inputs. Isolating latest-order line
+count and annual distinct-product count under nested grouped boosting did not
+meet the current complete recall/FP acceptance rules. Those failed trials do
+not prove the descriptors contain no signal or that all transaction features
+are exhausted. A predeclared new-partition check of gap CV + overdue ratio with
+seven leaves/L2=1, omitting annual count, has promising recall/FP point results
+but also fails its complete frozen practical/uncertainty requirements. Full
+outcomes belong in [evaluation metrics](evaluation_metrics.md#continued-matched-development-research--2026-10-16).
+
+Historical assignments and a live archived-value discrepancy screen select no
+additional predictor. Current order status, mutable profiles, future price-history
+versions and an assumed profit interpretation of archived ActualCost remain
+excluded. See the [live source audit](data_analysis.md#live-source-availability-follow-up--2026-10-16)
+for the unresolved historical version and semantic evidence.
+
+
+The follow-up product identity screen uses accepted ProductID/LineTotal facts,
+not current product attributes or archive ActualCost. All132 SKU contrasts and
+2,750 annual/latest profiles are preserved in
+results/product-mix-diagnosis-20261016/. Baseline-near cases often have disjoint
+products, and two latest-order shares show a consistent descriptive contrast for
+recent false alerts. This does not automatically select those IDs. The subsequent
+[fixed product-mix protocol](../comparisons/product_mix_protocol.md) learns an
+unsupervised vocabulary inside EACH training partition; no validation/outcome
+counts define membership. Model usefulness still requires matched evaluation.
+
+
+Direct SKU, fixed reseller-bootstrap and five-component purchase-mix procedures
+all fail their complete operational requirements. The direct vocabulary captures
+only21.00% annual/24.54% latest revenue on average; the projection of all training-
+observed SKUs captures26.74% mean outer-training variance. These are different
+representation limitations, not proof of error causes or permission to tune cap/
+component count after results. Extended pre-annual cadence contrasts reverse and
+remain missing/neighbor-sensitive; no longer-history feature is selected. See
+[current metrics](evaluation_metrics.md#further-fixed-contrasts--2026-10-17) and
+[research journal](research_journal.md) for complete failures and next diagnostics.
+
+
+The residual cadence screen motivated one additional compact feature:
+`last_order_unit_revenue` = latest accepted SubTotal / summed accepted quantity.
+This is a basket-composition descriptor, not archived cost or profit. On identical
+splits its13-input fixed procedure meets point/practical recall-FP requirements,
+but FP uncertainty still fails; it is not an accepted feature replacement. All
+adverse matched contrasts and the secondary cadence comparison are preserved in
+[current metrics](evaluation_metrics.md#latest-fixed-numeric-feature-result--2026-10-17).

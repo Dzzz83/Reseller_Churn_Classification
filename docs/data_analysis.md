@@ -291,3 +291,69 @@ FROM Sales.Store;
 SELECT name, temporal_type_desc, is_tracked_by_cdc
 FROM sys.tables WHERE name = 'Store';
 ```
+
+## Live source-availability follow-up — 2026-10-16
+
+The existing local `companyx-audit` container was found stopped and restarted at
+the user's direction to locate the configured database access. SELECT queries
+succeeded against `CompanyX_Audit`, SQL Server 16.0.4295.3. The read-only-mounted
+backup at `/home/dzzz83/Documents/ChatGPT/ResellerChurnClassification/CompanyX.bak`
+exactly matches the backup SHA-256 above. No new restoration, source mutation,
+October outcome access or churn-label construction was performed. New query
+text, exports, reconciliation and hashes are in
+`results/companyx-availability-audit-20261016/`.
+
+- All 72 tables are non-temporal, with neither CDC nor change tracking enabled.
+  `BusinessEntityContact` is a current contact linkage, not a contact-event log;
+  `PersonCreditCard` is a current card linkage, not payment failures. No linked
+  timestamped reseller service/contact/payment-failure table was identified in
+  the complete 491-column catalog. This does not establish absence elsewhere.
+- No sales-reason records join pre-April reseller orders. DatabaseLog contains
+  schema/build events dated 2023; ErrorLog has seven integrity errors from
+  August 2023, not a historical reseller payment-failure series. Card values,
+  approval codes, contact details and free-text comments were not retrieved.
+- All 1,886 accepted pre-April orders have current revision 8 and ModifiedDate
+  seven days after OrderDate; 20 have current status 6. The current header trigger
+  increments revision except for status updates and supplies no status-transition
+  log. These facts do not establish when cancellation occurred or prove that
+  historical order fields were unavailable at prediction. Preserve the purchase
+  contract; current status cannot retrospectively relabel or filter orders.
+- TransactionHistory has no pre-April linked sales events; its archive contains
+  28,356 accepted lines with quantities and transaction dates matching orders.
+  The six excluded raw orders account for the apparent negative raw date lags.
+  Archive reference line numbers are not current SalesOrderDetail primary keys.
+  Joining on order/product is unique in both sources and recovers every accepted
+  line. An initial primary-key join failed and was not silently accepted.
+- Archived `ActualCost` differs from current selling UnitPrice: ratio minimum 1,
+  median 1.2, maximum 2.88. Source column documentation says "Product cost";
+  the current detail trigger inserts UnitPrice into new transaction records.
+  This discrepancy remains unresolved and must not become an assumed profit or
+  pricing-revision feature. Archive timestamps are not immutable first-record
+  evidence, and current triggers do not certify how old archive rows were made.
+- Dated product-price/cost and salesperson-territory histories exist. Effective
+  dates and current ModifiedDate do not by themselves certify the versions
+  available at historical predictions. The 200 pre-April-start list-price rows
+  uniquely cover all 28,356 accepted lines by effective order date, but every
+  applicable price record has a later modification than that order. That is a
+  version-availability question, not proof of leakage or permission to use future
+  EndDate/record revisions as predictors.
+
+The first multiline trigger export was malformed by the existing sqlcmd CSV
+helper; the corrected line-wise export is `order_trigger_lines.csv`. Preserve the
+failed export as evidence and use the corrected version. No predictor was added
+from this audit. New service/payment data and a business interpretation of the
+archive price/cost discrepancy remain unverified, rather than assumed absent
+because only handoff CSVs were inspected.
+
+Across the approved development snapshots, 538/1,375 latest-order headers have
+current ModifiedDate at or after the corresponding snapshot (139/133/132/134
+by snapshot). This flags unavailable version history, not demonstrated unknown
+initial order facts or a measured source of model errors. Details and supplemental
+hashes are in the live audit's `report.md` and `supplemental_identity.json`.
+
+A no-outcome follow-up reproduces a seven-day OrderDate-to-ShipDate difference
+for all1,886 accepted pre-April orders, with no missing ShipDate. Thus observed
+shipment-delay duration is constant in this source; it cannot supply the proposed
+service-delay distinction. This does not validate first-record availability or
+make a current status transition history available. Source hashes and the small
+replay script are in results/shipping-timestamp-audit-20261017/.

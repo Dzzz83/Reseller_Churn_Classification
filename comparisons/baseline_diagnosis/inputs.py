@@ -46,6 +46,11 @@ def validate_partition(
     features: pd.DataFrame, split: dict
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Require a complete row partition with every reseller on only one side."""
+    from comparisons.development_checks import (
+        validate_development_cases,
+        validate_development_split,
+    )
+
     training_rows, validation_rows = split["train_rows"], split["validation_rows"]
     require(
         set(training_rows).isdisjoint(validation_rows)
@@ -62,6 +67,8 @@ def validate_partition(
         and set(valid.StoreID) == set(split["validation_store_ids"]),
         "Split identity mismatch",
     )
+    validate_development_cases(features)
+    validate_development_split(train, valid)
     return train, valid
 
 

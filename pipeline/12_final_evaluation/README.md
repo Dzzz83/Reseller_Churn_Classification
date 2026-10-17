@@ -74,3 +74,20 @@ This fails the intended precision improvement over the original rule. The
 model/cutoff are unchanged after evaluation; no alternative test winner is
 selected. This is descriptive reuse of inspected October outcomes, not a new
 independent test. See [results, provenance, commands, and checks](../../comparisons/frozen_october_evaluation.md).
+
+## Latest authorized October follow-up — 2026-10-17
+
+The user explicitly authorized evaluating the fixed cadence/unit-revenue candidate
+on October and directed that development exclude this test. The separate research
+runner `comparisons/evaluate_unit_revenue_october.py` fits fixed procedures/cutoffs
+using development only, checkpoints unlabeled predictions, then evaluates supplied
+outcomes. Its protocol is `comparisons/unit_revenue_october_protocol.md`.
+
+This completed run catches45/46 with194 false alerts, failing against both the
+historical0.06 baseline(43/46,108FP) and the original10 using the same development
+cutoff objective(46/46,183FP). No test tuning,promotion or deployment.
+`results/unit-revenue-october-evaluation-20261017/completed_report/report.md`
+contains the completed result. A reporting dependency failure after metrics were
+saved was recovered by the separate no-fit verifier, preserving original evidence
+and exact as-run source. The runner now uses plain-text tables. This authorization
+covers October evaluation, not an automatic new cohort or test-based selection.

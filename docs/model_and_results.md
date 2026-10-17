@@ -162,3 +162,22 @@ Four focused tests and saved-artifact verification passed; maximum seed
 reconstruction error is 5.56e-16. Reconstruction checks validate arithmetic,
 not exact attribution, causation, calibration, or improved predictive accuracy.
 See [the SHAP record and reproducibility instructions](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/debugging.md#completed-held-out-shap-analysis--2026-10-16).
+
+### Current research continuation
+
+The current `pipeline_preparation` continuation uses the stricter requirement
+of fewer false alerts while matching baseline recall on the same development
+splits. The matched-history, breadth, cadence, learner/weight, product-mix and fixed
+ensemble follow-ups do not produce an accepted replacement under their complete
+frozen criteria. Descriptive ranking improvements do not establish operational
+acceptance. See
+[current metrics](evaluation_metrics.md#continued-matched-development-research--2026-10-16)
+and the [continuation checkpoint](continuation_checkpoint.md). The original fixed
+model and historical results above are preserved. Newly queried CompanyX source
+availability limits are documented in [data analysis](data_analysis.md#live-source-availability-follow-up--2026-10-16).
+
+The latest13-feature cadence/unit-revenue candidate has now completed the
+explicitly authorized October test:45/46 caught with194 false alerts, versus
+43/46 and108 for historical0.06. The matched-policy original10 catches46/46 with
+183 false alerts. It fails the operational improvement objective; no replacement
+or deployment follows. See [October test metrics](evaluation_metrics.md#authorized-latest-candidate-october-test--2026-10-17).

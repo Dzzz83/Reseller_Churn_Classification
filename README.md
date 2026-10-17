@@ -14,6 +14,8 @@ and threshold choices remain provisional.
   scoring versus research workflows, and saved-model compatibility.
 - [Baseline error diagnosis](comparisons/baseline_error_diagnosis.md): saved
   development errors, ranking overlap, behavioral slices, and recurrence checks.
+- [Research journal](docs/research_journal.md): current continuation work,
+  verification, completed cycles, and links to their frozen protocols.
 - [Data analysis](docs/data_analysis.md): CompanyX backup provenance, source
   tables and columns, row counts, CSV mappings, cleaning, and availability assumptions.
 - [Feature analysis](docs/feature_analysis.md): candidate feature sets,
@@ -35,15 +37,35 @@ and threshold choices remain provisional.
 - [Alternative-method audit](comparisons/correlation_pruned_churn/README.md):
   independent reconstruction and validation protocols.
 
+The [development research preparation protocol](comparisons/development_research_protocol.md)
+defines development-only checks,complete period/subgroup comparisons,cutoff-transfer
+diagnostics and the requirements to freeze before another candidate. Preparation
+runs no new model experiment or final test.
+
 ## Current development findings
 
-**Current conclusion:** the candidate improved grouped development validation
+**Current conclusion:** no replacement has met the complete current development
+acceptance criteria. Source, feature, learner and score-transfer follow-ups are
+complete. The latest paid-unit-revenue candidate meets point recall/false-alert
+requirements but fails the frozen false-alert uncertainty requirement. See
+[current evidence](docs/evaluation_metrics.md#latest-fixed-numeric-feature-result--2026-10-17)
+and the [continuation checkpoint](docs/continuation_checkpoint.md).
+The explicitly authorized October test also fails: the latest candidate catches
+45/46 with194 false alerts, versus43/46 with108 for historical0.06 and46/46 with183
+for the baseline using the same development cutoff objective. See
+[October test results](docs/evaluation_metrics.md#authorized-latest-candidate-october-test--2026-10-17).
+
+The earlier cadence candidate improved grouped development validation
 but failed to improve October precision. The gains below are development
 evidence, not a demonstrated improvement on new populations or a deployment
 recommendation. Follow the [research rules](docs/research_rules.md) for further work.
 
-The latest studies maximize precision while maintaining **grouped recall above
-90%**, using development data only. Three repetitions of five outer reseller
+The completed studies below maximize precision while maintaining **grouped recall
+above 90%**, using development data only. The current objective is stricter:
+**fewer false alerts while matching or exceeding baseline recall on the same
+development splits**. See the [research journal](docs/research_journal.md) for
+the ongoing matched-history investigation and predeclared follow-up.
+Three repetitions of five outer reseller
 folds use three inner grouped folds for feature, parameter, and cutoff selection.
 All snapshots of a reseller stay together; outer labels never tune cutoffs.
 

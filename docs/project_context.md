@@ -13,8 +13,11 @@ Metric explanations and completed-run results belong in
 ## Purpose and prediction contract
 
 Predict whether an active reseller will place no orders during the next six
-months. The current user-approved research objective is to **maximize precision
-while maintaining pooled grouped recall strictly above 90% in every repetition**.
+months. The current user-approved research objective is to **reduce false alerts
+while matching or exceeding baseline recall on the same development validation
+splits**. The completed grouped studies used the older requirement of pooled
+recall strictly above 90% in every repetition; that alone is insufficient for
+the current objective.
 Feature, parameter, and cutoff choices use inner training folds; outer grouped
 validation measures their performance. The older debug experiments used a 30%
 minimum precision in every validation fold. A deployment alert budget has not
@@ -141,8 +144,9 @@ and source completeness remains unverified by a fresh audit.
 Future research must follow the [research rules](research_rules.md): matched
 cutoff policies, nested grouped selection, subgroup and false-positive-rate
 reporting, development-only prevalence and refit-stability checks, and no
-evaluation rebalancing or October-guided winner selection. The primary recall
-criterion is unchanged; additional subgroup or practical-gain requirements must
+evaluation rebalancing or October-guided winner selection. The current paired
+baseline-recall requirement supersedes the older >90% rule; additional subgroup
+or practical-gain requirements must
 be frozen before a new experiment. October is inspected, so an independent
 claim for a revised method needs a fresh cohort and explicit evaluation approval.
 

@@ -1319,3 +1319,124 @@ These rules do not silently add a subgroup recall target or a practical-gain
 margin, and are documentation requirements rather than claims of new runtime
 enforcement. This update changes documentation only and leaves `AGENTS.md`
 unchanged; no training, scoring, data changes, push or merge is performed.
+
+## Persistent-error continuation and live source audit — 2026-10-16
+
+The [matched-history investigation](../comparisons/persistent_error_investigation.md)
+compares persistent baseline errors with similar correctly classified development
+cases, using explicit missingness-aware similarity and one/three/five-neighbor
+sensitivities. Reused controls and reseller snapshots remain dependent. The
+complete diagnosis reproduces from the restored handoff without model refits.
+Ten baseline inputs and six historical descriptors reconcile against accepted
+orders/lines; source completeness and order-time availability are not certified
+by numerical parity alone.
+
+Latest-order basket breadth and annual product breadth motivate two predeclared
+minimal boosting trials. Both fail the complete current acceptance rule. An
+all-configuration screen of the old ablations identifies a promising simpler
+cadence configuration, followed by a separately predeclared new-partition
+stability trial; it also fails the complete frozen rule. It preserves recall
+and reduces FP in each new repetition, but practical gain and FP uncertainty
+remain insufficient. Full metrics, unfavorable results and interval definitions
+are owned by [evaluation metrics](evaluation_metrics.md#continued-matched-development-research--2026-10-16).
+No deployment or accepted replacement is produced.
+
+No-fit score/cutoff-transfer diagnostics find nonadditive score-only and cutoff-
+only decision variation; they do not isolate causation or establish full-refit
+cutoff transfer. Historical order-assignment differences reverse across snapshots,
+with small categorical cells. None automatically selects a new predictor.
+
+At the user's direction, the existing CompanyX database access was recovered
+and queried. The backup was available and the old audit container only needed
+starting. The [live source audit](data_analysis.md#live-source-availability-follow-up--2026-10-16)
+confirms no verified reseller service/payment event series or order-version history
+in this schema. Archived transaction values reveal an unresolved cost/current-
+price discrepancy. A further fixed-pair numeric screen is exploratory only;
+source semantics/version availability must precede ordinary feature use.
+
+[The journal](research_journal.md) records every cycle, output and check;
+[the current checkpoint](continuation_checkpoint.md) records the exact continuation
+state. The working branch and operational model are preserved, as are historical
+records. None of these runs opens October outcomes or establishes independent
+future-cohort performance.
+
+### Product identity research checks — 2026-10-17
+
+The frozen SKU screen and candidate are separate from the operational pipeline.
+No-refit source audit:
+`.venv/bin/python -m comparisons.verify_product_mix --profiles results/product-mix-diagnosis-20261016`.
+It independently reconstructs all2,750 accepted annual/latest revenue profiles.
+Candidate audit after fitting:
+`.venv/bin/python -m comparisons.verify_product_mix --comparison results/product-mix-comparison-20261017`.
+It checks training-only distinct-reseller support/vocabulary and expanded-content
+hashes, cached baseline fidelity, grouped memberships,30 inner cutoffs and36
+metric rows. It fits no estimators. The cadence reference is secondary; original
+balanced HGB remains the acceptance comparator. The reporter honors linked
+50,000-draw confirmation decisions when present and cannot rescue failed primary
+checks. Existing output directories are preserved rather than rerun in place.
+
+## Development validation design audit — 2026-10-17
+
+In response to the failed candidate evaluation, a separate no-fit audit accesses
+only saved DEVELOPMENT artifacts and code. No test data, predictions or reports
+are read. The main identified mistake is overinterpreting a small, adaptively
+explored mixed-period grouped gain as evidence of later-period reliability.
+The candidate had already failed its complete development acceptance.
+
+Confirmed gaps: all15 grouped splits isolate resellers but mix dates; all60
+fold/snapshot cells contain training labels unresolved at that historical
+prediction date. This is an estimand mismatch, not proof of feature leakage in
+the final fit. The average28-FP reduction hides April losses in every repeat
+(+33,+24,+30FP); the subgroup rule constrained recall,not FP harm. Candidate
+mean inner-selected→outer FPR rises38.86→42.11%,while recall rises91.08→95.75%.
+These are different fitted models/pools,not proof of calibration or sample-size
+causality. Repeated feature choices reused outer errors on the same422resellers;
+nested fitting does not nest that entire research process. All five saved seeds
+produce identical predictions. Unit revenue's incremental gain beyond cadence
+is only1.33 extra catches/5.33 fewer FP on average and is not uniform.
+
+Recent-buyer development prevalence spans4.18–17.20%; pooled operating metrics
+already conceal substantial period sensitivity. No coding/population/cutoff
+boundary defect was identified in the inspected fitting path; source recording
+availability remains an assumption. A causal explanation of test failure is not
+identifiable from these development artifacts alone.
+
+Corrective direction: keep the test closed,freeze forward/matured-label and
+reseller-isolated development evidence with an explicit target population,
+report period/activity harm and cutoff transfer,and avoid further adaptive
+selection on the same outer evidence. A naive exclusion of every future-cohort
+reseller makes earlier training severely biased(January76/76 positives),so do
+not merely swap splitters. These are prospective design recommendations,no new
+candidate,acceptance change or temporal evaluation was run. Full evidence:
+`results/development-validation-audit-20261017/report.md`; reproducible no-fit
+entrypoint `comparisons/development_validation_audit.py`.
+
+### Correction: earlier temporal evidence does not establish a temporal remedy
+
+2026-10-17, following the user's correction. The earlier explanation overstated
+mixed-period grouped validation as the cause of the candidate's failure and
+implied temporal selection was an untried fix. Temporal validation was already
+used. In results/validation_strategy_experiment, both selected models refit on
+the same566 rows and score the same340 April2013 accounts. At34/68/102 alerts,
+GroupKFold selection catches17/24/34 churners; temporal selection catches9/21/32.
+Grouped AP0.4183 exceeds temporal0.2813. The saved confidence interval crosses
+zero and the formal winner is inconclusive. Grouped selected full16-feature RF
+without rebalancing; temporal selected RFM3-feature RF with oversampling. This
+is evidence about those selection procedures,not a clean causal effect of dates
+or proof either splitter universally wins. One temporal selection period and
+incomplete April2012 history limit the comparison.
+
+These records call April2013 COMMON DEVELOPMENT evaluation,not October final
+testing. Restored October GB10 and RF7 final protocols explicitly use grouped
+cutoff selection; no separate temporal-selected October final result was found
+in the inspected checkout. Do not silently identify RF7's grouped October result
+as a temporal result. User's broader point remains supported: temporal selection
+was tried and did not outperform the grouped selection in the controlled record.
+
+The defensible conclusion is that the latest grouped gains did not establish
+future-period reliability. Mixed-period splits are a limitation,not an identified
+cause or proof temporal selection will improve the model. Retain both historical
+validation views; no automatic switch,new candidate or test-driven tuning follows.
+Six aggregate comparison rows were checked for count/metric consistency; only
+existing aggregate reports/protocols and code were read,no models refitted or
+case-level final-test datasets reopened.

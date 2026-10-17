@@ -558,3 +558,230 @@ churners, and stability on matched populations. Freeze the complete methodology
 before requesting protected final evaluation through
 [Stage 12](../pipeline/12_final_evaluation/README.md). None of the results here
 authorize or substitute for that final evaluation.
+
+## Continued matched development research — 2026-10-16
+
+These trials follow the current **fewer false alerts with no lower baseline
+recall on the same splits** objective. All decisions additionally require the
+predeclared practical gain, uncertainty and subgroup safeguards. None passes
+its complete acceptance rule. No operational model/cutoff changes or October
+outcome access occurred. New partitions of previously inspected development data
+are stability evidence, not independent confirmation.
+
+| Fixed candidate | Outer split seeds | Baseline mean recall / FP | Candidate mean recall / FP | Mean FP reduction | Decision |
+| --- | --- | --- | --- | --- | --- |
+| Add last-order line count | 42/78/88 | 91.51% / 520.67 | 91.35% / 522.67 | -2.00 (-0.38%) | Reject: recall and FP requirements fail |
+| Add annual distinct products | 42/78/88 | 91.51% / 520.67 | 91.04% / 509.33 | 11.33 (2.18%) | Reject: recall, practical gain and uncertainty fail |
+| Gap CV + overdue ratio, seven leaves, L2=1, no annual count | 301/919/1201 | 90.72% / 518.00 | 95.13% / 495.33 | 22.67 (4.38%) | Not accepted: practical gain and FP uncertainty fail |
+
+Each row averages three repetition-pooled metrics. Each repeat evaluates the
+same 1,375 cases once, with matched natural populations and grouped folds for
+both arms; it does not supply 4,125 independent cases. Both arms maximize inner
+OOF precision subject to recall >90%, with training-only weights, native missing
+values and the original five-seed ensemble. Outer labels never set cutoffs.
+The historical 0.06 rule is excluded from acceptance. The baseline itself falls
+below 90% recall in new repeat 301 (89.62%); neither arm is retuned afterward.
+
+The research practical default is >=5% mean FP reduction, alongside fewer FP
+and recall >= baseline in **each** repeat. The activity/snapshot safeguard allows
+at most five percentage points loss in mean recall; it passes in the three trials
+above. Later learner/weight contrasts include subgroup failures, reported below.
+These margins were frozen before fitting and are not user-supplied business
+requirements. The cadence candidate's apparent benefit must not be relabelled
+as acceptance by lowering the margin after seeing 4.38%.
+
+| Candidate | Conditional recall-difference interval | Conditional FP-reduction interval | Interval definition |
+| --- | --- | --- | --- |
+| Last-order lines | -1.91 to +1.52 points | -14 to +10 | 2.5–97.5 percentiles |
+| Annual products | -2.81 to +1.88 points | -2 to +25 | 1.25–98.75 percentiles for the two bounded trials/two endpoints |
+| Cadence without annual count | +0.60 to +8.94 points | -1.33 to +49.67 | tails 0.05/(14×2), conservative for the inspected ablation family |
+
+All use 5,000 paired reseller-cluster draws, seed 2026, moving reseller snapshots
+and repeat predictions together. They condition on fitted models and cutoffs;
+retraining/reselection, adaptive research and population-shift uncertainty remain.
+The last trial passes recall and fewer-FP point checks in all three new repeats,
+but its FP lower bound crosses zero. This does not establish that the candidate
+has no benefit; it does not establish the frozen required improvement either.
+
+Complete fold/repeat confusion counts, ranking near 90/95/100% recall, active/
+inactive and snapshot results, annual-count/span/discount-missingness slices,
+changed cases, cutoff distributions and seed spreads are in the respective
+`report.md` and CSVs under `results/basket-breadth-20261016-serial/`,
+`results/annual-breadth-20261016/` and `results/cadence-stability-20261016/`.
+Independent no-fit verifiers reproduce 30 inner cutoffs, 15 grouped partitions,
+600 recorded training identities and 36 overall metric rows per study. The two
+original-split baselines reproduce all historical decisions (max score difference
+1.11e-16). The last study has different training partitions, so old scores are
+not direct fidelity targets.
+
+See the frozen [basket](../comparisons/basket_breadth_protocol.md),
+[annual breadth](../comparisons/annual_breadth_protocol.md) and
+[cadence stability](../comparisons/cadence_stability_protocol.md) protocols,
+[research journal](research_journal.md), and
+[live source-availability findings](data_analysis.md#live-source-availability-follow-up--2026-10-16).
+
+
+### Further fixed contrasts — 2026-10-17
+
+The following comparisons use the same301/919/1201 partitions and ORIGINAL
+balanced HGB primary baseline (mean518 FP,90.72% recall). All fail complete
+acceptance; no original operating objective is weakened. Positive FP reduction
+means fewer alerts; negative values mean additional false alerts.
+
+| Procedure | Mean FP reduction | Main failed constraints |
+| --- | --- | --- |
+| Fixed50/50 original/cadence mean |22.00 (4.25%)|5% practical margin |
+| RF10, balanced training | -25.33 |Recall, FP, practical, uncertainty, subgroup |
+| Fixed50/50 original/RF10 mean | -4.00 |Recall, FP, practical, uncertainty, subgroup |
+| L2 logistic10 | -302.67 |Recall, FP, practical, uncertainty |
+| Unit-weight HGB10 | -9.33 |Recall, FP, practical, uncertainty |
+| Unit-weight RF10 | -82.67 |FP, practical, uncertainty, subgroup |
+| Cadence + direct SKU shares |17.00 (3.28%)|Per-repeat FP, practical, uncertainty |
+| Fixed reseller-bootstrap SKU ensemble |5.00 (0.97%)|Per-repeat FP, practical, uncertainty |
+| Cadence + five purchase-mix components | -15.67 |Per-repeat FP, practical, uncertainty |
+| Symmetric-half raw cadence mean |23.33 (4.50%)|Practical, recall/FP uncertainty |
+| Held-training-reference percentile cadence mean |51.33 (9.91%)|Per-repeat recall, recall uncertainty |
+| Cadence + latest paid unit revenue |28.00 (5.41%)|FP-reduction uncertainty |
+
+Each learned candidate has training-only preprocessing/weights, inner cutoffs
+maximizing precision with recall>90%, matched evaluation rows and the frozen
+same-repeat acceptance rule. Unit-weight RF preserves repeat recall but sharply
+increases false alerts. Better curve/AP values in some studies do not rescue
+failed operational requirements. Fixed blending is not followed by weight search.
+Balanced RF is only a secondary reference in the weight study.
+
+All failures, ranking curves, subgroup/sample-size reports, conditional paired
+reseller uncertainty and independent audits are preserved under
+results/fixed-blend-20261016/, results/forest-comparison-20261016/,
+results/linear-comparison-20261016/ and results/weighting-comparison-20261016/.
+The family-tail conventions and adaptive limitations are in their respective
+comparisons/*_protocol.md files. A predeclared50,000-draw sign confirmation is
+required only when every primary check passes in later trials; neither weight
+candidate qualifies. No protected final evaluation or October outcome was used.
+
+
+The fixed cadence+SKU representation (training-only frequency vocabulary, not
+outcome-selected IDs) also fails acceptance on301/919/1201. TP/FP201/506,202/506,
+199/491 versus original190/498,195/551,192/505: recall preserved, mean17 fewer FP
+(3.28%), but eight extra FP in one repeat and both uncertainty checks fail.
+Conditional intervals: recall[-1.31,+9.46]pp; FP reduction[-12.52,+47.67], tail.05/46.
+Within-fold AP rises.5009→.5718 and descriptive high-recall burden falls; neither
+rescues the frozen operational failure. All300 vocabulary/training records,
+30 inner cutoffs and36 metric rows independently verify. Full report:
+results/product-mix-comparison-20261017/report.md. No vocabulary retuning.
+
+
+Both SKU follow-ups preserve original repeat recall and pass the activity/snapshot
+safeguard, but fail complete acceptance. Bootstrap TP/FP199/507,204/520,205/512;
+latent197/534,202/544,204/523. Neither receives50,000-draw confirmation or post-hoc
+parameter tuning. Independent300-training-identity/30-cutoff/36-metric audits pass
+for each. Reports: results/product-bagging-comparison-20261017/report.md and
+results/latent-mix-comparison-20261017/report.md. The fixed direct-SKU vocabulary
+captures little revenue, while5-PC compression captures only26.74% mean outer-
+training variation; neither representation should be called complete information.
+
+At the SAME baseline catch count, candidate outcome-derived tied-score ranking
+points often reduce FP compared with baseline's own outcome-derived point. This
+is **descriptive ranking evidence, not an operational cutoff or acceptance**.
+DirectSKU improves12/15 outer folds (three worsen); cadence12 improve/one worsens/
+two tie; bootstrap10/5; latent11/4. All480 inner/outer points reproduce by exhaustive
+enumeration in results/matched-rank-burden-20261017/. Baseline cutoff slack is
+reported separately; comparing candidate oracle FP only with baseline actual FP
+would exaggerate separation. A fixed training-size sensitivity probe investigates
+possible contributors without selecting new cutoffs or declaring a winner.
+
+
+The symmetric-half alignment study shares600 component fits. Raw TP/FP193/470,
+202/521,199/493; percentile189/454,199/490,196/456. Percentile alignment has a
+positive conditional FP-reduction interval[21.50,82.67] but recall interval
+[-2.83,+5.49]pp and loses one baseline-caught churner in301. The criterion is not
+weakened for that loss. Raw passes recall/FP point checks but its4.50% gain and
+both uncertainty bounds fail. Independent600-component/45-cutoff/36-metric-per-arm
+audit passes; both full reports in results/crossfit-percentile-20261017/.
+Reference percentiles are not calibrated churn probabilities. No reference-rule,
+half-count, seed or cutoff tuning follows these outcomes.
+
+
+### Latest fixed numeric-feature result — 2026-10-17
+
+Cadence + latest paid unit revenue meets all point, practical, recall uncertainty
+and subgroup requirements, but **does not pass complete acceptance**. Baseline
+TP/FP190/498,195/551,192/505; candidate199/471,207/511,203/488. Mean recall90.72→95.75%,
+FP518→490 (28 fewer,5.41%). Conditional paired reseller-cluster recall-difference
+interval[+0.47,+10.38]pp; FP reduction[-2.51,+60.23], tail.05/56,5000 draws. The FP
+lower bound crosseszero. No extra draws, threshold adjustment, altered tail or
+parameter retry is used to rescue it; the frozen50,000-draw safeguard requires
+ALL primary checks first and is therefore not triggered.
+
+The secondary cadence reference is196/470,207/527,202/489; the added feature is
+not uniformly better even on point counts versus that secondary procedure. The
+primary comparator remains original balanced HGB10 with the same train-only
+high-recall cutoff objective. Historical0.06 and October metrics are separate.
+Independent no-fit audit passes15 grouped splits,30 cutoffs,36 overall metric
+rows and all cached/new training hashes. Full report and failures:
+results/cadence-unit-revenue-20261017/report.md. Full combined suite253 passed
+in60.40s; Ruff and diff whitespace checks pass.
+
+This promising developmental association remains unaccepted. Repeated seeds,
+folds or bootstrap draws cannot create new independent reseller evidence or
+remove adaptation from inspecting these same cases. Further independent
+confirmation needs an appropriate untouched cohort with frozen data roles/method
+and explicit authorization under the protected-evaluation rule; October cannot
+serve that role. No additional source-backed remedy is currently justified by
+the completed diagnoses. This is not proof that purchase histories contain no
+other useful signal, nor permission for an indiscriminate search near a margin.
+
+### Authorized latest-candidate October test — 2026-10-17
+
+The user explicitly requested evaluation of the latest cadence/unit-revenue
+candidate on October. Its13 features, seven-leaf HGB/L2=1, balanced weights and
+five seeds remain fixed. A three-fold reseller-grouped development-only OOF
+procedure selects cutoff0.18634605 (precision maximum with recall>90%). No test
+labels select features, parameters or cutoffs. October492 cases include46 churners.
+
+| Fixed procedure | TP | FP | FN | Recall | Precision |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Historical baseline0.06 | 43 | 108 | 3 | 93.48% | 28.48% |
+| Latest cadence/unit-revenue candidate | 45 | 194 | 1 | 97.83% | 18.83% |
+| Original10 with same development cutoff objective | 46 | 183 | 0 | 100.00% | 20.09% |
+
+The candidate fails the false-alert reduction objective against both predeclared
+references. Compared with historical0.06, it adds two catches and86 false alerts;
+compared with the matched-policy baseline, it loses one catch and adds11 false
+alerts. Recent purchasers account for the candidate miss and additional alerts.
+All35 inactive churners and10 inactive continuing buyers are alerted by all arms.
+
+Paired5000-reseller percentile95% intervals: recall difference versus historical
+[0,+11.36]percentage points and FP reduction[-105,-67]; versus matched-policy
+[-7.32,0]points and FP reduction[-29,+7]. They omit training,cutoff,source and
+research adaptation uncertainty. Aggregate AP improves0.7013→0.7585 while recent
+purchaser AP falls0.1553→0.0695; this does not establish operational improvement.
+
+Models and predictions were saved before supplied outcomes were joined. October
+was inspected historically; this is the authorized October test, not a newly
+untouched cohort. No subsequent tuning or deployment. The no-fit verifier
+reproduces40 training identities,two cutoffs,10 serialized-model predictions,nine
+confusion rows and all paired intervals. Full evidence:
+`results/unit-revenue-october-evaluation-20261017/completed_report/report.md`.
+The prediction-stage manifest and archived as-run source preserve original code
+identity; the current runner only removes an optional Markdown rendering dependency.
+
+
+### Prepared development reporting and prospective safeguards — 2026-10-17
+
+The shared assessment now writes operating_metrics.csv,paired_operating_metrics.csv
+and worst_slices.csv. These preserve EVERY repeat/fold,snapshot,activity group and
+snapshot/activity intersection. They report matched confusion counts,recall,
+precision,FPR,alert rates and sample sizes; undefined rates stay undefined.
+Harm flags compare to baseline and are descriptive unless a frozen prospective
+policy explicitly makes them acceptance constraints. No historical metrics or
+acceptance decisions change.
+
+The no-fit review entrypoint and cutoff-transfer table are documented in
+[the preparation protocol](../comparisons/development_research_protocol.md).
+Inner pooled OOF,individual inner folds and outer validation use their saved
+outer cutoff; component training row/reseller ranges are explicit. These tables
+select no thresholds and cannot identify calibration or a causal failure mechanism.
+Prospective per-repeat period/activity limits complement,not replace,global
+recall preservation,FP reduction,practical improvement and paired uncertainty.
+No candidate has been frozen or evaluated by this preparation.

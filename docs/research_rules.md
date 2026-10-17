@@ -1,6 +1,6 @@
 # Experiment lessons and rules moving forward
 
-Updated 2026-10-16. This document owns the research and reporting rules agreed
+Updated 2026-10-17. This document owns the research and reporting rules agreed
 after the grouped studies, ablations, October evaluation and failure diagnosis.
 It documents future requirements; it does not claim that every requirement
 is already enforced by the experiment scripts. Historical protocols and their
@@ -68,6 +68,33 @@ It remains a research artifact, not an accepted precision-improving replacement.
 
 See [the complete diagnosis](../comparisons/frozen_failure_diagnosis.md),
 [metrics](evaluation_metrics.md), and [ablations](../comparisons/grouped_ablation.md).
+
+## Current development decisions — 2026-10-17
+
+The goal remains improved model performance developed without the final test.
+Repeated validation use is normal development work; it is not itself an error.
+We will keep diagnosing development errors and freeze each bounded comparison,
+reporting uncertainty and adverse periods rather than treating a favorable mean
+as sufficient. No guaranteed future performance follows from a development score.
+
+Temporal validation has already been tried. Grouped selection led the controlled
+April2013 comparison on points,with an inconclusive formal winner. Mixed-period
+validation limits forecasting claims,but is not an identified cause of failure;
+automatically switching to temporal selection is not a supported remedy. Keep
+both evidence types distinct and their different populations/training sizes clear.
+
+The [development preparation protocol](../comparisons/development_research_protocol.md)
+owns the next-fit freeze requirements and implemented APIs. New comparisons must
+report and predeclare limits for false-alert harm AND recall in each period and
+activity group,per repeat. Proposed research defaults are zero additional FP and
+at most five percentage points of recall loss in those groups; overall recall
+must still match baseline. They are prospective research defaults,not approved
+business margins or changes to historical decisions. Every fold and period/activity
+intersection is also reported,including sparse/undefined metrics. Freeze limits
+before fitting and pass them explicitly; do not average a failed period away.
+
+October rows,labels,predictions and errors stay outside further development choices.
+No new training or final evaluation is authorized by this preparation document.
 
 ## Rules for the next development experiment
 

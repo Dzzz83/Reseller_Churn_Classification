@@ -276,3 +276,76 @@ Use the saved-output verifier rather than rerunning the completed final test:
 ```bash
 bi_venv/bin/python debug/verify_final_testing_outputs.py
 ```
+
+## Persistent-error research continuation
+
+The development-only matched-history investigation and single-feature nested
+comparison are separate from the operational workflow. Read the
+[exploration protocol and findings](../comparisons/persistent_error_investigation.md),
+[frozen model-comparison protocol](../comparisons/basket_breadth_protocol.md), and
+[current journal](../docs/research_journal.md) first. Each output directory must
+be new. The comparison fits 600 estimators; its verifier fits none.
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/python -m comparisons.persistent_error_investigation --output results/persistent-errors-NEW
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/python -m comparisons.basket_breadth --histories results/persistent-errors-NEW --workers 1 --output results/basket-breadth-NEW
+.venv/bin/python -m comparisons.verify_basket_breadth results/basket-breadth-NEW
+```
+
+Defaults use the relocated source study, the reproduced Linux diagnosis, and
+the exact historical-byte order copy described in the journal. Override
+`--orders` and `--diagnosis` for a different verified location. The strict audit
+rejects a different order hash; LF/CRLF checkout differences must be investigated,
+not bypassed by rewriting a historical manifest. Neither command opens October
+outcomes or produces a replacement operational model.
+
+The bounded annual-breadth contingency and the separately frozen cadence
+stability check use the same fitting utilities:
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/python -m comparisons.basket_breadth --feature unique_products_12m --histories results/persistent-errors-NEW --output results/annual-breadth-NEW
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/python -m comparisons.cadence_stability --output results/cadence-stability-NEW
+.venv/bin/python -m comparisons.verify_basket_breadth results/cadence-stability-NEW
+.venv/bin/python -m comparisons.breadth_reporting results/cadence-stability-NEW
+```
+
+Read [the cadence stability protocol](../comparisons/cadence_stability_protocol.md)
+before execution. New grouped seeds are a stability check on reused development
+rows, not independent confirmation. The reporter creates a new report and refuses
+to replace an existing one. Live CompanyX availability checks and the restored
+container/query access are recorded in
+[data analysis](../docs/data_analysis.md#live-source-availability-follow-up--2026-10-16).
+Do not rerun old fixed-output extraction scripts just to inspect the source;
+new audits must use new directories and preserve historical exports.
+
+
+## Development research preparation — 2026-10-17
+
+Use [the development preparation protocol](../comparisons/development_research_protocol.md)
+for future matched experiments. It separates the existing grouped and temporal
+views,documents current data guards,and requires frozen period/activity harm
+limits alongside the original recall/false-alert objective. It does not introduce
+a candidate,change historical results or automatically execute training/testing.
+
+The supported no-fit review of saved fixed-numeric studies is:
+
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/python -m comparisons.review_development_study \
+  --source results/cadence-unit-revenue-20261017 \
+  --output results/CHOOSE-A-NEW-development-review-directory
+```
+
+This reads only declared canonical development artifacts and saves complete
+paired period/repeat/fold/activity reports,sorted harm flags,split timing and
+saved-cutoff inner/outer operating tables. It never loads a model,fits,selects a
+cutoff or calls a final evaluator. Existing output directories are rejected.
+The final verified preparation run is results/development-preparation-review-20261017-verified;
+its original manifest retains the code identities at execution. Shared assessment
+now emits paired_operating_metrics.csv and worst_slices.csv for future executions.
+An optional EXPLICIT period_limits argument activates prospective acceptance
+checks; omitting it preserves historical behavior. All new experiments must freeze
+and pass their limits as specified by the preparation protocol.
+
+Verification functions vary: synthetic smoke tests may fit synthetic models;
+historical model verifiers may refit real development models. Inspect an entrypoint
+before running it. The review command above is the no-fit route for these reports.
