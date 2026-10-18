@@ -21,10 +21,11 @@ from reseller_churn.artifacts import (
 KEYS = study.KEYS
 
 
-def evaluate_fixed_fold(data, split, cached, output, spec):
+def evaluate_fixed_fold(data, split, cached, output, spec, *, fit_function=None):
     """Fit one candidate with cached inner groups; outer labels only assess."""
     from comparisons.development_checks import validate_development_cases
 
+    fit = study.fit_scores if fit_function is None else fit_function
     validate_development_cases(data, spec["features"])
     train, valid = validate_partition(data, split)
     verify_manifest(cached)
@@ -41,13 +42,12 @@ def evaluate_fixed_fold(data, split, cached, output, spec):
         for row in json.loads((cached / "model_identities.json").read_text())
         if row["candidate"] == "baseline"
     ]
+    cached_count = len(identities)
     for fold in sorted(assignment.unique()):
         fitting = train.iloc[np.flatnonzero(assignment.to_numpy() != fold)]
         held = train.iloc[np.flatnonzero(assignment.to_numpy() == fold)]
         require(set(fitting.StoreID).isdisjoint(held.StoreID), "Inner reseller leakage")
-        scores, fitted, spread, _ = study.fit_scores(
-            fitting, held[spec["features"]], spec
-        )
+        scores, fitted, spread, _ = fit(fitting, held[KEYS + spec["features"]], spec)
         identities.extend(
             dict(**row, stage="inner", inner_fold=int(fold), seed_score_range=spread)
             for row in fitted
@@ -75,7 +75,7 @@ def evaluate_fixed_fold(data, split, cached, output, spec):
         baseline.cutoff.eq(choices[0]["cutoff"]).all(),
         "Cached baseline cutoff changed",
     )
-    scores, fitted, spread, _ = study.fit_scores(train, valid[spec["features"]], spec)
+    scores, fitted, spread, _ = fit(train, valid[KEYS + spec["features"]], spec)
     identities.extend(
         dict(**row, stage="outer", seed_score_range=spread) for row in fitted
     )
@@ -98,8 +98,8 @@ def evaluate_fixed_fold(data, split, cached, output, spec):
     write_manifest(
         folder,
         dict(
-            new_fits=20,
-            cached_fits=20,
+            new_fits=len(identities) - cached_count,
+            cached_fits=cached_count,
             inputs=input_identity(dict(source=cached / "manifest.json")),
         ),
     )
@@ -117,6 +117,8 @@ def run_fixed_hgb(
     extra_inputs,
     *,
     period_limits=None,
+    fit_function=None,
+    post_assessment=None,
 ):
     """Reuse baseline fits and memberships; every candidate choice is already fixed."""
     from comparisons.development_checks import validate_development_cases
@@ -141,11 +143,42 @@ def run_fixed_hgb(
             **({"period_limits": period_limits} if period_limits is not None else {}),
         ),
     )
+    write_json(
+        out / "prefit_identity.json",
+        {
+            "inputs": input_identity(
+                {
+                    "source": source / "manifest.json",
+                    "protocol": protocol_path,
+                    **extra_inputs,
+                }
+            ),
+            "implementation": input_identity(
+                {
+                    "runner": Path(__file__),
+                    "fitting": Path(study.__file__),
+                    "assessment": Path(__file__).parent / "matched_evaluation.py",
+                }
+            ),
+        },
+    )
+    snapshot = out / "source_snapshot"
+    snapshot.mkdir()
+    for path in [Path(__file__), Path(study.__file__), *extra_inputs.values()]:
+        if Path(path).suffix == ".py":
+            shutil.copyfile(path, snapshot / Path(path).name)
     parts = []
     for split in previous["splits"]:
         relative = Path(f"repeat_{split['repeat']}/fold_{split['outer_fold']}")
         parts.append(
-            evaluate_fixed_fold(data, split, source / relative, out / relative, spec)
+            evaluate_fixed_fold(
+                data,
+                split,
+                source / relative,
+                out / relative,
+                spec,
+                fit_function=fit_function,
+            )
         )
         print(
             f"Completed repeat {split['repeat']} fold {split['outer_fold']}", flush=True
@@ -155,6 +188,8 @@ def run_fixed_hgb(
     decision = evaluate_predictions(
         data, predictions, profiles, out, spec["id"], tail, period_limits=period_limits
     )
+    if post_assessment is not None:
+        decision = post_assessment(out)
     write_json(
         out / "baseline_fidelity.json",
         dict(status="unchanged cached HGB", changed_baseline_decisions=0),
@@ -188,8 +223,18 @@ def run_fixed_hgb(
         out,
         dict(
             stage="fixed_numeric_feature",
-            new_fits=300,
-            cached_fits=300,
+            new_fits=sum(
+                verify_manifest(out / f"repeat_{s['repeat']}/fold_{s['outer_fold']}")[
+                    "new_fits"
+                ]
+                for s in previous["splits"]
+            ),
+            cached_fits=sum(
+                verify_manifest(out / f"repeat_{s['repeat']}/fold_{s['outer_fold']}")[
+                    "cached_fits"
+                ]
+                for s in previous["splits"]
+            ),
             decision=decision,
             inputs=input_identity(
                 dict(

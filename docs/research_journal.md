@@ -601,3 +601,450 @@ Final verification: **278 tests passed in64.98s** with
 Focused preparation tests20 passed. Changed modules/tests pass Ruff;
 `git diff --check` passes. Final review output manifests and current implementation
 hashes pass; no disposable task files or running processes remain.
+
+## 2026-10-18 — autonomous development continuation, reconciliation and cycle 1
+
+Created research/development-recall-alerts-20261018 from db52abd in the clean
+primary checkout. experimental_research at c047741 has user-owned ablation changes
+and remains untouched. Recent research lives in pipeline_preparation plus ignored
+results, not just that experimental checkout. Reviewed the four requested saved
+development reports and the ablation protocol/results. No prior candidate passes
+complete acceptance. Ablation uses a different operating policy; no direct headline
+comparison is valid. Historical old feature name remains preserved in research.
+
+Mixed historical documentation unexpectedly displayed protected aggregate results;
+this is a boundary incident, not new evidence for selection. Those contents are
+excluded from this task's hypotheses and decisions. Subsequent reads are scoped
+to explicit development evidence. Prior test inspection means no independent test
+claim is available. No test artifact, case, prediction or label file was opened.
+
+New hypothesis derives from development transfer and the failed raw/percentile
+studies: retain classifier/reference-calibrator pairs rather than map scores then
+refit a different classifier. Freeze comparisons/retained_calibration_protocol.md
+before any calibrator fitting. Saved raw component/reference scores permit zero
+HGB refits. Supervised regularized logistic maps differ materially from previous
+unsupervised percentile maps; unchanged raw ensemble is the controlled reference.
+Prospective period/activity/intersection safeguards and alpha-spending are fixed.
+Next: implement isolated reconstruction, synthetic checks, execute, verify all
+results independently and diagnose failures before deciding another cycle.
+
+Cycle1 completed: retained_logistic TP/FP301=189/429,919=198/464,1201=193/431;
+baseline190/498,195/551,192/505. Mean76.67 fewerFP(14.80%) but repeat301 loses
+one catch; October2012 and April period/intersection gates fail. Recall interval
+[-.0428727,+.0534454],FPreduction[43.6663,113] at tail.00025. Complete acceptance
+FAILS. No50000-draw confirmation or calibrator tuning. Zero new HGB fits,600
+calibrators; identical seeds do not add evidence. Independent audit checks600
+identities,540 operating rows,30 cuts,5000 bootstrap draws and logistic gradients
+(max9.52e-9),all pass; no negative slopes. Results/retained-calibration-20261018.
+A repeated manifest write caused a self-checksum defect; original manifest/as-run
+source preserved, separate completion_manifest.json records finalized assessment.
+Verifier uses it and checks archived pre-fit code hash. No scores or decisions
+were changed to repair metadata. Nine focused/synthetic tests pass.
+
+No-fit next diagnosis results/retained-ranking-audit-20261018 exhaustively verifies
+12 tied period burden points at baseline catches. October2012 losses29/27FP in
+301/1201; April loss8FP in301. Inner/outer average operating mismatch is much
+smaller, yet acceptance fails: no justification for repeated calibration tuning.
+Cycle2 frozen in comparisons/smooth_cadence_protocol.md: a single smooth additive
+cadence learner,not the previous linear10 or a hyperparameter search. Next run
+focused preprocessing/isolation/extrapolation checks,60fits,independent reconstruction.
+
+Cycle2 completed,results/smooth-cadence-20261018-02:60 deterministic spline/logistic
+fits; baseline cached. Mean56 MORE false alerts(10.81%); overall recall point
+preserved each repeat,but uncertainty/period/practical/FP requirements fail.
+Complete acceptance FAILS. Independent60training identities,medians,quantile
+knots,scales,coefficients/held scores,30cuts,540operating rows and all42period
+acceptance cells/5000draws reproduce. Maximum logistic gradient1.34e-7.
+Focused two synthetic checks pass,including nested cached-baseline parity.
+First results/smooth-cadence-20261018 interrupted after one fit due duplicate
+metadata keyword; preserved,corrected caller contract,added end-to-end test,
+no scientific parameters changed. Initial verification test also exposed constant
+spline knot reconstruction semantics; scipy construct_fast reproduces sklearn.
+
+Cycle3 observation: counts of snapshots per reseller are strongly associated with
+development labels. Training-only inverse-history/class-normalized weighting is
+not covered by prior unit weights or whole-reseller bootstrap product trial.
+Freeze comparisons/reseller_weighting_protocol.md. Original10HGB unchanged except
+training weights,300fits,strict same safeguards,new alpha spend. No history count
+becomes a predictor and no evaluation row is removed/reweighted. Equal reseller
+versus row influence are different fitting choices,not proven bias correction.
+
+Cycle3 completed,results/reseller-weighting-20261018:300newHGB fits,300cached
+baseline identities;31moreFP(5.98%) on average,recall preservation fails. Complete
+acceptance FAILS. Independent300weight identities,class totals/parameters,
+15splits/30cuts/36overall metrics/8250predictions and5000draw/full-decision audit
+pass. Six focused/synthetic checks passed before execution. Saved-cutoff review
+results/reseller-weighting-transfer-20261018 has450transfer rows,actual component
+sizes; no fitting or new cutoff. Hypothesis of useful account-weight correction
+is unsupported in this fixed trial;no exponent or weight retuning.
+
+Cycle4 was frozen contingently before cycle3 outcomes:two activity experts with
+original10features/architecture/full-partition weights. No case removed,no routing
+threshold search. First run results/activity-experts-20261018 hit sklearn1.9.1's
+all-missing-column binning error before any expert fit/prediction. Synthetic60row
+reproduction and local source establish cause. Version2 implementation amendment
+omits only entirely missing FITTING columns,records actual features and retains
+all10input fields/hashes. No observed feature information removed,other NaNs
+native. Both frozen versions/source snapshots preserved;no outcomes motivated
+repair. Two focused routed/all-missing/empty-held/missing-class tests pass.
+Results/activity-experts-20261018-02 now executing600expert fits,unchanged gates.
+
+Development lineage reconciliation results/development-lineage-reconciliation-
+20261018 proves ablation,research and renamed operational preparation have exactly
+the same1375keys/212labels/422resellers,ten numeric features and missing values
+under explicit name mapping. Byte hashes intentionally differ across serialization
+and schema. No raw future/test rows were read for reconciliation.
+
+Cycle4 completed,results/activity-experts-20261018-02:600expert fits with only
+training-all-missing columns omitted,300cached baseline fits;21fewerFP(4.05%),
+adds2FP in301,loses6catches in1201. Complete acceptance FAILS. Independent600
+expert/subset/global-weight identities,routed scores,30cuts,540operating rows,
+5000draw/full-decision audit pass.52 consolidated synthetic/boundary tests pass.
+Transfer450rows and twelve independently enumerated tied period burden points
+saved separately. No50000confirmation,route/parameter/cutoff tuning or promotion.
+
+No-fit continuation-complementarity-20261018 finds bidirectional catches7/12,
+7/4,16/9 and meanwithin-foldmidrankrho.85957 between calibration and routedexperts.
+These are different fitted procedures,not five identical seed evidence. Experts
+improve April ranking in all repeats;calibration gains mainly elsewhere. This
+provides a specific new ensemble hypothesis rather than revising a near-failed
+cutoff. Freeze comparisons/continuation_blend_protocol.md forONE50/50 mean using
+training-only analytic odds normalization of globally balanced expert scores.
+Report correctedexpert as ineligible mechanism control. Zero newHGB/calibrator
+fits. Same strict acceptance;cycle5alpha ledger continues. Next verify correction
+boundaries/isolation,execute saved-score comparison,independently audit every result.
+
+Cycle5 completed,results/continuation-blend-20261018:zeroHGB/calibratorfits,
+TP/FP188/435,199/475,193/436 versus190/498,195/551,192/505. Mean69.33fewerFP
+(13.38%),but repeat301 loses2catches;April adds8/6/5FP and period/intersection
+limits fail. Recall interval[-.0449141,+.0543567],FPreduction[40.0521,107.1720].
+Complete acceptance FAILS. Independent120score-stage constructions,45cutoffs,
+1080candidate/control operating rows and5000draw/full-decision audit pass.
+Mechanism control not eligible and did not resolve expert repeat losses.
+Seven focused prior-correction/pairing/leakage tests pass. No blend-weight tuning.
+
+Cycle6 frozen:period/class-balanced ORIGINAL10HGB loss changes ONLY fitting weights,
+not models/features/cutoffpolicy/splitter. This targets persistent period tradeoffs,
+which inverse-reseller weights did not address. Equal8period/class cells is
+simple fixed reweighting,not a claimed implementation of groupDRO or forecast fix.
+See comparisons/period_weighting_protocol.md. Same strict complete acceptance,
+next alpha spend,300fits after focused checks. No protected outcomes selected it.
+
+Before cycle6 results,freeze contingent cycle7 only if cycle6 fails:one RBFmargin
+learner on cadence12. Failed linear/additive boundaries versus tree period-ranking
+losses motivate a smooth multivariate interaction function,not a kernel/C/gamma
+search. Explicit probability=False avoids libsvm's ungrouped internal probability
+CV;expit margins remain non-probabilistic scores. See rbf_cadence_protocol.md.
+No model/feature/cutoff choice comes from protected-test evidence. Next retain
+all failed decisions and execute only the justified frozen contingent procedure.
+
+Cycle6 completed,results/period-weighting-20261018:original10HGB equal8cell
+loss,300newfits,TP/FP192/511,191/545,192/560. Mean20.67MOREFP(3.99%),repeat919
+loses4catches;complete acceptance FAILS. Independent300weight/cell identities,
+15partitions/30cuts/36overallmetrics/8250predictions and5000draw/full-decision
+audit pass. Six focused weighting tests pass. No weight/class/period retuning.
+Cycle7 contingent criterion is met;RBFcadence60fit procedure is executing after
+its synthetic kernel/transform/dual-bound/missing/extrapolation check passed.
+Explicit probability=False emits a sklearn1.9 future deprecation warning;it
+is intentional to avoid ungrouped internal probabilityCV,not an execution failure.
+
+Cycle7 completed,results/rbf-cadence-20261018:60deterministic fits,no probability
+calibration,mean141.67MOREfalsealerts(27.35%) despite overall repeat recall
+preservation. Complete acceptance FAILS. Independent60support/preprocessing/
+training identities,kernel-margin reconstruction/dual bounds,30cuts,540operating
+rows and5000draw/full-decision audit pass. No C/gamma/scale/cutoff tuning.
+RBFtransfer450rows saved separately. Generic transfer reviewer now labels
+single deterministic estimators explicitly rather than requiring a seed field;
+previous exact reviewer source is archived. No models were refitted for reviews.
+
+Seven completed cycles are consolidated in results/development-continuation-
+20261018:summary/repeatcounts/uncertainty/source-code snapshot/runtime/identities.
+All failed decisions remain failed. Completed real fit slots:1200newHGB,
+60smooth-additive,60SVM,600reference logistic calibrators;one additional first-run
+spline fit was discarded after metadata failure. Synthetic checks are separate;
+identical five-seed predictions do not add robustness. Prior original/crossfit
+model fits were reused,not rerun to read results. No50000draw rescue was allowed.
+
+Next investigation before any fit:read primary method guidance on monotonic
+shape constraints and establish whether recency/cadence directions are defensible
+conditional assumptions for this purchasing data. Saved-score associations are
+not partial dependence or causal proof. No monotonic candidate,parameters,margin
+or cutoff is frozen yet;do not infer authorization for test access or tune the
+seven failed methods. The objective remains unmet and research remains active.
+
+## 2026-10-18 — shape investigation and cycle 8 freeze
+
+The previous goal turn made verified progress (seven complete comparisons), not a
+wait or no-progress turn. Rechecked current branch/status, AGENTS, and the clean
+standalone development checkpoint; preserved all existing research changes.
+
+No-fit recency-shape diagnosis: April recent-buyer churn rates reverse the simple
+marginal recency trend; exact annual-count strata are sparse and do not establish
+conditional partial dependence. Primary BG/NBD P(alive) conditions on frequency,
+observation age, and a specific dropout process; it is not the six-month label.
+No hard monotonic constraint is selected merely from that literature or a marginal
+association. results/recency-shape-diagnosis-20261018 independently reconciles four
+half-open historical quarter counts to all 1,375 annual/recent counts, using saved
+accepted pre-snapshot trajectories only. No model or cutoff was fitted.
+
+Historical-quarter diagnosis reused unchanged original and cadence-residual
+matches, all four count/share descriptors, and all k=1/3/5 summaries. Earliest
+quarter share has small mostly negative original recent-FP contrasts (k1/k5 all
+periods; k3 tiny January reversal), mostly zero medians. Cadence residual direction
+reverses in April. Results/quarter-history-diagnosis-20261018 and
+quarter-cadence-residual-diagnosis-20261018 preserve every adverse contrast. No
+seasonality or causal claim. This feature choice is explicitly exploratory after
+eight descriptor summaries, not nested human hypothesis selection.
+
+Freeze cycle 8: original HGB10 + early_quarter_order_share, all original parameters
+and weights unchanged. This is a controlled single-feature trial, not addition to
+the cadence parent whose residual evidence is weaker. comparisons/early_quarter_
+share_protocol.md owns exact formula, same splits/objective, unchanged strict
+operating/practical/subgroup/uncertainty gates and cycle8 alpha spend.
+
+Numerical-readiness issue: later alpha tails imply far below one expected tail
+observation in 5,000 draws. Historical seven decisions already failed independent
+point/period gates and remain failed. A new ADDITIONAL simulation-resolution gate
+is frozen before cycle8 fitting: after passing original5k and50k gates, require
+fixed10,240,000 paired draws plus exact one-sided binomial bounds on bootstrap
+failure probabilities. This can only reject, never rescue or loosen a failed
+criterion. It addresses Monte Carlo error, not adaptive research/model coverage.
+Next implement focused source/feature checks and independent reconstruction, then
+execute the single frozen comparison if correctness passes.
+
+Cycle8 completed, results/early-quarter-share-20261018: 300 original-parameter
+HGB fits plus unchanged cached baseline. Recall point preservation passes every
+repeat, but mean FP increase is 6 (1.16%) and period/intersection safeguards fail.
+Complete acceptance FAILS. Independent calendar audit checks all 5,500 quarter
+counts/1,375 features; nested synthetic feature and simulation tests pass (9 tests).
+No-fit split/training-hash/cutoff/count, feature/lifecycle, and full acceptance
+reconstructions pass. The frozen extra Monte Carlo gate is correctly NOT RUN:
+failed 5,000-draw primary results cannot receive 50,000 or 10.24-million-draw rescue.
+No quarter, transform, parameter or cutoff retuning follows this failure.
+
+Next distinct hypothesis: train-only guarded cutoff selection with an explicit
+baseline fallback may prevent unsafe use of a component whose average FP improves
+but period harm persists. Use only original HGB and fixed retained-logistic
+component; no model pool expansion or blend-weight grid. Freeze a common inner
+objective and all subgroup constraints before any outer construction. Baseline
+fallback retains every outer case and is an explicit new procedure, not retroactive
+reinterpretation of failed fixed components. Existing protected-data boundary and
+all outer acceptance requirements remain unchanged. No new classifier fits needed.
+
+Cycle9 completed, results/guarded-component-20261018: ZERO new fits. The frozen
+training-only common cutoff constraints find no feasible retained-logistic cutoff
+in any of15outer-training partitions. Every fold therefore takes the explicit
+original baseline fallback. All4,125 paired candidate decisions equal baseline;
+FP reduction0 and complete acceptance FAILS. This is not a safety-only success or
+a development improvement. No guard was relaxed and no favorable folds were pooled.
+All cutoff scans, reference-group counts and fallback reasons are retained.
+
+The common-baseline, intact-tie, recall-boundary, undefined-group, practical-fallback
+and no-extra-draw-rescue tests pass (10 tests including streamed uncertainty tests).
+An independent exhaustive tied-cutoff verifier and full acceptance recount are
+running. Next diagnose which training FP lower bounds and recall upper bounds
+conflict, retaining all groups. That can distinguish missing discrimination from
+merely choosing the wrong threshold, without retuning cutoffs on outer labels.
+
+
+## Wrap-up at user request — 2026-10-18
+
+Cycle9 independent audit PASSED:32690tied boundaries,15choices,540operatingrows.
+Binding-bound diagnosis finds AprilFP lowerbounds conflict with earlierperiod
+recall upperbounds. Exactintegerbootstrap diagnostics reproduced conditional
+sign probabilities without changing any failed decision;15exhaustive tests pass.
+
+Cycle10 frozen positive_floor_veto completed,zero new fits. Learnedminimum
+innerOOF retained-logistic score among baseline-caught churners;unchanged baseline
+cutoff,strictbelowfloorveto,tiesretained. Independent source/cutoff/floor/outer
+reconstruction passed15folds,8250predictions,540operatingrows,42cells and5000draws.
+TP/FP188/451,195/519,191/459 versus190/498,195/551,192/505. FP reduction8.04%
+but recall lost2/0/1cases across dependent repeats;Octoberrecent recallloss6.67pp
+exceeds5ppguard. Complete acceptanceFAILED. No confirmation/exact-rescue run.
+The user requested finishing current work and reporting the last hour without
+requiring the goal. No new cycle follows. Standalone safe checkpoint/report:
+results/development-wrapup-20261018. No final data accessed in this cycle.
+
+Final wrap-up checks: 60 focused tests passed in 16.86 seconds; one existing sklearn
+SVC deprecation warning. New veto runner/verifier/tests pass Ruff format/check;
+git diff --check passes. No task-created temporary files remain. Independent audits
+and immutable source identities are bound in the new wrap-up manifest.
+
+
+## Explicitly authorized inspected-test evaluation — 2026-10-18
+
+User: “evaluate on the final test set.” This supersedes the earlier no-test-access
+instruction for this one evaluation, without authorizing test-driven tuning.
+Frozen positive-floor veto:full-development baselinecut.0067626906041783315,
+componentfloor.06083151162511704,40HGB+40maps fromdevelopmentonly. Original10full
+baseline/OOF reused after identity checks. Predictions checkpointed and independent
+preparation audit passed before supplied outcomes. No DB query/labelconstruction.
+October candidate46TP/171FP/0FN/275TN,recall100%,precision21.20%;matchedbaseline
+46/183/0/263,100%,20.09%. Historical.06:43/108/3/338,93.48%,28.48%.
+PairedFP reduction12(6.56%),95%conditionalinterval[6,19],recallchange[0,0].
+All changes recentpurchase;inactiveunchanged. No procedure adapted after outcomes.
+Development failure remains. Octoberreused,notnew independenttest.
+Originaloutcomejoin failed datetime/string; recovery normalizedkeys; duplicate
+reportfield failure preserved in evaluation/. Completed_evaluation is authoritative.
+No refit for reportingrepairs. Independent40fitidentities/1476decisions/9metrics
+reproduce. In-memoryjoblibhash changesafterserialization were synthetically
+reproduced; bundleSHA plus exactcomponentpredictions used for persistedidentity.
+Report:results/positive-floor-october-evaluation-20261018/summary.md.
+
+
+## Candidate-specific threshold follow-up — 2026-10-18
+
+User requested selecting the candidate's own development threshold before October
+evaluation. Removed baseline-TP and baseline-cutoff constraints; maximized pooled
+OOF precision subject to recall strictly above 90%, ties recall then higher cutoff.
+Independent exhaustive tied-score enumeration agrees with the existing selector.
+It selects the SAME cutoff,0.0067626906041783315: development recall90.09%,precision
+28.72%,191TP/474FP/21FN/689TN. No numeric threshold difference or changed test
+predictions. October remains46TP/171FP/0FN/275TN,100%recall/21.20%precision.
+No refit, floor revision or test-based selection. Predictions checkpointed before
+supplied outcomes; manifests verified. Descriptive reuse of inspected October;
+full development acceptance still failed. Report:
+results/positive-floor-own-threshold-october-20261018/evaluation/report.md.
+
+
+## Authorized precision-floor October sweep — 2026-10-18
+
+User requested minimum development precision20%,30%,40%,... then final evaluation.
+Fixed model/veto floor; no new fits. Frozen targets20–100% in10point steps; maximize
+development OOF recall with precision >=target, ties higherprecision then cutoff.
+No90%recall floor in this policy. All nine cutoffs and test predictions saved
+before supplied outcomes. Independent exhaustive tied-cutoff selection and27group
+confusion recounts pass;two synthetic tests pass. Target30% gives test45TP/154FP,
+recall97.83%,precision22.61%;40% gives40TP/60FP,86.96%,40.00%;50% gives31TP/23FP,
+67.39%,57.41%. Targets80–100% select one development alert and no test alerts;
+test precision undefined, explicitly flagged. No test-winner selection or deployment.
+October previously inspected; descriptive reuse. Full table and undefined-rate
+correction:results/precision-floor-october-20261018/report.md. Original outputs
+remain immutable;audited_comparison.csv provides undefined precision display.
+
+
+## Authorized all-candidate precision-floor evaluation — 2026-10-18
+
+User requested the same precision-target evaluation for other candidates. Frozen
+scope: ten recent procedures plus two earlier cadence candidates and original
+baseline,13 total. Development OOF cutoffs maximize recall subject to precision
+>=20%,30%,...,100%;ties higherprecision then cutoff;no recallfloor. All117targets
+frozen before outcome stage. 92 feasible and25 infeasible,all reported. Same492
+October resellers/46churners,inspected previously;descriptive reuse,not independent
+validation. No test winner selection,model tuning,deployment,merge or push.
+
+At40%developmentprecision target,testprecision/recall/FP: original40.00/86.96/60;
+retainedcalibration38.18/91.30/68;smooth52.86/80.43/33;reseller42.71/89.13/55;
+experts43.30/91.30/55;blend41.58/91.30/59;period45.16/91.30/51;RBF43.82/84.78/50;
+earlyquarter39.62/91.30/64;guarded=original;veto40.00/86.96/60;oldercadence35.40/
+86.96/73;unitrevenue34.26/80.43/71. These are separate predeclared policy outcomes,
+not a test-selected winning method. Full20–100%grid and counts in the report.
+
+Independent audit:117cutoff choices,128logicalfitidentities,7fullmodelbundles,
+276overall/activity metricrows all reproduce. Guarded procedure selects baseline
+fallback;its duplicate results are intentional. Legacycadence runtime/Windows
+manifest incompatibilities handled via verified originalspec and fixed refit.
+Interruptedpreparation attempts preserved;fullmodels cached,75losttransientinner
+HGB predictions recovered by exactidentity-matched fits. Finalroot:
+results/all-candidate-precision-october-20261018-04/report.md. All frozen
+DEVELOPMENT acceptance failures remain;no independent final-validation claim.
+
+
+## Missed recent-purchase warnings — development-only diagnosis, 2026-10-18
+
+User asked for unused warnings among hardresellers. Fixed period/class40% OOF
+policy,67missed recentchurn cases/66resellers;noOctoberinputs/no new fits.
+Rebuilt6875historicalratios and all603matchedneighborhoods;3synthetic tests pass.
+47of67have at leastoneobservedwarning,15noneobserved,5insufficientcomparisonhistory.
+Smallerlastorder40/62;revenue decline23/53;longerlastgap20/51. Continuingbuyers
+alsofrequentlyshowthese:67.3%,63.2%,39.5%. Main k3matchedflags do not separate
+missedchurners. Continuousrevenueratio andproductvariety offer exploratory hints,
+with nearest-only attenuation/reversals;related previous features failed full
+acceptance. No new predictor or fix established. All18descriptors/k1,3,5/periods,
+missingness/coverage/controlreuse saved. Fullreport:
+results/hard-recent-warning-audit-20261018-02/report.md. Initialschemaadapter
+failure preserved;no trainingrepeated. Boundeddiagnosis complete,no active fit.
+
+
+## Fixed product-engagement ranking experiments — 2026-10-18
+
+New user research objective:move churners above continuing buyers without many
+more false alerts. Development-only, no further October access. Froze two arms
+under same period/class HGB10 and nested301/919/1201x5/inner3seed78:annualdistinct
+products;distinctproducts/annualorders. Same training-only40%precisionpolicy;
+all settings,criteria andcycle11/12spends frozen before fits. Neither passes full
+acceptance. Breadth APgain+.00754 reverses inone repeat;meanFP reduction3.33(1.53%)
+and recall lost in1201. Density APgain+.02117,AUCgain+.02523,pointgains positive
+all3repeats;AP95%interval[-.00327,.04772],AUC[.00965,.04068]. MeanTPgain8,FPaddition10.
+Densitytherefore offers provisionalranking information,not practicalsuccess.
+No failedprimary receivesconfirmation. Independent600modelreloads/60cutoffs/
+1080operatingrows/5000operatingdrawsperarm/17rankingdrawspots pass. Root:
+results/period-product-ranking-20261018. Protocol and currentasrunsnapshots saved.
+
+Contingent follow-up frozen before fitting:personalizedrecency(original10+overdue)
+under sameweights/parameters/policy;oldcontrolled f01vsf00 APgainpositiveall3old
+repeats motivates it. Cycle13. Separate densityattributioncontrol annualordercount
+alone,cycle14,justified by provisionalratio signal and predeclared attribution
+limit,independent ofpendingrecencyresult. Both retain complete acceptance gates.
+Two jobs currently running;no newparametergrid,finalevaluation orpromotion.
+
+
+## Ranking-information follow-ups completed — 2026-10-18
+
+Personalized recency cycle13 and annual-order exposure cycle14 completed after
+separately frozen contingencies. Same period/class weights and HGB10parameters,
+onlyone featureadded;no Octoberinputs. Recency recentAPgain+.03272,AUC+.03202,
+AP95%interval[.00918,.05589],all3repeatpointgainspositive. TP changes+12,+7,+4;
+FPchanges-4,+4,-12. MeanTPgain7.67,FP reduction4(1.84%). FailsrepeatFP,5%practical,
+period/intersection and operatinguncertaintygates. Strongestprovisionalranking
+information inthiscycle,butnotacceptedreplacement. Annualordercontrol APgain
++.01773,CI[-.00203,.03783],TPgain1,FPaddition3;failfullgates. Densityminusorder AP
+increment+.00344,paired95%[-.02525,.03415],notuniquebreadthevidence. Allfailures
+preserved,noextra-drawrescue. Fourarms1200savedHGBfits independentlyreloaded;
+120cutoffs,2160operatingrows,5000operatingdrawsperarm checked,17rankingdrawspots.
+Reports/checkpoint/sourceidentities:results/development-ranking-information-20261018.
+No active fit or finalevaluation,promotion,commit,push or merge. Nextifspecifically
+resumed:diagnosecutofftransfer919savedscorebeforeanynewtrainingorpolicy.
+
+## Authorized personalized-recency October evaluation — 2026-10-18
+
+User explicitly requested adding the new period/class + personalized recency
+method to the existing20–70% precision-target October table. Method unchanged:
+original10 + overdue_ratio, original HGB/seeds and fitting-only period/class
+weights. Three grouped OOF folds seed78 on all1375/212/422development cases;
+maximize recall subject to each precision floor, ties precision then cutoff.
+20new retained HGB fits (15OOF,5full); no completed experiment rerun.
+Predictions and cutoffs checkpointed before supplied October outcomes.
+All six targets feasible. October precision/recall:20=11.41/100,
+30=19.91/100,40=38.74/93.48,50=50.77/71.74,60=77.14/58.70,
+70=86.36/41.30. At40:43TP68FP3FN378TN; compared with existing
+period/class40:one additional caught churn case,17additional false alerts.
+Development acceptance remains FAILED. October reused/descriptive, no new
+independence or deployment claim. New table and complete counts/activity groups:
+results/personalized-recency-october-20261018/evaluation/report.md.
+The evaluation assigns a unique strategy display key per precision target for
+the supplied-outcome join; frozen model scores/cutoffs/decisions unchanged.
+
+### Consolidated lessons and documentation reconciliation — 2026-10-18
+
+The latest authorized October result does not overturn the provisional ranking
+finding or the failed development decision. At the 40% target, adding personalized
+recency to period/class weighting catches one extra churner at the expense of
+17 extra FP (43/68 versus 42/51). At 60%, it catches 27 versus 21 with eight
+versus six FP. Thus 'worse at 40% for fewer false alerts' is supported; 'worse at
+every operating point' is not. No business-approved minimum precision exists.
+
+The missed-case audit establishes overlapping warnings, not absence of warnings.
+The latest controlled arms test breadth, density, personalized timing and annual
+order exposure; all full acceptance decisions fail. Density/count attribution
+remains uncertain, and the reason for score/cutoff transfer after refitting is
+not proven. Cohort composition partly explains development/October differences;
+it does not establish a universal easy/hard customer rule.
+
+Updated the existing model summary, feature evidence, evaluation metrics, rules,
+README and current checkpoint. The complete 14-row 20%–70% table is now embedded
+in evaluation_metrics.md rather than only in ignored generated results. That
+section also records all new target confusion counts, latest four-arm validation
+means, every personalized-recency repeat and evidence links. Historical journals,
+source snapshots, acceptance decisions and result manifests remain intact.
+This reconciliation uses saved artifacts only; no fitting or new evaluation.

@@ -173,7 +173,39 @@ bootstrap intervals do not cover all retraining, selection or population-shift
 uncertainty. Repeated folds and identical seed predictions are not independent
 new evidence. Smoke tests establish execution correctness only.
 
-Research stays on `pipeline_preparation`; final pipeline preparation stays on
-`final-pipeline-preparation`. Preserve the operational fixed ten-feature
+Research continues on `research/development-recall-alerts-20261018`; earlier
+`pipeline_preparation` and `final-pipeline-preparation` references describe their
+historical work. Preserve the operational fixed ten-feature
 pipeline, tracked dataset references and unrelated edits. No automatic push,
 merge, promotion or deployment is authorized by these findings.
+
+## Lessons from the latest controlled comparisons — 2026-10-18
+
+A warning must separate churners from continuing buyers to help ranking. Its
+presence among missed churners alone is insufficient: spending declines, smaller
+orders and longer gaps are also common normal behavior. Conversely, a binary
+warning's failure does not prove a continuous representation has no conditional
+value. Personalized recency provides provisional development ranking gains, but
+its complete operating acceptance fails.
+
+Better ranking and better alerts are different claims. AP is not alert precision;
+a development precision constraint is not a guarantee after outer or full refit.
+Compare procedures using the same rows, splits and cutoff objective. Keep
+historical >90%-recall optimization, nested 40%-precision validation and
+full-development OOF threshold selection separate. A subgroup remaining above
+90% recall would not erase a failure of a previously frozen baseline-relative
+loss limit. Research-default 5% FP and five-point subgroup limits are not
+company-approved business requirements; changing them starts a new protocol.
+
+October was later explicitly authorized for candidate-wide precision sweeps and
+personalized-recency evaluation. These completed comparisons are descriptive
+reuse of the inspected cohort; authorization does not restore independence or
+supersede development failures. Preserve all target columns, infeasible settings,
+undefined metrics and failures. Do not select a target solely because its October
+result is favorable. No precision minimum, staffing capacity or retention benefit
+has yet been supplied by the company. A low-cost check-in is a proposed use case;
+its cost and causal effect still require measurement.
+
+The [method inventory](model_and_results.md#methods-tried-and-current-status--2026-10-18)
+and [full precision-target table](evaluation_metrics.md#authorized-all-candidate-precision-floor-evaluation--2026-10-18)
+own current results. Historical protocols and decisions remain unchanged.

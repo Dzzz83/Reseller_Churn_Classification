@@ -44,16 +44,32 @@ runs no new model experiment or final test.
 
 ## Current development findings
 
-**Current conclusion:** no replacement has met the complete current development
-acceptance criteria. Source, feature, learner and score-transfer follow-ups are
-complete. The latest paid-unit-revenue candidate meets point recall/false-alert
-requirements but fails the frozen false-alert uncertainty requirement. See
-[current evidence](docs/evaluation_metrics.md#latest-fixed-numeric-feature-result--2026-10-17)
-and the [continuation checkpoint](docs/continuation_checkpoint.md).
-The explicitly authorized October test also fails: the latest candidate catches
-45/46 with194 false alerts, versus43/46 with108 for historical0.06 and46/46 with183
-for the baseline using the same development cutoff objective. See
-[October test results](docs/evaluation_metrics.md#authorized-latest-candidate-october-test--2026-10-17).
+**Current conclusion (2026-10-18):** no replacement has met the complete frozen
+development acceptance requirements. The latest four controlled additions to
+period/class-weighted boosting tested annual product breadth, products per annual
+order, personalized recency, and annual order count. Personalized recency gives
+the strongest provisional recent-purchase ranking gain: average precision
+27.64% → 30.92%. Under matched nested validation at a 40% inner precision target,
+mean recall rises 63.84% → 67.45%, with mean false alerts 217.67 → 213.67.
+It still fails repeat, practical, subgroup and uncertainty requirements.
+
+The authorized October precision-target comparison now includes 14 procedures.
+At the 40% development precision target, period/class weighting catches 42 of 46
+churners with 51 false alerts; adding personalized recency catches 43 with 68.
+That is one extra catch for 17 additional false alerts, a worse trade-off for
+reducing false alerts at this operating point. It is not worse at every target.
+See the [complete 20%–70% table](docs/evaluation_metrics.md#authorized-all-candidate-precision-floor-evaluation--2026-10-18),
+[latest development results](docs/evaluation_metrics.md#development-ranking-information-research--2026-10-18),
+and [method inventory](docs/model_and_results.md#methods-tried-and-current-status--2026-10-18).
+October has been inspected repeatedly; these later evaluations are descriptive
+reuse. No experimental procedure replaces the operational model.
+
+The earlier paid-unit-revenue result remains a separate failed comparison:
+it passed development point/practical requirements but failed false-alert
+uncertainty, then caught 45/46 with 194 October false alerts. Its original
+[development](docs/evaluation_metrics.md#latest-fixed-numeric-feature-result--2026-10-17)
+and [October records](docs/evaluation_metrics.md#authorized-latest-candidate-october-test--2026-10-17)
+remain unchanged.
 
 The earlier cadence candidate improved grouped development validation
 but failed to improve October precision. The gains below are development
@@ -64,7 +80,7 @@ The completed studies below maximize precision while maintaining **grouped recal
 above 90%**, using development data only. The current objective is stricter:
 **fewer false alerts while matching or exceeding baseline recall on the same
 development splits**. See the [research journal](docs/research_journal.md) for
-the ongoing matched-history investigation and predeclared follow-up.
+the completed matched-history investigation and preserved follow-ups.
 Three repetitions of five outer reseller
 folds use three inner grouped folds for feature, parameter, and cutoff selection.
 All snapshots of a reseller stay together; outer labels never tune cutoffs.
@@ -85,7 +101,7 @@ ablations; they are not alternative names for the adaptive procedure's result.
 Fourteen controlled ablations identify **purchase-gap variation and overdue
 ratio** as the clearest precision contributors. Seven leaves mainly help
 recall; annual order count and L2 precision effects remain uncertain after
-adjusting across 17 comparisons. The current research candidate keeps the
+adjusting across 17 comparisons. That historical research candidate keeps the
 original ten features plus three cadence features, seven leaves, L2=1, and a
 development-selected cutoff. The subsequent October follow-up below finds
 lower precision at that frozen cutoff; it is not installed into the operational
@@ -167,7 +183,7 @@ records the subsequent development diagnosis and need for an untouched cohort
 for an independent final claim. The grouped improvement and ablation studies
 do not access final testing.
 
-Earlier development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features).
+Earlier development metrics and tradeoffs are in [evaluation metrics](docs/evaluation_metrics.md#earlier-seven-versus-ten-feature-experiment).
 The historical ten-feature comparison runs through root `debug/`; the supported pipeline
 still registers RFM, Pruned, Reduced, and Full. See the
 [debug execution guide](pipeline/README.md#debugging-and-feature-experiments).

@@ -1,24 +1,25 @@
 # Evaluation metrics and latest results
 
-Updated on 2026-10-16 against the grouped studies, component ablations,
-October follow-up and failure diagnosis. The research objective maximizes
-precision subject to recall above 90%,
-using nested reseller-grouped validation only. No final testing is used for
-these development studies. A subsequent authorized frozen-candidate evaluation
-on the inspected October cohort is recorded separately below. The original
-2026-10-11 October test record and earlier
-seven-versus-ten experiments retain their separate protocols and results below.
+Updated 2026-10-18. The objective is fewer false alerts while preserving matched
+baseline recall under each experiment's frozen rules. Historical high-recall
+studies maximize precision subject to recall >90%; later precision-target studies
+maximize recall subject to a development precision floor. These are different
+operating policies. Nested outer validation, threshold-selection OOF and October
+results are identified separately below. Development studies exclude October;
+subsequent user-authorized evaluations reuse that previously inspected cohort.
+The original 2026-10-11 record and every historical acceptance decision remain.
 
 The historical provisional pipeline's latest available evaluation files are dated
 2026-10-07. Its results are recorded separately below because its models and
 evaluation summaries differ. See [project_context.md](project_context.md) for
 data roles and [feature_analysis.md](feature_analysis.md) for model inputs.
 
-**Current conclusion:** grouped development gains did not establish better
-October precision. The frozen candidate fails the precision-improvement goal
-on that inspected cohort. [Lessons and research rules](research_rules.md) own
-the requirements for subsequent experiments; historical tables below retain
-their original protocols and are not updated into new independent claims.
+**Current conclusion:** no experimental replacement passes the complete frozen
+development acceptance requirements. Personalized recency improves development
+ranking, but its 40%-target October policy adds 17 false alerts for one additional
+caught churner versus period/class alone. Results vary by operating target; a
+favorable mean or inspected October result does not establish acceptance.
+[Research rules](research_rules.md) own future comparison requirements.
 
 ## What the metrics mean
 
@@ -785,3 +786,282 @@ select no thresholds and cannot identify calibration or a causal failure mechani
 Prospective per-repeat period/activity limits complement,not replace,global
 recall preservation,FP reduction,practical improvement and paired uncertainty.
 No candidate has been frozen or evaluated by this preparation.
+
+## Development-only autonomous continuation — 2026-10-18
+
+Ten further frozen comparisons completed on the same1375development rows,
+212churn labels,422resellers and matched301/919/1201 grouped repeats. None passed
+complete acceptance. The common training-only objective maximizes innerOOF
+precision with recall>.90;the historical.06 and precision-floor policies remain
+separate. Baseline mean recall90.72%,518false alerts per repeat.
+
+| Procedure | Mean recall | Mean FP | FP reduction | Complete acceptance |
+| --- | ---: | ---: | ---: | --- |
+| Retained logistic reference calibration | 91.19% | 441.33 | 14.80% | Failed |
+| Smooth additive cadence | 92.61% | 574.00 | -10.81% | Failed |
+| Inverse reseller-history weighting | 90.41% | 549.00 | -5.98% | Failed |
+| Fixed activity experts | 90.41% | 497.00 | 4.05% | Failed |
+| Fixed complementary calibrated/expert mean | 91.19% | 448.67 | 13.38% | Failed |
+| Equal period/class weighting | 90.41% | 538.67 | -3.99% | Failed |
+| RBF cadence margin learner | 92.30% | 659.67 | -27.35% | Failed |
+| Earliest-quarter historical order share | 91.67% | 524.00 | -1.16% | Failed |
+| Training-guarded component with baseline fallback | 90.72% | 518.00 | 0.00% | Failed |
+| Baseline alert veto below caught-inner-positive floor | 90.25% | 476.33 | 8.04% | Failed |
+
+Values average repeat-level pooled metrics;these are dependent development
+observations,not seven independent cohorts. Positive FP reduction means fewer.
+Favorable means for calibration/blending still lose baseline catches in301 and
+violate frozen period/activity/intersection safeguards. No50000draw confirmation
+was permitted for a failed primary. Prospective alpha-spending and conditional
+cluster intervals do not cover all prior adaptive research,retraining or shifts.
+
+The [continuation report](../results/development-continuation-20261018/report.md)
+owns consolidated counts,intervals,identities and limitations;each source study
+retains every fold,period,activity/intersection and undefined/sparse flag. The first
+seven complete acceptance decisions independently reproduce from case-level
+predictions and paired5000reseller-cluster draws. Frozen procedures are in
+comparisons/{retained_calibration,smooth_cadence,reseller_weighting,activity_experts,
+continuation_blend,period_weighting,rbf_cadence}_protocol.md. Runtime interruption
+and all-missing expert-column handling amendments are preserved. No operational
+model was changed,no final evaluation ran,and no candidate is promoted.
+
+
+Cycles8–10 preserve their separately frozen protocols. Quarter-share fails FP;
+guarded selection falls back in all15folds;veto reduces FP but loses baseline
+recall and fails October/activity limits. Each complete decision independently
+reproduces. Exact empirical bootstrap sign counting is an additional prospective
+cycle10 gate after all5k/50kgates pass;it changes no historical decision and provides
+no adaptive/future guarantee. Failedprimary correctly prevents extra confirmation.
+The [wrap-up report](../results/development-wrapup-20261018/report.md) and safe
+checkpoint own the latest status and reproducible source/identity bundle.
+
+
+## Authorized veto October evaluation — 2026-10-18
+
+The user authorized evaluating the latest positive-floor veto. October was already
+inspected, so this is descriptive reuse. Saved predictions preceded joining supplied
+outcomes; no test tuning. On492resellers/46churners:
+
+| Procedure | Recall | Precision | TP | FP | FN | TN | Alerts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original10, matched development cutoff |100.00%|20.09%|46|183|0|263|229|
+| Positive-floor veto |100.00%|21.20%|46|171|0|275|217|
+| Historical cutoff0.06 |93.48%|28.48%|43|108|3|338|151|
+
+The veto removes12FP(6.56%) and losesno catches against its matched comparator;
+95%conditional reseller-bootstrap FPreduction interval[6,19],recallchange[0,0].
+Historical0.06 retains betterprecision withlowerrecall. Full development acceptance
+remainsFAILED;no deployment or independentvalidation claim. All nine subgroup
+metric rows,source/checkpoint identities,reporting recovery and independent audits
+are in [the report](../results/positive-floor-october-evaluation-20261018/summary.md).
+
+
+## Candidate-specific threshold follow-up — 2026-10-18
+
+User requested selecting the candidate's own development threshold before October
+evaluation. Removed baseline-TP and baseline-cutoff constraints; maximized pooled
+OOF precision subject to recall strictly above 90%, ties recall then higher cutoff.
+Independent exhaustive tied-score enumeration agrees with the existing selector.
+It selects the SAME cutoff,0.0067626906041783315: development recall90.09%,precision
+28.72%,191TP/474FP/21FN/689TN. No numeric threshold difference or changed test
+predictions. October remains46TP/171FP/0FN/275TN,100%recall/21.20%precision.
+No refit, floor revision or test-based selection. Predictions checkpointed before
+supplied outcomes; manifests verified. Descriptive reuse of inspected October;
+full development acceptance still failed. Report:
+results/positive-floor-own-threshold-october-20261018/evaluation/report.md.
+
+
+## Authorized precision-floor October sweep — 2026-10-18
+
+User requested minimum development precision20%,30%,40%,... then final evaluation.
+Fixed model/veto floor; no new fits. Frozen targets20–100% in10point steps; maximize
+development OOF recall with precision >=target, ties higherprecision then cutoff.
+No90%recall floor in this policy. All nine cutoffs and test predictions saved
+before supplied outcomes. Independent exhaustive tied-cutoff selection and27group
+confusion recounts pass;two synthetic tests pass. Target30% gives test45TP/154FP,
+recall97.83%,precision22.61%;40% gives40TP/60FP,86.96%,40.00%;50% gives31TP/23FP,
+67.39%,57.41%. Targets80–100% select one development alert and no test alerts;
+test precision undefined, explicitly flagged. No test-winner selection or deployment.
+October previously inspected; descriptive reuse. Full table and undefined-rate
+correction:results/precision-floor-october-20261018/report.md. Original outputs
+remain immutable;audited_comparison.csv provides undefined precision display.
+
+
+## Authorized all-candidate precision-floor evaluation — 2026-10-18
+
+User requested the same precision-target evaluation for other candidates. Frozen
+scope: ten recent procedures plus two earlier cadence candidates and original
+baseline,13 total. Development OOF cutoffs maximize recall subject to precision
+>=20%,30%,...,100%;ties higherprecision then cutoff;no recallfloor. All117targets
+frozen before outcome stage. 92 feasible and25 infeasible,all reported. Same492
+October resellers/46churners,inspected previously;descriptive reuse,not independent
+validation. No test winner selection,model tuning,deployment,merge or push.
+
+At40%developmentprecision target,testprecision/recall/FP: original40.00/86.96/60;
+retainedcalibration38.18/91.30/68;smooth52.86/80.43/33;reseller42.71/89.13/55;
+experts43.30/91.30/55;blend41.58/91.30/59;period45.16/91.30/51;RBF43.82/84.78/50;
+earlyquarter39.62/91.30/64;guarded=original;veto40.00/86.96/60;oldercadence35.40/
+86.96/73;unitrevenue34.26/80.43/71. These are separate predeclared policy outcomes,
+not a test-selected winning method. Full20–100%grid and counts in the report.
+
+Independent audit:117cutoff choices,128logicalfitidentities,7fullmodelbundles,
+276overall/activity metricrows all reproduce. Guarded procedure selects baseline
+fallback;its duplicate results are intentional. Legacycadence runtime/Windows
+manifest incompatibilities handled via verified originalspec and fixed refit.
+Interruptedpreparation attempts preserved;fullmodels cached,75losttransientinner
+HGB predictions recovered by exactidentity-matched fits. Finalroot:
+results/all-candidate-precision-october-20261018-04/report.md. All frozen
+DEVELOPMENT acceptance failures remain;no independent final-validation claim.
+
+
+### Complete October precision-target table, including personalized recency
+
+Each cell is **October precision / recall (%)**. Cutoffs maximize pooled
+three-fold development OOF recall subject to the column's minimum precision;
+ties prefer higher precision, then higher cutoff. No 90% recall floor applies.
+Reseller-grouped folds use seed 78. Scores tied at a cutoff stay together.
+All 492 October cases and 46 churners remain. An infeasible development target
+has no test policy; undefined precision must not be displayed as successful.
+
+| Procedure | 20% target | 30% target | 40% target | 50% target | 60% target | 70% target |
+|---|---|---|---|---|---|---|
+| Original baseline | 12.92 / 100.00 | 22.84 / 97.83 | 40.00 / 86.96 | 57.41 / 67.39 | 70.00 / 45.65 | 78.26 / 39.13 |
+| Retained calibration | 13.07 / 100.00 | 21.03 / 97.83 | 38.18 / 91.30 | 44.44 / 78.26 | 63.46 / 71.74 | 83.33 / 65.22 |
+| Smooth additive cadence | 13.58 / 95.65 | 30.07 / 93.48 | 52.86 / 80.43 | 81.58 / 67.39 | 88.89 / 52.17 | Infeasible |
+| Reseller weighting | 11.25 / 100.00 | 24.18 / 95.65 | 42.71 / 89.13 | 56.67 / 73.91 | 69.70 / 50.00 | 76.92 / 43.48 |
+| Activity experts | 13.11 / 100.00 | 25.28 / 97.83 | 43.30 / 91.30 | 58.62 / 73.91 | 78.57 / 47.83 | 94.74 / 39.13 |
+| Complementary blend | 13.03 / 100.00 | 21.80 / 100.00 | 41.58 / 91.30 | 55.88 / 82.61 | 73.68 / 60.87 | 92.59 / 54.35 |
+| Period/class weighting | 11.92 / 100.00 | 23.32 / 97.83 | 45.16 / 91.30 | 56.14 / 69.57 | 77.78 / 45.65 | 93.33 / 30.43 |
+| RBF cadence | 13.11 / 100.00 | 27.85 / 95.65 | 43.82 / 84.78 | 69.57 / 69.57 | 72.00 / 39.13 | 0.00 / 0.00 |
+| Early-quarter share | 11.86 / 100.00 | 20.09 / 100.00 | 39.62 / 91.30 | 58.93 / 71.74 | 79.31 / 50.00 | 81.82 / 39.13 |
+| Guarded component¹ | 12.92 / 100.00 | 22.84 / 97.83 | 40.00 / 86.96 | 57.41 / 67.39 | 70.00 / 45.65 | 78.26 / 39.13 |
+| Positive-floor veto | 16.08 / 100.00 | 22.61 / 97.83 | 40.00 / 86.96 | 57.41 / 67.39 | 70.00 / 45.65 | 78.26 / 39.13 |
+| Earlier cadence/regularization | 12.23 / 100.00 | 17.97 / 100.00 | 35.40 / 86.96 | 43.75 / 76.09 | 69.39 / 73.91 | 90.00 / 58.70 |
+| Earlier cadence/unit revenue | 12.30 / 100.00 | 18.00 / 97.83 | 34.26 / 80.43 | 43.75 / 76.09 | 63.46 / 71.74 | 83.33 / 65.22 |
+| Period/class + personalized recency | 11.41 / 100.00 | 19.91 / 100.00 | 38.74 / 93.48 | 50.77 / 71.74 | 77.14 / 58.70 | 86.36 / 41.30 |
+
+
+¹ Guarded component selected the baseline fallback. Its duplicate row is
+intentional. RBF at 70% has false alerts and no caught churners, so its 0/0
+entry means zero precision and zero recall, not undefined no-alert precision.
+The older sweep also reports 80%–100% targets, including infeasible and undefined
+cases, in its original artifact; this table shows the requested 20%–70% range.
+
+The first 13 rows are preserved from the original sweep. The new row uses the
+same selection policy with the fixed period/class + overdue-ratio procedure.
+It required 15 grouped OOF and five full-development HGB fits; all models and
+predictions were saved. Cutoffs and unlabeled decisions were checkpointed before
+joining supplied outcomes. No test labels selected cutoffs or revised this model.
+These results reuse inspected October; they are not independent confirmation.
+
+| Personalized recency target | TP | FP | FN | TN | Alerts |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 20% | 46 | 357 | 0 | 89 | 403 |
+| 30% | 46 | 185 | 0 | 261 | 231 |
+| 40% | 43 | 68 | 3 | 378 | 111 |
+| 50% | 33 | 32 | 13 | 414 | 65 |
+| 60% | 27 | 8 | 19 | 438 | 35 |
+| 70% | 19 | 3 | 27 | 443 | 22 |
+
+At 40%, period/class alone gives 42TP/51FP/4FN/395TN: personalized recency
+adds one TP and 17 FP. This is a worse false-alert trade-off for the stated
+objective at that point; it does not mean the feature is useless or worse at
+every target. At 60%, its recall is 58.70% versus 45.65%, with precision
+77.14% versus 77.78%. No company precision minimum or outreach capacity has
+been established, so none of these columns is an approved business policy.
+
+[Full updated report](../results/personalized-recency-october-20261018/evaluation/report.md),
+[all overall/activity confusion counts](../results/personalized-recency-october-20261018/evaluation/combined_metrics.csv),
+[development cutoffs](../results/personalized-recency-october-20261018/development_selections.csv),
+and [independent verification](../results/personalized-recency-october-20261018/independent_verification.json)
+retain the evidence. Earlier raw reports and manifests were not rewritten.
+
+
+## Development ranking-information research — 2026-10-18
+
+Four fixed single-feature additions to period/class-weighted HGB10 used the
+same 1,375 development cases, 212 churn cases and 422 resellers. Repeats
+301/919/1201 each have five outer folds and three inner folds (seed 78), with
+reseller isolation at both levels. Cutoffs maximize inner OOF recall subject to
+precision >=40%, with the same tie rules in both arms. No October inputs were
+used in this development cycle. Parameters, five model seeds, native missingness
+and period/class weights stayed fixed. Identical seed predictions do not count
+as independent robustness evidence.
+
+| Added predictor | Mean recall | Mean TP | Mean FP | Recent AP gain, points | Descriptive 95% AP-gain interval, points | Complete acceptance |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| Reference: period/class ten features | 63.84% | 135.33 | 217.67 | — | — | Comparator |
+| Annual distinct products | 64.78% | 137.33 | 214.33 | +0.75 | [-0.99, 2.67] | Failed |
+| Distinct products / annual orders | 67.61% | 143.33 | 227.67 | +2.12 | [-0.33, 4.77] | Failed |
+| Personalized recency | 67.45% | 143.00 | 213.67 | +3.27 | [0.92, 5.59] | Failed |
+| Annual accepted-order count control | 64.31% | 136.33 | 220.67 | +1.77 | [-0.20, 3.78] | Failed |
+
+These are means of dependent repeat-level pooled operating counts, not unique
+customer totals. Recent average precision (AP) averages within-fold ranking
+metrics; it is not precision among the chosen alerts. Personalized recency
+raises recent AP from 27.64% to 30.92%, with positive point gains in all repeats.
+Its mean recent AUC gain is 3.20 points, descriptive 95% interval [1.95, 4.54].
+
+| Repeat | Reference TP / FP | New TP | New FP | New FN | New TN | New recall | New precision | New alerts |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 301 | 134 / 214 | 146 | 210 | 66 | 953 | 68.87% | 41.01% | 356 |
+| 919 | 129 / 199 | 136 | 203 | 76 | 960 | 64.15% | 40.12% | 339 |
+| 1201 | 143 / 240 | 147 | 228 | 65 | 935 | 69.34% | 39.20% | 375 |
+| Mean | 135.33 / 217.67 | 143.00 | 213.67 | 69.00 | 949.33 | 67.45% | 40.11% | 356.67 |
+
+Personalized recency gains 7.67 TP and removes four FP on average, but repeat 919
+adds four FP. Its 1.84% mean FP reduction is below the frozen 5% requirement;
+period/activity/intersection and operating uncertainty gates also fail. Annual
+breadth loses recall and its AP gain reverses in one repeat. Density adds ten FP
+on average; annual count adds three and loses recall in one repeat. Their AP
+intervals include zero. Density minus count gives only a 0.34-point AP increment,
+with descriptive paired interval [-2.53, 3.41]: product variety is not established
+as the unique source of the density gain.
+
+All four acceptance failures stand. Paired reseller bootstrap keeps snapshots
+and repeat predictions together; these conditional intervals omit retraining,
+adaptive search, calendar dependence and future shifts. Ranking intervals are
+descriptive, not corrected evidence of a winner. Frozen cycle 11–14 spending and
+operating safeguards were not relaxed; failed primaries received no extra-draw
+rescue. Every fold, period, activity group and intersection is in the source
+studies rather than hidden by the averages above.
+
+The separate full-development three-fold OOF selector gives personalized
+recency 65.09% recall and 40.35% precision at its 40% target (138TP/204FP).
+That selector is used to choose the full-fit cutoff; it is not the nested outer
+67.45%/40.11% estimate above. Period/class alone's corresponding selector gives
+63.21%/41.49% (134TP/189FP). Neither should be substituted for the October table.
+
+[Consolidated development report](../results/development-ranking-information-20261018/report.md),
+[every repeat's counts](../results/development-ranking-information-20261018/repeat_metrics.csv),
+and [verification](../results/development-ranking-information-20261018/verification.json)
+record source, code, protocol, model, weight and runtime identities. All 1,200
+saved estimators, 120 selected cutoffs and 2,160 operating rows were independently
+reconstructed; full 5,000-draw operating bootstraps were checked for every arm.
+Independent ranking-bootstrap checks cover 17 draws per arm, not all 5,000.
+The later authorized personalized-recency October evaluation appears above and
+does not retroactively change this development-only cycle's decision.
+
+### What the missed-case diagnosis establishes
+
+Under the period/class 40%-target development OOF policy, 67 recent-purchase
+churn cases were missed (66 resellers). Of these, 47 have an observed selected
+warning, 15 have none among defined comparisons, and five lack enough comparison
+history. Warnings are also common among continuing buyers: smaller last orders
+occur in 64.5% of defined missed cases versus 67.3% of continuing cases; revenue
+decline in 43.4% versus 63.2%; longer last gaps in 39.2% versus 39.5%.
+Same-period matching on original features does not establish these binary flags
+as separators. Absence of a useful flag is not proof that churners show no signs.
+Continuous features may add conditional information even when a binary flag fails.
+[The development warning audit](../results/hard-recent-warning-audit-20261018-02/report.md)
+retains missingness, all controls and sensitivity results.
+
+Period/class alone's 40%-target selector catches 63.21% in development but
+91.30% in October. October contains 35/46 churn cases in the no-recent-purchase
+group, versus 91/212 in development. Applying development subgroup recalls to
+October's churn mix gives a descriptive 77.56%, so composition explains part,
+not all, of the difference. Within-group performance differs too. This is not
+proof that October customers are universally 'easy' or that every missed buyer
+has no available warning. Inner-to-outer cutoff transfer is observed; its cause
+and whether it explains repeat 919 remain unresolved. The next useful research
+step, if requested, is a saved-score diagnosis before another fit or policy.

@@ -179,7 +179,7 @@ Random Forest ensemble recall under both methods. Individual forest-seed
 benefits vary. The discount bundle's value is therefore architecture-dependent;
 no isolated per-discount-feature contribution has been established.
 
-See [earlier comparison metrics](evaluation_metrics.md#latest-completed-experiment-seven-versus-ten-features)
+See [earlier comparison metrics](evaluation_metrics.md#earlier-seven-versus-ten-feature-experiment)
 for scores and costs, and [debugging.md](debugging.md) for all 11 candidate
 definitions, associations, paired prediction changes, and experiment limits.
 
@@ -371,3 +371,36 @@ splits its13-input fixed procedure meets point/practical recall-FP requirements,
 but FP uncertainty still fails; it is not an accepted feature replacement. All
 adverse matched contrasts and the secondary cadence comparison are preserved in
 [current metrics](evaluation_metrics.md#latest-fixed-numeric-feature-result--2026-10-17).
+
+## Controlled ranking features and missed-case lessons — 2026-10-18
+
+The latest four arms add exactly one predictor to period/class-weighted original
+ten-feature HGB under the same nested 40%-precision selection policy:
+
+| Field | Historical definition | Measured outcome |
+| --- | --- | --- |
+| unique_products_12m | Distinct accepted ProductIDs in [t−12m,t) | Recent AP +0.75 points; one repeat reverses; failed full acceptance |
+| unique_products_per_order_12m | Annual distinct products / annual accepted orders | Recent AP +2.12 points, mean FP +10; failed |
+| overdue_ratio | recency_days / mean gap between distinct historical purchase dates in [t−12m,t) | Recent AP +3.27 points, mean TP +7.67 and FP −4; failed |
+| n_orders_12m | Accepted order count in [t−12m,t) | Attribution control: recent AP +1.77 points, mean FP +3; failed |
+
+Density is not mean basket size. Undefined personalized recency remains NaN;
+no history is invented. Counts and dates reconcile with saved pre-snapshot order
+and SKU histories. No extended window, customer profile or future-derived input
+was added. Density's AP increment over annual count has an interval spanning
+zero, so unique product-variety benefit is not established.
+
+Simple spending/last-order/gap warnings occur frequently in both missed churners
+and continuing buyers. Binary warning presence does not establish discrimination;
+continuous overdue ratio can still help conditionally even though no defined
+missed recent cases exceed the binary overdue>1 boundary. The specific mechanism
+(pace, history availability or interactions) is not isolated. Stronger ranking
+also does not guarantee a useful cutoff: personalized recency adds one October
+catch and 17 false alerts at the 40% target. Neither a causal warning nor a
+replacement feature schema has been established.
+
+See [complete development counts and uncertainty](evaluation_metrics.md#development-ranking-information-research--2026-10-18)
+and [authorized October table](evaluation_metrics.md#authorized-all-candidate-precision-floor-evaluation--2026-10-18).
+Historical outputs keep `discounted_line_share_12m`; the renamed
+`discount_frequency_12m` is numerically the same feature. Preserve each artifact's
+recorded schema rather than rewriting its source or manifest.

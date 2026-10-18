@@ -165,8 +165,8 @@ See [the SHAP record and reproducibility instructions](https://github.com/Dzzz83
 
 ### Current research continuation
 
-The current `pipeline_preparation` continuation uses the stricter requirement
-of fewer false alerts while matching baseline recall on the same development
+The continuation, now on `research/development-recall-alerts-20261018`, uses
+the stricter requirement of fewer false alerts while matching baseline recall on the same development
 splits. The matched-history, breadth, cadence, learner/weight, product-mix and fixed
 ensemble follow-ups do not produce an accepted replacement under their complete
 frozen criteria. Descriptive ranking improvements do not establish operational
@@ -176,8 +176,63 @@ and the [continuation checkpoint](continuation_checkpoint.md). The original fixe
 model and historical results above are preserved. Newly queried CompanyX source
 availability limits are documented in [data analysis](data_analysis.md#live-source-availability-follow-up--2026-10-16).
 
-The latest13-feature cadence/unit-revenue candidate has now completed the
+The earlier 13-feature cadence/unit-revenue candidate completed the
 explicitly authorized October test:45/46 caught with194 false alerts, versus
 43/46 and108 for historical0.06. The matched-policy original10 catches46/46 with
 183 false alerts. It fails the operational improvement objective; no replacement
 or deployment follows. See [October test metrics](evaluation_metrics.md#authorized-latest-candidate-october-test--2026-10-17).
+
+### Methods tried and current status — 2026-10-18
+
+The baseline remains the operational reference; every candidate below remains
+experimental and failed its complete frozen development acceptance requirements.
+October results do not override those decisions.
+The operational ten-feature model and original cutoff remain unchanged.
+The full [20%–70% precision-target table](evaluation_metrics.md#authorized-all-candidate-precision-floor-evaluation--2026-10-18)
+contains all 14 October-evaluated procedures, including failures and fallback.
+These targets are development precision constraints, not numeric probability
+cutoffs or guaranteed October precision.
+
+| Procedure | What changed | Recorded lesson |
+| --- | --- | --- |
+| Original baseline | Ten-feature, balanced-weight HGB | Reference; keep historical 0.06 separate from new cutoff policies |
+| Retained calibration | Logistic mapping on a disjoint training reference, retaining its fitted learner | High-recall mean FP fell 14.80%, but recall/subgroup gates failed |
+| Smooth additive cadence | Training-fitted splines and logistic regression on ten features plus overdue ratio and gap variation | High-recall FP increased 10.81% |
+| Reseller weighting | Inverse reseller-history influence followed by class balancing | High-recall FP increased 5.98%; equal account influence was not a solution |
+| Activity experts | Separate HGB routes for recent-purchase and no-recent-purchase cases | Mean FP fell 4.05%, below the 5% practical requirement; other gates failed |
+| Complementary blend | Equal mean of retained calibrated score and prior-corrected activity-expert score | High-recall mean FP fell 13.38%, but recall/subgroup gates failed |
+| Period/class weighting | Fitting-only weight N/(8 × snapshot/class cell count), ten-feature HGB | High-recall FP increased 3.99%; later used as a controlled 40%-target comparator |
+| RBF cadence | Training-only imputation/scaling, class-balanced RBF SVM, logistic transform of margin | High-recall FP increased 27.35%; margin transform is not fitted calibration |
+| Early-quarter share | Add order share from [t−12m,t−9m) within annual history | High-recall FP increased 1.16% |
+| Guarded component | Training-only component guard with baseline fallback | All 15 outer folds fell back; no improvement |
+| Positive-floor veto | Remove baseline alerts below a retained-calibration floor learned from inner caught churners | Mean FP fell 8.04%, but baseline catches were lost |
+| Earlier cadence/regularization | Original ten plus overdue ratio, annual count and gap CV; seven leaves, L2=1 | Favorable historical grouped means did not establish a replacement |
+| Earlier cadence/unit revenue | Original ten plus overdue ratio, gap CV and latest-order subtotal/quantity | Passed later point/practical gates, failed FP uncertainty; October trade-off also failed |
+| Period/class + personalized recency | Add only continuous overdue ratio to period/class HGB10 | Strongest recent ranking signal in latest cycle; full acceptance still failed |
+| Period/class + annual product breadth | Add annual distinct ProductID count | Recent AP gain reversed in one repeat; not evaluated on October |
+| Period/class + product density | Add annual distinct products / annual accepted orders | Ranking point gains, but more FP; not evaluated on October |
+| Period/class + annual order exposure | Add only annual accepted-order count as a control | Weaker ranking gain and operating failure; not evaluated on October |
+
+The high-recall percentages above refer to the continuation's matched policy:
+maximize inner OOF precision subject to recall strictly above 90%. They must not
+be compared as controlled effects against the later 40%-precision policy.
+[Evaluation metrics](evaluation_metrics.md#development-only-autonomous-continuation--2026-10-18)
+retains that table; the [journal](research_journal.md) preserves earlier feature,
+learner, product-mix, bagging, projection and cutoff-transfer experiments as well.
+The separate experimental-checkout feature-ablation study uses another operating
+policy and is not a directly interchangeable headline comparison.
+
+The latest personalized-recency ratio divides current recency by mean gaps
+between distinct accepted purchase dates in [t−12m,t). Short undefined histories
+remain NaN. The model may use its continuous values and interactions; it is not
+an 'overdue > 1' rule. At the October 40% target it gives 38.74% precision and
+93.48% recall, versus 45.16% and 91.30% for period/class alone. At the 60% target
+it gives 77.14% precision and 58.70% recall, versus 77.78% and 45.65%.
+There is no uniform dominance across these operating points.
+
+The proposed business use is a low-cost support check-in, not an automatic
+discount. Staff time, unwanted contact and follow-up capacity still matter.
+No company-approved minimum precision or intervention-effect estimate is available;
+40% is a research/presentation scenario, not a business requirement. The model
+ranks purchase inactivity risk; whether outreach prevents churn needs a separate
+intervention comparison. No ready-for-deployment claim follows from these scores.

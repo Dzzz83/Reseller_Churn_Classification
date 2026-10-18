@@ -1,9 +1,39 @@
 # Current research continuation checkpoint
 
-Updated 2026-10-17. **Keep working autonomously without further questions.** The
-user explicitly instructed this after confirming CompanyX.bak is the only source.
-Source limitations exclude ambiguous fields; they do not block all existing-input
-research. No accepted development replacement has been established yet.
+Updated 2026-10-18. **Current work is complete; no training or evaluation is
+running.** The user stopped the earlier autonomous run, then authorized further
+comparisons and requested documentation of the findings. This current status
+supersedes historical active-work and next-action text below. No candidate has
+met complete frozen development acceptance; no operational model is replaced.
+
+Workspace: `research/development-recall-alerts-20261018`, base `db52abd`, with
+uncommitted research code/docs. Preserve existing changes, ignored results and
+the separate dirty `experimental_research` checkout. No push, merge or deployment.
+
+Latest development: four fixed additions to period/class HGB10 (breadth,
+density, personalized recency, annual order control), all failed full acceptance.
+Personalized recency improves recent AP 27.64% → 30.92%, mean recall
+63.84% → 67.45%, mean FP 217.67 → 213.67, but repeat 919 adds FP and practical,
+subgroup and uncertainty gates fail. Saved development source/identities:
+`results/development-ranking-information-20261018/continuation_checkpoint.md`.
+
+Latest authorized October evaluation: personalized recency's development-selected
+20%–70% targets are added to the original 13 procedures. At 40%,43TP/68FP
+versus period/class42TP/51FP. Source, models, cutoffs, predictions, input/runtime
+identities and independent audit:
+`results/personalized-recency-october-20261018/continuation_checkpoint.md`.
+October is previously inspected; no fresh-independent-evidence claim.
+The durable [complete table](evaluation_metrics.md#authorized-all-candidate-precision-floor-evaluation--2026-10-18)
+and [method inventory](model_and_results.md#methods-tried-and-current-status--2026-10-18)
+record current conclusions. Read saved reports rather than rerunning training.
+
+If further research is requested, first diagnose saved inner-to-outer cutoff
+transfer for recency repeat 919. Its cause is unproven. Freeze any new policy
+before assessment; do not tune on October or relax old decisions. No further
+final evaluation or deployment is part of this documentation task.
+
+The chronological sections below preserve earlier instructions, branches and
+work states as historical context; they are not current execution directives.
 
 ## Objective and boundaries
 
@@ -15,7 +45,7 @@ Current research defaults: recall >= baseline and FP < baseline in each repeat,
 reseller-cluster lower bounds for recall >=0 and FP reduction >0. Conservative
 family thresholds and prior adaptive reuse are disclosed per protocol.
 
-Branch pipeline_preparation, starting checkpoint de7573499166979c17f829600d9a98b76a2b178b.
+Historical branch pipeline_preparation, starting checkpoint de7573499166979c17f829600d9a98b76a2b178b.
 Clean initial checkout on an older research branch was switched to this branch.
 All current uncommitted code/docs are this task's work. Preserve them and old
 outputs/data. No reset, pull, push, merge, deployment or model promotion.
@@ -399,3 +429,329 @@ Final verification: **278 tests passed in64.98s** with
 Focused preparation tests20 passed. Changed modules/tests pass Ruff;
 `git diff --check` passes. Final review output manifests and current implementation
 hashes pass; no disposable task files or running processes remain.
+
+## ACTIVE CONTINUATION — 2026-10-18 (supersedes earlier next-action text)
+
+Branch research/development-recall-alerts-20261018 from db52abd in primary repo.
+Experimental checkout c047741 and its ablation edits untouched. No push/merge,
+operational changes,promotion or real final evaluation authorized/performed.
+Mixed historical docs unexpectedly displayed protected aggregates; boundary
+incident recorded in journal,excluded from hypotheses/selection. Read only narrowly
+scoped development evidence from now on; do not reopen historical test sections.
+
+Cycle1 retained logistic reference calibration:FAILS despite14.80%FP reduction,
+one repeat recall loss and period/intersection harm. Results/retained-calibration-
+20261018,independent600identity/540metric/30cutoff/5000draw audit passes.
+Cycle2 smooth additive cadence:FAILS,56moreFP on average. Results/smooth-cadence-
+20261018-02,60fits/30cuts/540rows/statistics/prediction reconstruction pass.
+First interrupted spline run preserved. Separate acceptance verifier independently
+reproduces both full failed decisions; no50000draw rescue allowed.
+
+Current hypothesis/next action: execute frozen reseller-weighting cycle3 after
+synthetic checks. comparisons/reseller_weighting_protocol.md specifies original10
+HGB with inverse FITTING-partition reseller-history weights renormalized to
+balanced class totalsN/2. Same splits/cutoff objective/natural validation. No
+reseller-count predictor. Freeze and save all weights and identities before scoring.
+Continue alpha ledger:.001,.0005,.00025 across cycles,each /4 for two metric tails.
+Periods/activity/intersections each repeat <=5pp recall loss,zero addedFP; overall
+recall>=baseline each repeat,strict fewerFP each repeat,>=5%mean reduction,conditional
+bootstrap lower recall>=0/FP reduction>0. No independent confirmation claims.
+
+Runtime .venv Python3.14.8,sklearn1.9.1;threads OMP/OPENBLAS=1. Commands and outputs
+owned by each protocol. New reusable callback in evaluate_fixed_fold supports
+non-HGB fitting while retaining cached memberships,metadata and baseline; original
+default covered by existing smoke. No completed training should be rerun to read
+results. Durable code/journal remain uncommitted on research branch; generated
+results ignored. Further work and final verification remain required.
+
+## LATEST ACTIVE CHECKPOINT — 2026-10-18, seven completed cycles
+
+The objective remains **unmet**. No DEVELOPMENT IMPROVEMENT has passed acceptance.
+The research goal stays active; no candidate is promoted or eligible for final
+evaluation. All seven failed decisions are preserved.
+
+### Workspace and boundary
+
+Primary checkout: `/home/dzzz83/Documents/code/Reseller_Churn_Classification`.
+Branch: `research/development-recall-alerts-20261018`, based on `db52abd`.
+Research code and documentation remain uncommitted. No push, merge, reset, pull,
+commit, operational model change, or final evaluation occurred. The experimental
+checkout at `c047741` and its user-owned ablation changes remain untouched.
+No training process remains active after cycle 7.
+
+Mixed historical documentation unexpectedly exposed protected test aggregates
+near the start. This boundary incident is disclosed in the journal; that material
+was excluded from research hypotheses and selection. Do not reopen those sections.
+No test case-level files, prediction files, label files, model bundles, or final
+evaluators were accessed for these experiments. Prior test inspection prevents
+any claim of fresh independent final evidence.
+
+### Current hypothesis and next action
+
+Investigate whether monotonic shape constraints on recency/cadence have defensible
+conditional domain support, using primary sources and approved development evidence.
+This is a potential regularization assumption, not an established cause or a frozen
+candidate. Saved-score associations are not partial dependence or causal evidence.
+No further fit should start until the hypothesis and full protocol are justified.
+If unsupported, record that result and find another evidence-backed direction.
+Do not retune the failed weights, routes, kernels, blend fractions, or cutoffs to
+clear a failed margin. No routine user question is needed.
+
+### Completed comparisons
+
+The common baseline has TP/FP of 190/498, 195/551, and 192/505 for repeats
+301, 919, and 1201. Its mean recall is 90.72%, with 518 FP per repeat.
+All studies use the same natural 1,375 rows, 212 churn cases, and 422 resellers.
+
+| Cycle | Procedure | Mean recall | Mean FP | Result directory under results/ |
+| --- | --- | ---: | ---: | --- |
+| 1 | Retained logistic calibration | 91.19% | 441.33 | retained-calibration-20261018/retained_logistic |
+| 2 | Smooth additive cadence | 92.61% | 574.00 | smooth-cadence-20261018-02 |
+| 3 | Inverse reseller-history weighting | 90.41% | 549.00 | reseller-weighting-20261018 |
+| 4 | Fixed activity experts | 90.41% | 497.00 | activity-experts-20261018-02 |
+| 5 | Fixed complementary mean | 91.19% | 448.67 | continuation-blend-20261018/complementary_mean |
+| 6 | Equal period/class weighting | 90.41% | 538.67 | period-weighting-20261018 |
+| 7 | RBF cadence margin | 92.30% | 659.67 | rbf-cadence-20261018 |
+
+Every row FAILED complete acceptance. Calibration and blending have favorable
+averages but lose baseline catches in repeat 301 and violate period/intersection
+gates. No failed primary received 50,000-draw confirmation or a weaker criterion.
+The corrected-expert mechanism control in cycle 5 is ineligible for selection.
+
+Completed real fit slots: 1,200 new HGB classifiers, 60 additive logistic models,
+60 SVMs, and 600 reference logistic calibrators. One initial spline fit was lost
+to a metadata integration failure; synthetic fits are separate. Previously saved
+baseline and crossfit models were reused, not retrained to read their results.
+Identical five-seed predictions do not supply independent robustness evidence.
+
+### Frozen rules and uncertainty
+
+Keep reseller snapshots together in outer and inner validation. The common cutoff
+rule maximizes pooled inner-OOF precision with recall strictly above 90%; ties
+favor recall, then the higher cutoff. Scores equal to the cutoff alert. Original
+fixed 0.06 and precision-floor policies remain separate historical references.
+Grouped validation estimates unseen reseller identities across mixed periods;
+it is not chronological forecasting.
+
+Acceptance requires ALL: baseline recall preserved and strictly fewer FP in each
+repeat; at least 5% mean FP reduction; at most 5 percentage points of recall loss
+and zero added FP in each repeat's snapshot, activity, and snapshot/activity cell;
+paired conditional lower recall difference >= 0 and lower FP reduction > 0.
+Undefined recall, missing predictions, or infeasible folds cannot silently pass.
+These margins are conservative research defaults, not business-approved limits.
+
+Use 5,000 paired reseller-cluster draws, seed 2026, carrying every snapshot and
+repeat together. Continuation alpha spend is .001 / 2**(cycle - 1), divided by four
+for two endpoints and both tails. Cycle 8, only if justified and frozen, has spend
+.0000078125 and tail .000001953125; do not reset the family. The empirical extreme
+tails are imprecise and omit adaptive research, retraining/reselection, and future
+population/calendar changes. A 50,000-draw check is allowed only after ALL primary
+gates pass, with the same seed and tail; it cannot rescue a failure.
+
+### Evidence, repairs, and reproduction
+
+`results/development-continuation-20261018/` contains the report, summary,
+repeat-level counts, intervals, runtime inventory, study identities, code snapshot,
+and base-commit mapping. Frozen protocols are the seven matching
+`comparisons/*_protocol.md` files. The existing research journal and evaluation
+metrics own the explanation; generated results stay ignored by Git.
+
+Independent audits passed for every comparison: training/weight/route/support
+identities, score reconstruction where applicable, cutoffs, operating counts, and
+all seven complete decisions from 5,000 paired draws. Transfer reviews retain
+450 rows per reviewed study and actual component sizes. The final focused suite
+passed **63 tests in 23.65 seconds**; lint and `git diff --check` passed. SVC emits
+one expected future deprecation warning for explicit probability=False. The full
+legacy suite was not run because some tests load broader source files; the selected
+checks use synthetic or explicitly approved development data only.
+
+The initial spline metadata failure and expert all-missing-column binning failure
+are preserved in their interrupted directories. Expert version 2 omits only
+entirely missing FITTING columns, recorded in a pre-score protocol amendment;
+other missing values remain native. The calibration child preserves its original
+self-referential manifest and uses completion_manifest.json for the final outputs.
+The blend child similarly binds its post-assessment intersection decision with a
+completion manifest. Exact as-run sources and earlier verifier versions are saved.
+
+Development lineage reconciliation proves that ablation, research, and renamed
+operational preparation have identical approved keys, labels, ten values, and
+missingness under the explicit name mapping. Preserve the historical
+`discounted_line_share_12m` schema; operational `discount_frequency_12m` changes
+only its name. Numeric parity does not prove historical source completeness.
+
+Use `.venv/bin/python` with OMP_NUM_THREADS=1 and OPENBLAS_NUM_THREADS=1.
+Every runner requires a new output directory. Read completed reports rather than
+refitting. Verifiers perform zero fits but usually refuse to overwrite existing
+audit files: use task-local copies for rechecking, retaining the originals.
+`verify_development_acceptance` takes directory, --candidate, and --tail from the
+frozen protocol. See the consolidated reproduction instructions. No source/data
+expansion or protected evaluation is assumed by this checkpoint.
+
+
+# Continuation checkpoint — 2026-10-18, stopped at user request
+
+The user asked to finish the current work and report the last hour, without requiring
+achievement of the research objective. No further research cycle is authorized by
+this checkpoint itself. The objective remains UNMET: no DEVELOPMENT IMPROVEMENT
+has passed all frozen gates. No candidate is eligible for final evaluation.
+
+## Workspace and boundaries
+
+Primary checkout /home/dzzz83/Documents/code/Reseller_Churn_Classification.
+Research branch research/development-recall-alerts-20261018, base db52abd.
+Changes remain uncommitted; no push, merge, deployment or operational change.
+Experimental checkout c047741 and user-owned ablation changes remain untouched.
+Only approved development cases were used: 1375 rows,212 churn cases,422 resellers,
+four snapshots July2012/October2012/January2013/April2013. No final evaluation ran.
+Earlier mixed historical documents unexpectedly exposed protected aggregates;
+that incident was disclosed and excluded from hypothesis/selection. Do not reopen
+mixed old journal/checkpoint sections. No additional protected material was opened
+in this wrap-up or current cycle. No protected case/prediction/label/model file was
+used. Read this standalone checkpoint instead of historical mixed documents.
+
+## Completed evidence
+
+First seven continuation cycles all failed. Their complete report/source/runtime
+bundle remains results/development-continuation-20261018, unchanged.
+
+Cycle8: early_quarter_share, originalHGB10 plus one verified historical order-share
+feature,300 new fits. TP/FP repeats301/919/1201:190/504,198/553,195/515.
+Baseline190/498,195/551,192/505. MeanFP increases6; complete acceptance FAILED.
+Independent5500quartercounts/1375features,split/cutoff/count/acceptance audits pass.
+
+Cycle9: fixed retained-logistic component with inner period/activity guards and
+explicit whole-fold baseline fallback. No new fits. All15 alternatives infeasible;
+all4125 candidate decisions equal baseline,FP reduction0; acceptance FAILED.
+Independent exhaustive32690tied-cutoff boundaries and540operating rows pass.
+Training-bound diagnosis: April FP constraints bind all15 lower bounds; earlier
+period recall constraints prevent a common feasible cutoff. No guards relaxed.
+
+Cycle10: positive_floor_veto over unchanged baseline alerts. No new fits. Floor is
+minimum fixed retained-logistic innerOOF score among baseline-caught churners;
+equality retained. Floor saved before outer prediction file read. Common cutoff
+objective reproduces original baseline cutoff; every outer candidate alert must
+be a subset of baseline. No floor grid, margin or outer-label tuning.
+TP/FP:188/451,195/519,191/459. MeanFP476.33 vs518 (8.04% reduction).
+Recall mean90.25% vs90.72%; loses2 catches in301 and1 in1201 (dependent repeats).
+October/recent-purchase recall loses6.67points in301 and1201, exceeding5point limit.
+Complete acceptance FAILED; no50000draw or exact-sign rescue was run.
+Independent15floors,8250predictions,540operating rows,component identities,
+alert-subset property,42safeguard cells and5000cluster draws all reproduce.
+Results:results/positive-floor-veto-20261018. Frozen protocol and as-run source
+snapshot are inside. Reproduce with the module commands in this wrap-up report.
+
+## Uncertainty and limitations
+
+Same matched grouped outer301/919/1201 x5folds,inner3fold seed78; every reseller's
+snapshots stay together. Cutoff precision maximum with recall>.90, ties recall
+then higher cutoff. Ten-feature HGB configuration and five seeds unchanged.
+C8/C9/C10 tails .000001953125/.0000009765625/.00000048828125; no reset.
+Research defaults remain >=5%meanFP reduction,recall preserved andstrictlyfewerFP
+everyrepeat,<=.05recall loss andzeroFPincrease everyperiod/activity/intersection,
+pairedreseller lowerrecall>=0 andlowerFPreduction>0; undefined fails.
+
+Exact integer-convolution bootstrap sign audit implemented/tested prospectively.
+Prior calibration diagnostic recall-negative probability .3407117774 despite tiny
+FP-nonpositive probability1.105e-15. C8recall-negative.1556373,FP-nonpositive.8067529;
+C9FP-nonpositive1. These diagnostics changed no historical decisions.
+Cycle10 additionally froze exact sign counting only after all5k/50kgates pass;
+primary failure correctly prevented execution. Exact empirical counting resolves
+simulation error only,not retraining,adaptive choice,calendar/future uncertainty.
+OOF training-positive floor has no conformal/NP coverage guarantee.
+
+## Next action if research is resumed
+
+Do not retune veto floors or guards to observed outer misses. No pending fit/query.
+The next distinct direction would need development-only source/provenance evidence
+and a new frozen protocol. Latest-basket discount composition is only an untested
+possibility; no feature/query/protocol is frozen. Database container running was
+confirmed, but no DB rows were queried in this phase. Its helper's read-only
+name/docstring does not enforce SELECT: use explicit bounded SELECT only if needed.
+Strict final exclusion remains. Repeated development adaptation can overfit the
+same422resellers andfourperiods. New seeds do not create new independent evidence.
+
+
+# Latest checkpoint addendum — authorized October evaluation completed
+
+2026-10-18: user requested “evaluate on the final test set.” Positive-floor veto
+procedure frozen; results/positive-floor-october-evaluation-20261018/summary.md owns
+complete results, sources and commands. Candidate100%recall/21.20%precision/171FP;
+matchedbaseline100%/20.09%/183FP;historical.06:93.48%/28.48%/108FP. Reused inspected
+cohort,not independenttest. Development acceptance remainsFAILED. No deployment.
+No active fit or research continuation. Do not tune from these test outcomes.
+
+
+# Latest checkpoint — all-candidate precision sweep completed, 2026-10-18
+
+User explicitly authorized evaluating other candidates with development precision
+targets, after earlier October evaluation. Scope frozen at13procedures x9targets.
+All117choices/checkpoints precede this outcome stage. October already inspected;
+descriptive reuse only,no test-selected model/threshold/floor. 92feasible25infeasible.
+Independent117choices/128fitidentities/7fullbundles/276metricrows pass. No active fit.
+No operational model change,push,merge or deployment. Full developmental acceptance
+remains unmet for all prior candidates. Do not restart autonomous research or tune
+from these outcomes. User owns next decision.
+
+Authoritative report and exact commands:
+results/all-candidate-precision-october-20261018-04/report.md.
+Full counts and undefined flags: evaluation/comparison.csv andevaluation/metrics.csv.
+As-run source,schemas,protocol,cutoff scans,models,input/runtime IDs and audits saved.
+Older cadence13 exactspec refitted under active runtime;Windowsmanifest handled by
+rootfilehash checks. Attempts01–03 preserved,cache recovery documented inreport.
+All historical source features remain strictlypreprediction;no SQL/new labels.
+
+
+# Latest diagnostic checkpoint — 2026-10-18
+
+User asked whether missed recent-purchase resellers show unused warning signs.
+Development-only descriptive audit complete,not a new model experiment. Authoritative
+report:results/hard-recent-warning-audit-20261018-02/report.md. 67cases/66resellers,
+47have observedwarning,15noneamongdefinedcomparisons,5insufficienthistory. Warnings
+also common among continuingbuyers;no clean separator found. Weak revenue-ratio
+and product-diversity associations remain exploratory and overlap failed prior
+research. NoOctoberinputs,newfits,cutoffchanges,SQL,newlabels or deployment.
+6875ratios,603neighborhoods independentlyverified;3synthetic tests pass. All data,
+code,protocol andartifactidentities saved. No pending fit/query or autonomous
+research continuation. Any model trial requires a separately frozen development
+protocol; previously inspected October is not independent confirmation.
+
+
+# Research checkpoint — development ranking information, 2026-10-18
+
+Current request:find information that ranks churners above continuing buyers
+without many additional false alerts. Four fixed development-only comparisons
+completed;no active fit/query. Scope included annual breadth,density,personalized
+recency,and annual-order attribution control under unchanged period/class HGB10,
+same nested301/919/1201x5groups,innerseed78 and40%precisionpolicy. Historical code
+schema retained. No new October access/evaluation or operational modification.
+
+Personalized recency is the strongest provisional signal:recentAP27.64→30.92%,
+mean gain3.27points,descriptive95%gain interval[.92,5.59]points,positiveall3repeats.
+MeanTP gain7.67,FP reduction4(1.84%);repeat919adds4FP,period/intersectionlimitsfail,
+operatinguncertaintygatesfail. Thus NOT an accepted DEVELOPMENT IMPROVEMENT or
+finalmethod. Both density and annualcount gainrankingpointestimates,butAPintervals
+includezero andoperatinggatesfail. Breadth reversesAPgaininone repeat. Allfourfailed
+acceptancedecisions preserved;no50k/exactrescue. Cycles11–14 alpha ledger continued,
+notreset. 1200fits saved;no fitting recovery or discardedcases.
+
+Authoritative summary:results/development-ranking-information-20261018/report.md.
+Studies:results/period-product-ranking-20261018(twoarms),
+results/period-personalized-recency-20261018,
+results/period-order-exposure-20261018. Every study has protocol,asrunsource,input/
+model/weights/splits/scores/cutoffs/runtime IDs and independent verification.
+1200modelreloads/120cutoffs/2160metricrows/full5000operatingdrawsperarm verified;
+17rankingdraws independently spotchecked perarm. No new finalperformance claim.
+
+If resumed,next diagnose the saved inner-to-outer score/cutoff transfer for
+recency repeat919 before changing a policy. Do not choose features/cutoffs from
+October,retroactively relax gates,combine everything blindly or treat prior test
+asindependent. Current rootresearch branch/db52abd/uncommitted;experimentalcheckout
+and userfiles untouched. No push,merge,commit or deployment.
+
+## Latest authorized evaluation — personalized recency, 2026-10-18
+
+User requested October evaluation and addition to existing20–70target table.
+Completed; no active job. New self-contained checkpoint:
+results/personalized-recency-october-20261018/continuation_checkpoint.md.
+Prior development failures preserved. This authorization/evaluation does not
+request further model selection or deployment.

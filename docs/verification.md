@@ -113,3 +113,73 @@ artifacts; all local documentation links/anchors and `git diff --check` passed.
 Only README.md, docs/model_and_results.md, and this verification document change.
 No training, evaluation, or independent holdout execution was performed for the
 documentation update.
+
+
+## Authorized veto October evaluation — 2026-10-18
+
+Eight focused tests passed in0.77s, including synthetic retained classifier/map
+reconstruction, floor/tie/subset guards, required prediction checkpoint,
+datetime/string outcome join and complete no-fit outcome reporting smoke.
+Ruff check/format checks passed for the four evaluation files;git diff --check
+passed. Independent audit verified40training identities,1476policy decisions and
+all9overall/activity metric rows. Preparation and completed-outcome manifests
+verified. Reporting repairs preserved frozen predictions and partial artifacts;
+no refitting or cutoff revision. The checksum-bound completion record is
+results/positive-floor-october-evaluation-20261018/completion_manifest.json.
+Full results/limitations:the matching summary.md. No operational change/deployment.
+
+
+## All-candidate precision-target evaluation — 2026-10-18
+
+21 focused tests passed in7.51s; two existing SVC deprecation warnings. Coverage
+includes all six learner-retention/serialization paths, historical window/quarter
+boundaries, missing outcomes, exact precision floors, intact ties, infeasibility
+and the complete13candidate inventory. Ruff check/format checks pass for seven
+task files;git diff --check passes. Independently reproduced117developmentcutoff
+choices,128logical fitting identities,7full modelbundles and276test confusion rows.
+92targets feasible,25infeasible;all retained. Root and evaluation manifests verified;
+late report/checkpoint/audits bound in completion_manifest.json. Legacy runtime and
+Windowsmanifest adapters and interrupted-fit recovery are documented without model
+or target changes. No test-driven selection or deployment. Authoritative output:
+results/all-candidate-precision-october-20261018-04/report.md.
+
+
+## Development ranking-information experiments — 2026-10-18
+
+Eight focused tests pass:featureprovenance/invalidhistory,nested synthetic model
+reload/cutoffisolation,weighted tied AP/AUC vs sklearn,existing precisionfloor/
+periodweights. Ruff check/format andgit diff --check pass. Fourfixedarms each300
+HGBfits;independentno-fit verifier reloadsall1200models,reproduces120innercutoffs,
+2160operatingrows andfull5000operatingbootstrapdrawsperarm. Allrecentpoint ranking
+gates recomputed;17rankingbootstrapdraws independentlyspotcheckedperarm. Allfour
+fullacceptance decisionsFAIL,no50k/exactrescue;recencyhasprovisionalrankinggain.
+NoOctoberinputs,SQL,newlabels,operationalmodificationorpush. Consolidatedmanifest
+verified:results/development-ranking-information-20261018/manifest.json.
+
+## Personalized-recency authorized October table — 2026-10-18
+
+8focused tests pass in4.59s (nested synthetic persistence, feature provenance,
+weighted ranks, precision cutoffs, period weights). Ruff check/format and
+ git diff --check pass. Independent saved-artifact audit reloads20models,
+checks20fitting weight vectors and fixed model configurations, reproduces
+6cutoff choices and18overall/activity confusion rows with sklearn. Both
+prediction-stage and evaluation manifests verified. Updated comparison table
+preserves all13previous rows and adds one. No operational code change or push.
+Audit/results:results/personalized-recency-october-20261018/.
+
+## Research documentation reconciliation — 2026-10-18
+
+Documentation-only update from completed saved reports. The full 14-procedure
+20%–70% October precision/recall table is embedded in evaluation_metrics.md;
+new target TP/FP/FN/TN and all three personalized-recency validation repeats are
+included. README/model summary/checkpoint now identify the latest method and
+preserve all failed acceptance decisions. Feature analysis and research rules
+record warning overlap, provisional ranking evidence and unresolved attribution.
+
+Verified all 84 precision/recall table cells against saved combined metrics,
+six new target confusion rows, three validation-repeat rows and four development
+mean/interval rows against saved artifacts. Local Markdown files and heading
+links resolve after repairing two historical seven-versus-ten anchors.
+`git diff --check` passes. No new model fitting, final evaluation or behavior
+tests ran for these static edits. Prior execution checks above remain historical
+checks, not newly rerun claims.
