@@ -32,11 +32,10 @@ defines schemas, reconciliation, coverage, exclusions and feature formulas.
 Tracked `datasets/orders_clean.csv` and `datasets/stores_clean.csv` remain source
 references. They do not supply header/detail facts or establish complete source
 coverage. Obtain reconciled local CSV exports independently and keep them under
-ignored `inputs/`. The optional `pipeline/export_order_inputs.sql` is an extraction template for
-separate source preparation, not an automatic database step. The pipeline needs
-no database connection. Coverage must
-include dates with no purchases; a maximum observed transaction date is
-insufficient evidence of completeness.
+ignored `inputs/`. The optional `pipeline/export_order_inputs.sql` is an extraction
+template for separate source preparation. The pipeline needs no database
+connection once CSVs exist. Coverage includes dates with no purchases; a maximum
+observed transaction date is insufficient evidence of completeness.
 
 ## Load the retained artifact
 
@@ -62,14 +61,18 @@ After the source owner has reconciled and attested complete inputs:
 ```bash
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 reseller-churn export \
   --model models/period_class_weighted/frozen_models.joblib \
-  --orders inputs/orders.csv --stores inputs/stores.csv \
-  --headers inputs/headers.csv --lines inputs/lines.csv \
-  --source-manifest inputs/source_coverage.json \
+  --orders inputs/snapshot-20140502-source-check-20261018/orders.csv \
+  --stores inputs/snapshot-20140502-source-check-20261018/source_stores.csv \
+  --headers inputs/snapshot-20140502-source-check-20261018/order_headers.csv \
+  --lines inputs/snapshot-20140502-source-check-20261018/order_lines.csv \
+  --source-manifest inputs/snapshot-20140502-source-check-20261018/source_coverage.json \
   --coverage-from 2013-05-02 --coverage-through 2014-05-02 \
-  --snapshot 2014-05-02 --output results/power-bi-20140502
+  --snapshot 2014-05-02 --output results/power-bi-20140502-next
 ```
 
-This is a command example, **not an export already performed**. For this snapshot,
+The completed local export is in
+`results/power-bi-20140502-discount-frequency-20261018/`. The example above uses a
+fresh output path because existing directories are refused. For this snapshot,
 history is `[2013-05-02, 2014-05-02)` and eligibility is
 `[2013-11-02, 2014-05-02)`. The pipeline derives the eligible count from purchases;
 the pipeline does not hard-code an expected population. A separately authorized
@@ -77,8 +80,8 @@ source check on 2026-10-18 verified 467 eligible resellers against the supplied
 CompanyX backup. Complete source extracts and a production coverage manifest
 were saved locally; see [source readiness](docs/verification.md#remaining-export-readiness).
 The earlier exports ending at 2013-10-01 are insufficient. Use the newly verified
-full-window inputs for this snapshot. Implementation/model checks used synthetic
-data; no real prediction export has been run.
+full-window inputs for this snapshot. The completed export contains 467 eligible
+resellers; no retraining, cutoff tuning or future outcome access was needed.
 
 The new output directory contains:
 
@@ -88,6 +91,11 @@ The new output directory contains:
 - `manifest.json`: exact cutoff, model identity/runtime/checksum, mean probability
   aggregation, source hashes/declarations, effective and loaded coverage,
   exclusions, row count and output hash, `models_fitted=0`, `outcomes_accessed=false`.
+
+The completed run also includes `predictions_rounded.csv` for sharing: revenue
+has two decimal places and shares, discounts and scores have four. Its Yes/No
+flags are preserved from full-precision scores. Use `predictions.csv` for exact
+numeric values and `bi_readiness.json` for the recorded file checks.
 
 The annual discount feature is named `discount_frequency_12m`: the fraction of
 order lines with a discount during the previous twelve months. The retained
@@ -128,7 +136,29 @@ explicitly approved future model, pass `--model-manifest` with that artifact's
 
 Use a fresh output directory for each run; existing directories are refused.
 Generated `results/`, `models/`, local source `inputs/`, environments and caches
-remain ignored. Preserve tracked dataset references. This branch contains only
-production code/configuration, operational docs, synthetic tests, packaging and
-CI. No real training, scoring, export, database query or final-test evaluation
-was part of this implementation. See [verification](docs/verification.md).
+remain ignored. Preserve tracked dataset references. The main branch contains
+only production code, configuration, operational docs, synthetic tests,
+packaging and CI. Research source and historical artifacts are preserved in the
+separate `experimental_research` checkout.
+
+```text
+reseller_churn/
+  config/       Fixed feature/model contracts and retained artifact metadata
+  data/         Source reconciliation, calendar windows and eligibility
+  features/     Purchase/discount calculations and value validation
+  modeling/     Five-seed fitting, grouped validation and portable loading
+  prediction.py Power BI CSV export from a saved model
+  evaluation.py Grouped-development decision metrics
+pipeline/       Thin entry point, extraction template and synthetic checks
+tests/          Self-contained production regression tests
+docs/           Input contract, model specification and verification record
+datasets/       Tracked order/store references
+inputs/         Local source exports (ignored)
+models/         Local production model (ignored)
+results/        Production CSVs and provenance (ignored)
+```
+
+Code checks use synthetic data. The separately authorized source check and
+2014-05-02 prediction export used the supplied backup and retained model;
+protected final-test evaluation data was not accessed. See
+[verification](docs/verification.md).

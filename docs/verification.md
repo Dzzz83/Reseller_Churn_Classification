@@ -74,13 +74,16 @@ to calculate eligibility rather than hard-code that number.
 
 The earlier detailed exports stopped at 2013-10-01. Replacement source files,
 SQL evidence, backup/restore identity, a production source_coverage.json and
-validation_summary.json are retained locally under the companion workspace's
+validation_summary.json are retained locally under this codebase's
 inputs/snapshot-20140502-source-check-20261018 directory. They pass production
 source and hash-bound coverage validation and remain outside Git. Completeness
 is relative to the supplied backup; original recording-time availability cannot
 be independently established from it. No churn labels or model scores were
-constructed during the source check. The real export still awaits separate
-execution authorization.
+constructed during the source check. The subsequently authorized export is
+saved in results/power-bi-20140502-discount-frequency-20261018: 467 unique eligible
+resellers, 84 Yes and 383 No flags. The full-precision and rounded files use the
+public name discount_frequency_12m. Scores and decisions are unchanged by the
+rename; no model fitting, threshold tuning or future outcome access occurred.
 
 ## Integration with current main
 
@@ -94,5 +97,16 @@ period/class-weighted production commands replace the old balanced-class
 workflow. The suite now contains 60 passing synthetic tests, including retained-model
 name adaptation and unchanged-score export coverage.
 
-This follow-up prepares the user-authorized GitHub merge. No history rewrite,
-binary upload, real model training or prediction export is included.
+The completed main merge is 8ad396c. Its GitHub production checks passed
+(run 39110136922). The follow-up public feature rename passed 60 local synthetic
+tests and smoke verification. Historical research source, including previously
+uncommitted feature-ablation work, is preserved on experimental_research at
+caf7701. Residual research folders in the production checkout contained only
+compiled Python caches and have been removed. Ignored historical research
+artifacts were relocated to that research checkout by filesystem rename;
+protected artifact contents were not opened. Production BI files and original
+user stashes were preserved. The relocation record is saved beside the final
+BI files as workspace_cleanup.json.
+
+No model retraining, cutoff tuning, new independent evaluation or history
+rewrite is part of the workspace cleanup.
