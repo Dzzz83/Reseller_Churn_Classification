@@ -1,54 +1,40 @@
-name: 01 Regression Tests
+name: Grouped pipeline checks
 
 on:
   push:
-    branches:
-      - data_preparation
-      - pipeline_preparation
+    branches: [main, pipeline_preparation, final-pipeline-preparation, 'refactor/**', 'research/**']
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  regression-tests:
+  synthetic-regression-and-smoke:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
     steps:
-      - name: 01 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 02 Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-
-      - name: 03 Install project
+          python-version: '3.11'
+      - name: Install package and verification tools
+        run: python -m pip install '.[dev]'
+      - name: Run self-contained grouped and core tests
+        run: python -m pytest -q
+      - name: Verify historical grouped research compatibility on synthetic cases
+        run: >-
+          python -m pytest -q comparisons/test_grouped_precision_recall.py
+          tests/step_04_evaluation/test_fixed_feature_comparison.py
+          tests/step_04_evaluation/test_period_weighting.py
+          tests/step_04_evaluation/test_reseller_weighting.py
+          tests/step_04_evaluation/test_precision_floor_october.py
+          tests/step_04_evaluation/test_all_candidate_precision.py
+      - name: Check supported implementation formatting and imports
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: 04 Run regression tests
-        run: python -m pytest -q tests debug
-
-      - name: 05 Audit validation comparison schedule
-        run: python comparisons/validation_schedule_audit.py
-
-      - name: 06 Verify source labels
-        run: python comparisons/correlation_pruned_churn/01_verify_data_and_labels.py
-
-      - name: 07 Verify feature calculations
-        run: python comparisons/correlation_pruned_churn/02_verify_features.py
-
-      - name: 08 Evaluate grouped and temporal designs
-        run: |
-          python comparisons/correlation_pruned_churn/03_compare_validation_strategies.py --include-unverified-store-profile
-          python comparisons/correlation_pruned_churn/04_compare_with_baseline.py
-
-      - name: 09 Reproduce original GroupKFold and corrected November audit
-        run: python comparisons/correlation_pruned_churn/05_reproduce_corrected_original.py
-
-      - name: 10 Archive comparison results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: correlation-pruned-churn-audit
-          path: results/correlation_pruned_churn/*.csv
-          if-no-files-found: ignore
+          ruff check reseller_churn pipeline/development_workflow.py pipeline/develop_models.py pipeline/prepare_data.py pipeline/run_full_development_pipeline.py pipeline/grouped_smoke_test.py pipeline/smoke_test.py tests/grouped tests/test_source_contract.py comparisons/grouped_precision_recall.py comparisons/period_weighting.py comparisons/precision_floor_october.py
+          ruff format --check reseller_churn pipeline/development_workflow.py pipeline/develop_models.py pipeline/prepare_data.py pipeline/run_full_development_pipeline.py pipeline/grouped_smoke_test.py pipeline/smoke_test.py tests/grouped tests/test_source_contract.py comparisons/grouped_precision_recall.py comparisons/period_weighting.py comparisons/precision_floor_october.py
+      - name: Run synthetic grouped end-to-end smoke
+        run: python pipeline/grouped_smoke_test.py
+      - name: Check installed command
+        run: reseller-churn --help
