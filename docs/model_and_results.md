@@ -1,164 +1,89 @@
-# Frozen model, evaluations, and research findings
+# Production model and development validation
 
-The final pipeline carries the methodology frozen before the original
-2026-10-11 evaluation. Its source research commit is `f53202d` on
-`pipeline_preparation`. Parameter/feature/seed changes require explicit new
-methodology; probability-cutoff comparisons do not alter the trained model.
+The supported model is `period_class_weighted`, using the ten historical features
+in [the input contract](input_contract.md). Research alternatives, personalized
+recency, candidate searches and historical performance reports stay on research
+branches. This implementation makes no new performance claim.
 
-- Histogram gradient boosting: learning_rate=0.1, max_iter=100,
-  max_leaf_nodes=31, min_samples_leaf=20, l2_regularization=0,
-  early_stopping=False.
-- Balanced training sample weights, native missing-value handling.
-- Mean predicted probabilities across seeds 42, 78, 88, 1034, 2026.
-- Ten features in the order recorded by the model manifest and input contract.
-- Training snapshots July/October 2012 and January/April 2013: 1,375 rows,
-  including 212 churn cases in the original dataset.
-- Original primary cutoff: 0.06, selected from grouped development results.
-  No model search or threshold selection is performed by the final pipeline.
+## Frozen artifact and cutoff
 
-The original test snapshot is 2013-10-01, with outcomes in
-`[2013-10-01, 2014-04-01)`: 492 accounts, 46 churners. Predictions and fixed
-alert decisions preceded outcome access. The original report remains under
-`results/final_evaluation/gb10_grouped_20261011/` in the research checkout;
-generated files and the original model remain outside Git.
+- Five HistGradientBoostingClassifier estimators, seeds 42, 78, 88, 1034, 2026.
+- learning_rate=0.1, max_iter=100, max_leaf_nodes=31, min_samples_leaf=20,
+  l2_regularization=0, early_stopping=False; other constructor defaults are
+  checked against the pinned estimator runtime, including class_weight=None.
+- Native missing-value handling and arithmetic mean of positive-class
+  probabilities; ordered estimator classes must be [0, 1].
+- Equal total weight in each development period × outcome-class cell, computed
+  only from the current fitting partition: weight = n / (8 × cell_count).
+  There is no additional class-weight multiplier.
+- Approved training snapshots: 2012-07-01, 2012-10-01, 2013-01-01, 2013-04-01.
+  All six-month training outcomes resolve by 2013-10-01; earlier prediction
+  snapshots are rejected.
+- Retained cutoff: **0.27912545951329487**, inclusive `score >= cutoff`.
+  The shortened display value 0.27912546 must not be used for decisions.
 
-| Cutoff | Original role | Recall | Precision | Caught | Missed | False alerts |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 0.01 | Secondary | 97.83% | 20.64% | 45 | 1 | 173 |
-| 0.06 | Primary | 93.48% | 28.48% | 43 | 3 | 108 |
-| 0.55 | Secondary | 71.74% | 56.90% | 33 | 13 | 25 |
-| 0.88 | Secondary | 43.48% | 76.92% | 20 | 26 | 6 |
+The retained `frozen_models.joblib` has SHA256:
 
-The primary rule fell below its intended 30% precision floor. Recently active
-accounts had 8 caught churners, 3 misses, and 98 false alerts: 72.73% recall and
-7.55% precision. Previously inactive accounts contained 35 of the 46 churners,
-all caught by the primary rule. This subgroup mix limits interpretation of
-overall recall as stable future-period performance.
+```text
+6ee382620eeae80bb2fce68734813e0323b7620a56c4b73f867ecfdad66894ba
+```
 
-The model remains provisional in terms of operational suitability. Merging a
-tested implementation does not resolve alert-cost requirements, subgroup
-weaknesses, probability calibration, or the source availability assumptions.
-Changing cutoffs using these inspected outcomes requires a new independent
-holdout to validate fresh performance. Preserve the original record and avoid
-calling subsequent comparisons another untouched final test.
+Its dictionary contains `spec` and `models`; it requires no research classes to
+load. The production loader validates checksum before deserialization, exact
+runtime, specification, feature order, estimator type, all constructor parameters,
+seeds, fitted state and binary classes. A manifest cannot change the retained
+artifact's cutoff. Runtime: Python 3.14.8, NumPy 2.3.5, pandas 3.0.1,
+scikit-learn 1.9.1, joblib 1.6.0. Compatibility is explicit, not inferred from
+successful unpickling. No package-history hashes or adjacent scores/results are
+required. Keep binaries and source exports outside Git.
 
+The minimal `production-model-v1` manifest records artifact checksum, runtime,
+features, parameters, seeds, weighting, aggregation, training snapshots,
+label-availability date and exact threshold. The retained manifest ships as
+package data. Future development writes the same manifest schema separately
+from its local bundle; explicit `--model-manifest` selects it. Only load trusted
+pickle/joblib data; hashes verify identity rather than authenticity.
 
-## Later research findings
+## Future grouped development
 
-Research completed on 2026-10-14 through 2026-10-16 is preserved separately on
-`research/revenue-shap-results-20261016`, commit
-`5cbd21f65912ef7d0f1b010eb585e18f950082a5`. Its
-[protocols, implementation notes, and verification](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/debugging.md)
-and [metric definitions and full results](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/evaluation_metrics.md)
-are the detailed evidence record. The final pipeline continues to use SubTotal,
-the same ten features, model settings, seeds, and original primary cutoff 0.06.
-Experiment scripts are not imported into this implementation. Generated datasets,
-models, predictions, and plots remain local ignored artifacts in the research
-checkout; the published branch contains their protocols and verifier code.
+`develop` uses one model configuration. The defaults are five outer folds,
+three outer repeat seeds (42, 78, 88), three inner folds and inner seed 78.
+StratifiedGroupKFold groups by StoreID, so every snapshot of a reseller stays in
+one partition. Each fitting partition must contain both classes in all four
+periods; infeasible folds fail before fitting.
 
-### Retrospective October comparisons
+Inner pooled OOF scores choose the cutoff maximizing recall subject to precision
+>=40%. Feasibility uses exact integer TP/alert ratios. Ties prefer precision,
+then the larger cutoff. Candidates are the observed scores plus zero, using
+inclusive comparison. A missing feasible cutoff remains explicit; there is no
+fallback rule. Each outer fold assesses a cutoff selected using only its training
+resellers. Full-development inner OOF then selects a future artifact's cutoff,
+and five models fit all development rows. The retained artifact/cutoff remains
+unchanged.
 
-The user authorized an additional seven-feature Random Forest evaluation and
-then the SubTotal/TotalDue comparison. Both reuse the inspected October cohort
-of 492 resellers and 46 churners. Each configuration applies its own cutoff
-selected solely from grouped development under the 30% per-fold precision rule.
-No October outcomes select settings or cutoffs. These are descriptive additional
-comparisons, not new independent final tests.
+Development outputs record OOF scores, outer selections, grouped decisions and
+repeat/snapshot recall, precision, confusion counts and false alerts. A repeat
+with any infeasible outer selection is marked incomplete; metrics over remaining
+rows must not be treated as complete assessment. Zero-denominator precision and
+recall are reported as zero. Split plans, source provenance, data identity,
+runtime and output hashes support reproduction. Grouped validation estimates
+unseen-reseller generalization within development periods, not future-period
+performance. There is no temporal validation or final-test evaluation command.
 
-| Model | Revenue amount | Development-selected cutoff | October recall | October precision | Caught | Missed | False alerts |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Random Forest, seven features | SubTotal | 0.26 | 91.30% | 26.42% | 42 | 4 | 117 |
-| Random Forest, seven features | TotalDue | 0.29 | 89.13% | 28.67% | 41 | 5 | 102 |
-| Histogram boosting, ten features | SubTotal | 0.06 | 93.48% | 28.48% | 43 | 3 | 108 |
-| Histogram boosting, ten features | TotalDue | 0.08 | 93.48% | 30.07% | 43 | 3 | 100 |
+## Evidence and readiness limits
 
-TotalDue boosting catches the same churners with eight fewer false alerts at its
-higher cutoff. This does not isolate a benefit from TotalDue: retrospective
-matched-cutoff checks catch 43 churners for both amounts, with SubTotal/TotalDue
-false alerts of 108/109 at 0.06 and 99/100 at 0.08. These diagnostic cutoffs were
-not used to replace the frozen original rule. TotalDue forest trades one fewer
-caught churner for 15 fewer false alerts. Recently active precision remains low
-for the TotalDue variants: 8.16% for boosting and 6.93% for forest.
+The supplied handoff records development-side reconciliation of historical
+features, eligibility, development labels, grouped splits, period/class weights,
+model parameters and the exact retained cutoff. It found no evidence requiring
+retraining. That evidence is historical context; it was not rerun on real data
+in this implementation. No protected final-test artifacts were used for model
+selection or verification here.
 
-See [the October extension record](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/debugging.md#authorized-retrospective-october-extension--2026-10-15)
-for score reproduction, the CSV precision correction, and subgroup results.
-The original SubTotal results above remain the original evaluation record.
-
-### Repeated nested grouped validation
-
-The study compares SubTotal with TotalDue for seven-feature forest and
-ten-feature boosting, changing only three- and twelve-month revenue totals.
-Category shares retain SubTotal denominators; all other features, populations,
-labels, model settings, and model seeds match. October data is excluded.
-
-Three predefined split seeds (42, 78, 88) each use five outer and five inner
-StratifiedGroupKFold splits grouped by StoreID. All snapshots of a reseller stay
-together. Inner folds select one cutoff per outer fold/configuration, maximizing
-mean inner recall subject to precision >=30% in every inner fold. Outer resellers
-are excluded from both training and cutoff selection. All 1,800 fits completed,
-and all 60 inner selections were feasible.
-
-| Model | Amount | Mean repeat pooled recall | Mean repeat pooled precision | Outer threshold range | Median threshold | Outer folds reaching 30% precision |
-| --- | --- | ---: | ---: | --- | ---: | ---: |
-| Random Forest, seven | SubTotal | 73.11% | 34.53% | 0.18–0.35 | 0.28 | 14/15 |
-| Random Forest, seven | TotalDue | 72.48% | 34.38% | 0.18–0.35 | 0.28 | 14/15 |
-| Histogram boosting, ten | SubTotal | 75.63% | 33.47% | 0.04–0.23 | 0.06 | 13/15 |
-| Histogram boosting, ten | TotalDue | 75.63% | 34.25% | 0.04–0.24 | 0.07 | 12/15 |
-
-Each metric averages three repeat-level pooled scores. Each repeat uses five
-fold-specific frozen cutoffs; ranges and medians are descriptive, not deployment
-cutoffs. Every repeat's pooled precision exceeds 30%, but individual outer folds
-sometimes fail it. Grouped validation measures unseen reseller identities across
-mixed periods; it is not an estimate of future-period performance.
-
-Paired reseller-cluster bootstrapping uses 5,000 draws, keeping each reseller's
-snapshots and repeat predictions together. Approximate multiplicity-adjusted
-98.75% marginal intervals cover four metric comparisons. Boosting's TotalDue
-recall difference is 0.00 percentage points, with interval -2.30 to +2.23;
-precision improves by 0.78 points, with interval -0.16 to +1.78. Forest's recall
-and precision differences are -0.63 and -0.15 points, with intervals -1.64 to
-+0.29 and -0.67 to +0.36, respectively.
-
-Neither variant establishes dominance under the frozen rule: no loss in either
-metric within adjusted intervals, pooled precision >=30% in every repeat, and
-at least a one-point mean gain in recall or precision. The practical gain minimum
-is a research default, not an approved business target. Intervals condition on
-fitted models/cutoffs; overlapping repeats are dependent and do not measure full
-retraining/reselection uncertainty. Inconclusive evidence does not prove
-equivalence or that observed differences are merely luck.
-
-See [the full nested study](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/debugging.md#completed-nested-grouped-study--2026-10-15)
-for exact threshold reports, per-repeat results, uncertainty, and verification.
-No revenue-feature replacement or deployment cutoff was selected.
-
-### Held-out SHAP explanations
-
-The explanation study reproduced repeat 42's five outer SubTotal boosting
-ensembles (25 refits) and explained all 1,375 held-out account/snapshot rows.
-It uses approximate permutation SHAP directly on churn probability, with 20
-reference rows sampled only from each outer-training fold. Five seed bases and
-contributions are averaged on the same probability scale. A fast tree explainer
-failed a reconstruction probe and was excluded. Optional SHAP packages stay in
-the research environment; main has no SHAP dependency.
-
-For reseller 752 on 2012-07-01, the model assigns 0.98616 against a cutoff of
-0.06, but actual churn is zero: a false alert. The training-reference baseline
-is 0.25235. Near-exclusive bike purchasing (99.94% bike revenue share) contributes
-about +31.26 probability percentage points; the other features contribute a net
-+42.12 points. SHAP explains the model's score, not whether that score is correct
-or whether bike purchasing causes churn. The score is not a calibrated 98.6%
-individual risk.
-
-Across held-out cases, recent spending has the largest mean absolute attribution
-(8.48 probability points), followed by bike share (5.81) and recency (5.04).
-These are account/snapshot attribution magnitudes across fold-specific models
-and references, not evidence of incremental feature usefulness. Correlated
-features and interventional masking can create implausible feature combinations.
-The largest walkthrough contribution change under a different permutation seed
-and doubled evaluation budget is 1.44 probability points; this is a sensitivity
-check, not a confidence interval or a background-sample robustness study.
-
-Four focused tests and saved-artifact verification passed; maximum seed
-reconstruction error is 5.56e-16. Reconstruction checks validate arithmetic,
-not exact attribution, causation, calibration, or improved predictive accuracy.
-See [the SHAP record and reproducibility instructions](https://github.com/Dzzz83/Reseller_Churn_Classification/blob/5cbd21f65912ef7d0f1b010eb585e18f950082a5/docs/debugging.md#completed-held-out-shap-analysis--2026-10-16).
+For proposed snapshot 2014-05-02, complete source coverage must contain
+[2013-05-02, 2014-05-02), including the six-month eligibility period beginning
+2013-11-02. The proposed 467 eligible resellers remains unverified. The handoff's
+recorded detailed extracts stop at exclusive 2013-10-01; later order dates alone
+do not establish completeness. A real export awaits reconciled complete sources
+and explicit execution authorization. Scores are not validated calibrated
+individual risk estimates. New independent evaluation requires frozen methodology
+and explicit user approval; protected final-test data stays outside development.

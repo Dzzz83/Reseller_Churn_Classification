@@ -2,21 +2,29 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 *.egg-info/
-.venv/
-bi_venv/
-build/
 dist/
-results/
-models/
-inputs/
+build/
+.venv/
+venv/
+bi_venv/
 .env
 .env.*
-/.aws/
-/.agents/
-/.codex/
+!.env.example
+!.env.sample
+!.env.template
 *.log
 
-# Local agent instructions
+# Local configuration and credentials.
+/.agents/
+/.aws/
+/.codex/
 AGENTS.md
 agents.md
+
+# Local source exports and generated artifacts; tracked references remain.
+inputs/
+results/
+models/

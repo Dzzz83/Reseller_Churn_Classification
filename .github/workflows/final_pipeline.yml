@@ -1,14 +1,14 @@
-name: Final pipeline checks
+name: Production pipeline checks
 
 on:
   push:
-    branches: [main, final-pipeline-preparation]
+    branches: [main, feat/production-only-pipeline]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  test-and-smoke:
+  production:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -18,16 +18,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install final package and tests
+          python-version: "3.14.8"
+      - name: Install pinned production runtime and checks
         run: python -m pip install ".[dev]"
-      - name: Run final pipeline tests
+      - name: Synthetic regression tests
         run: python -m pytest -q
-      - name: Check Python formatting and imports
+      - name: Formatting and imports
         run: |
           ruff check reseller_churn pipeline tests
           ruff format --check reseller_churn pipeline tests
-      - name: Run synthetic end-to-end smoke
+      - name: Synthetic grouped development and export
         run: python pipeline/smoke_test.py
-      - name: Check installed command
-        run: reseller-churn --help
+      - name: Build production wheel
+        run: python -m pip wheel . --no-deps --no-build-isolation --wheel-dir dist
+      - name: Inspect wheel and install outside source tree
+        run: |
+          python pipeline/check_package.py dist/*.whl
+          python -m pip install --no-deps --target "$RUNNER_TEMP/production-install" dist/*.whl
+          cd "$RUNNER_TEMP"
+          PYTHONPATH="$RUNNER_TEMP/production-install" python -m reseller_churn --help
+          PYTHONPATH="$RUNNER_TEMP/production-install" "$RUNNER_TEMP/production-install/bin/reseller-churn" --help
+          PYTHONPATH="$RUNNER_TEMP/production-install" python "$GITHUB_WORKSPACE/pipeline/smoke_test.py" --installed

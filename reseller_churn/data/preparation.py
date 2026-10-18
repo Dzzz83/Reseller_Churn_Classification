@@ -1,5 +1,6 @@
 """Historical source validation, final features, and development-only labels."""
 
+import csv
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date as CalendarDate
@@ -9,7 +10,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.data.churn_labels import build_churn_labels
+from reseller_churn.data.eligibility import get_eligible_store_ids
+from reseller_churn.data.prediction_window import PredictionWindow
+from reseller_churn.data.validation import (
+    validate_category_revenue,
+    validate_order_dates,
+)
 
 DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
 KEYS = ["StoreID", "snapshot"]
@@ -86,9 +94,12 @@ class Sources:
     lines: pd.DataFrame
     coverage_from: pd.Timestamp
     coverage_through: pd.Timestamp
+    loaded_through: pd.Timestamp
     excluded_order_ids: tuple[int, ...] = ()
 
     def require_coverage(self, start: DateLike, end: DateLike) -> None:
+        if date(end) > self.loaded_through:
+            raise ValueError("Required window extends beyond the loaded source cutoff.")
         if date(start) < self.coverage_from or date(end) > self.coverage_through:
             raise ValueError(
                 "Declared source coverage does not contain the complete required window."
@@ -98,15 +109,34 @@ class Sources:
 def _read_source_files(
     paths: Mapping[str, Path],
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    orders = pd.read_csv(paths["orders"], parse_dates=["OrderDate"])
-    headers = pd.read_csv(paths["headers"], parse_dates=["OrderDate"])
+    for name, path in paths.items():
+        with Path(path).open(newline="") as stream:
+            columns = next(csv.reader(stream))
+        if len(columns) != len(set(columns)):
+            raise ValueError(f"Duplicate source columns: {name}")
+        if {
+            "churn",
+            "actual_churn",
+            "test_churn",
+            "future_orders",
+            "predicted_churn",
+            "model score",
+            "predicted churn",
+        } & {c.lower() for c in columns}:
+            raise ValueError("Source inputs must not contain outcomes or predictions.")
+    orders = pd.read_csv(
+        paths["orders"], parse_dates=["OrderDate"], float_precision="round_trip"
+    )
+    headers = pd.read_csv(
+        paths["headers"], parse_dates=["OrderDate"], float_precision="round_trip"
+    )
     stores = pd.read_csv(paths["stores"])
-    lines = pd.read_csv(paths["lines"])
+    lines = pd.read_csv(paths["lines"], float_precision="round_trip")
     require_columns(orders, ORDER_COLUMNS, "orders")
     require_columns(headers, HEADER_COLUMNS, "headers")
     require_columns(lines, LINE_COLUMNS, "lines")
-    if orders.OrderDate.isna().any() or headers.OrderDate.isna().any():
-        raise ValueError("Source order dates must be present.")
+    validate_order_dates(orders.OrderDate)
+    validate_order_dates(headers.OrderDate)
     if not lines.SalesOrderID.isin(headers.SalesOrderID).all():
         raise ValueError("Orphan order lines lack a source header.")
     return orders, stores, headers, lines
@@ -161,13 +191,7 @@ def _validate_source_values(
         if not frame.StoreID.isin(stores.StoreID).all():
             raise ValueError(f"{name} references unknown stores.")
     finite_columns(orders, ["qty", "n_lines"], "orders", positive=True)
-    finite_columns(orders, CATEGORIES, "orders")
-    if (orders[CATEGORIES] < 0).any().any():
-        raise ValueError("Category revenue cannot be negative.")
-    if not np.allclose(
-        orders[CATEGORIES].sum(axis=1), orders.SubTotal, atol=0.01, rtol=0
-    ):
-        raise ValueError("Category revenue does not reconcile with clean subtotal.")
+    validate_category_revenue(orders)
     finite_columns(
         lines,
         ["ProductID", "OrderQty", "UnitPrice", "LineTotal"],
@@ -177,6 +201,17 @@ def _validate_source_values(
     finite_columns(lines, ["UnitPriceDiscount"], "lines")
     if not lines.UnitPriceDiscount.between(0, 1).all():
         raise ValueError("Discounts must be fractions in [0, 1].")
+    for frame, columns in [
+        (orders, ["qty", "n_lines"]),
+        (lines, ["SalesOrderID", "ProductID", "OrderQty"]),
+    ]:
+        values = frame[columns].to_numpy(dtype=float)
+        if (
+            not np.isfinite(values).all()
+            or (values <= 0).any()
+            or (values != np.floor(values)).any()
+        ):
+            raise ValueError("Source counts and IDs must be positive integers.")
     expected = lines.OrderQty * lines.UnitPrice * (1 - lines.UnitPriceDiscount)
     if not np.allclose(expected, lines.LineTotal, atol=1e-5, rtol=1e-8):
         raise ValueError("Order-line revenue formula does not reconcile.")
@@ -219,6 +254,8 @@ def load_sources(
     coverage_from: DateLike,
     coverage_through: DateLike,
     needed_through: DateLike,
+    *,
+    approved_excluded_order_ids: Iterable[int] = (),
 ) -> Sources:
     """Load and reconcile pre-cutoff source rows without exposing future facts.
 
@@ -229,7 +266,7 @@ def load_sources(
     start = date(coverage_from)
     through = date(coverage_through)
     cutoff = date(needed_through)
-    if start >= through or cutoff > through:
+    if start >= through or cutoff > through or cutoff <= start:
         raise ValueError("Invalid or insufficient source coverage.")
 
     orders, stores, headers, lines = _read_source_files(paths)
@@ -237,9 +274,17 @@ def load_sources(
     headers, lines, excluded = _accepted_order_population(
         orders, headers, lines, stores
     )
+    approved = pd.DataFrame({"SalesOrderID": list(approved_excluded_order_ids)})
+    unique_ids(approved, ["SalesOrderID"], "approved exclusions")
+    unexpected = set(excluded) - set(approved.SalesOrderID)
+    if unexpected:
+        raise ValueError(
+            f"Unexpected orders absent from clean input: {sorted(unexpected)}. "
+            "Supply independently approved excluded order IDs."
+        )
     _validate_source_values(orders, stores, headers, lines)
     _reconcile_accepted_orders(orders, headers, lines)
-    return Sources(orders, stores, headers, lines, start, through, excluded)
+    return Sources(orders, stores, headers, lines, start, through, cutoff, excluded)
 
 
 @dataclass(frozen=True)
@@ -263,14 +308,11 @@ def _discount_statistics(
 def build_features(source: Sources, snapshot: DateLike) -> pd.DataFrame:
     """Build only the ten frozen inputs, preserving their original formulas."""
     snapshot = date(snapshot)
-    history_start = snapshot - pd.DateOffset(months=12)
+    window = PredictionWindow.from_date(snapshot)
+    history_start = window.history_start
     source.require_coverage(history_start, snapshot)
-    history = source.orders[
-        source.orders.OrderDate.ge(history_start) & source.orders.OrderDate.lt(snapshot)
-    ]
-    eligible = history.loc[
-        history.OrderDate.ge(snapshot - pd.DateOffset(months=6)), "StoreID"
-    ].unique()
+    history = window.select_history(source.orders)
+    eligible = get_eligible_store_ids(source.orders, window)
     history = history[history.StoreID.isin(eligible)]
     features = (
         history.groupby("StoreID")
@@ -330,14 +372,15 @@ def build_development(source: Sources) -> pd.DataFrame:
     """Construct only approved historical training outcomes, never final labels."""
     parts = []
     for snapshot in TRAINING_SNAPSHOTS:
-        start = date(snapshot)
-        end = start + pd.DateOffset(months=6)
-        source.require_coverage(start, end)
-        features = build_features(source, start)
-        retained = source.orders.loc[
-            source.orders.OrderDate.ge(start) & source.orders.OrderDate.lt(end),
-            "StoreID",
-        ].unique()
-        features["churn"] = (~features.StoreID.isin(retained)).astype(int)
-        parts.append(features)
+        window = PredictionWindow.from_date(snapshot)
+        source.require_coverage(window.label_start, window.label_end)
+        features = build_features(source, window.snapshot)
+        labels = build_churn_labels(source.orders, window)
+        parts.append(
+            features.merge(
+                labels[["StoreID", "churn"]],
+                on="StoreID",
+                validate="one_to_one",
+            )
+        )
     return pd.concat(parts, ignore_index=True)
