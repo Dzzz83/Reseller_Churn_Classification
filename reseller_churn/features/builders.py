@@ -1,29 +1,8 @@
-"""Build the ten fixed features from validated historical purchases."""
-
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+"""Independent purchase and discount calculations for the frozen feature contract."""
 
 import pandas as pd
 
-from reseller_churn.config import DISCOUNT_FEATURES, FEATURES, KEYS, PURCHASE_FEATURES
-from reseller_churn.dates import DateLike, parse_calendar_date
-
-if TYPE_CHECKING:
-    from reseller_churn.data import Sources
-
-
-def select_order_history(sources: Sources, snapshot: pd.Timestamp) -> pd.DataFrame:
-    """Keep twelve months of orders for stores that purchased in the last six."""
-    start_date = snapshot - pd.DateOffset(months=12)
-    eligibility_start = snapshot - pd.DateOffset(months=6)
-    sources.require_coverage(start_date, snapshot)
-    # Include the start date; exclude the snapshot date.
-    history = sources.orders[
-        sources.orders.OrderDate.ge(start_date) & sources.orders.OrderDate.lt(snapshot)
-    ]
-    store_ids = history.loc[history.OrderDate.ge(eligibility_start), "StoreID"].unique()
-    return history[history.StoreID.isin(store_ids)]
+from reseller_churn.config.frozen_model import DISCOUNT_FEATURES, PURCHASE_FEATURES
 
 
 def build_purchase_features(
@@ -91,29 +70,8 @@ def build_discount_features(
 
     # Fraction of order lines with a discount in the last 12 months.
     line_shares = history.UnitPriceDiscount.gt(0).groupby(history.StoreID).mean()
-    features = line_shares.rename("discount_frequency_12m").to_frame()
+    features = line_shares.rename("discounted_line_share_12m").to_frame()
     # The series are indexed by StoreID, so assignment aligns each store's values.
     features["weighted_discount_3m"] = recent_discounts
     features["discount_change_3m"] = recent_discounts - previous_discounts
     return features.reset_index()[["StoreID", *DISCOUNT_FEATURES]]
-
-
-def build_features(sources: Sources, snapshot: DateLike) -> pd.DataFrame:
-    """Combine purchase and discount features for eligible stores at one snapshot."""
-    snapshot = parse_calendar_date(snapshot)
-    history = select_order_history(sources, snapshot)
-    purchase_features = build_purchase_features(history, snapshot)
-
-    # Lines need their order's reseller and date before discount calculations.
-    lines = sources.lines.merge(
-        sources.headers[["SalesOrderID", "StoreID", "OrderDate"]],
-        on="SalesOrderID",
-        validate="many_to_one",
-    )
-    lines = lines[lines.StoreID.isin(purchase_features.StoreID)]
-    discount_features = build_discount_features(lines, snapshot)
-    features = purchase_features.merge(
-        discount_features, on="StoreID", how="left", validate="one_to_one"
-    )
-    features["snapshot"] = snapshot
-    return features[[*KEYS, *FEATURES]].sort_values("StoreID").reset_index(drop=True)

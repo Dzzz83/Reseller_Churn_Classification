@@ -1,1 +1,1 @@
-"""Fixed ten-feature reseller churn prediction and cutoff evaluation."""
+"""Production reseller churn pipeline."""

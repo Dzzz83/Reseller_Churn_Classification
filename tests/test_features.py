@@ -4,11 +4,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from reseller_churn.config import DISCOUNT_FEATURES, FEATURES, KEYS, PURCHASE_FEATURES
-from reseller_churn.data import load_sources
-from reseller_churn.features import (
+from reseller_churn.config.frozen_model import (
+    DISCOUNT_FEATURES,
+    FEATURES,
+    PURCHASE_FEATURES,
+)
+from reseller_churn.data.preparation import KEYS, build_features, load_sources
+from reseller_churn.features.builders import (
     build_discount_features,
-    build_features,
     build_purchase_features,
 )
 
@@ -86,20 +89,20 @@ def test_discount_builder_weights_gross_values_and_preserves_missing_periods():
     assert stores.index.tolist() == [1, 2, 3]
     assert stores.loc[1, "weighted_discount_3m"] == pytest.approx(0.28)
     assert stores.loc[1, "discount_change_3m"] == pytest.approx(0.18)
-    assert stores.loc[1, "discount_frequency_12m"] == pytest.approx(0.75)
+    assert stores.loc[1, "discounted_line_share_12m"] == pytest.approx(0.75)
     assert stores.loc[2, "weighted_discount_3m"] == 0.0
-    assert stores.loc[2, "discount_frequency_12m"] == 0.0
+    assert stores.loc[2, "discounted_line_share_12m"] == 0.0
     assert np.isnan(stores.loc[2, "discount_change_3m"])
     assert np.isnan(stores.loc[3, "weighted_discount_3m"])
     assert np.isnan(stores.loc[3, "discount_change_3m"])
-    assert stores.loc[3, "discount_frequency_12m"] == 1.0
+    assert stores.loc[3, "discounted_line_share_12m"] == 1.0
     pd.testing.assert_frame_equal(lines, original_lines)
 
 
 def test_combination_keeps_eligible_store_when_discount_builder_has_no_row(
     source_paths, monkeypatch
 ):
-    import reseller_churn.features as feature_module
+    import reseller_churn.data.preparation as feature_module
 
     sources = load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
     original_builder = build_discount_features

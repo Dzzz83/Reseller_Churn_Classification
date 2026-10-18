@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from reseller_churn.config import FEATURES, TRAINING_SNAPSHOTS
-from reseller_churn.data import (
+from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
+from reseller_churn.data.preparation import (
     build_development,
+    build_features,
+    date,
     load_sources,
 )
-from reseller_churn.dates import parse_calendar_date
-from reseller_churn.features import build_features
 
 
 def test_frozen_features_and_training_boundaries(source_paths):
@@ -25,7 +25,7 @@ def test_frozen_features_and_training_boundaries(source_paths):
     active = final[final.StoreID.eq(3)].iloc[0]
     assert active.weighted_discount_3m == pytest.approx(0.2)
     assert active.discount_change_3m == pytest.approx(0.1)
-    assert active.discount_frequency_12m == 1
+    assert active.discounted_line_share_12m == 1
 
 
 def test_future_orders_do_not_enter_features(source_paths):
@@ -50,7 +50,15 @@ def test_established_rejected_raw_orders_stay_excluded(source_paths):
     frame = pd.read_csv(source_paths["headers"])
     rejected = frame.iloc[[0]].assign(SalesOrderID=999, SubTotal=-1)
     pd.concat([frame, rejected]).to_csv(source_paths["headers"], index=False)
-    source = load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
+    with pytest.raises(ValueError, match="Unexpected orders"):
+        load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
+    source = load_sources(
+        source_paths,
+        "2011-01-01",
+        "2013-10-01",
+        "2013-10-01",
+        approved_excluded_order_ids=[999],
+    )
     assert source.excluded_order_ids == (999,)
     assert not source.headers.SalesOrderID.eq(999).any()
 
@@ -104,7 +112,7 @@ def test_invalid_source_reconciliation(source_paths, mutation):
 )
 def test_invalid_calendar_dates(value):
     with pytest.raises(ValueError):
-        parse_calendar_date(value)
+        date(value)
 
 
 def test_eligibility_start_is_inclusive(source_paths):

@@ -4,7 +4,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Installed verification must resolve the package outside the source checkout.
+if "--installed" not in sys.argv:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pandas as pd
 
@@ -12,8 +14,7 @@ from reseller_churn.cli import main
 
 
 def synthetic_sources(directory: Path) -> dict[str, Path]:
-    orders, headers, lines = [], [], []
-    order_id = 0
+    store_dates = {}
     for store in range(1, 9):
         dates = ["2012-03-01", "2012-06-01", "2012-09-01", "2012-12-01", "2013-03-01"]
         if store > 2:
@@ -22,6 +23,14 @@ def synthetic_sources(directory: Path) -> dict[str, Path]:
             dates += ["2013-06-01"]
         else:
             dates = dates[:2]
+        store_dates[store] = dates
+    return write_synthetic_sources(directory, store_dates)
+
+
+def write_synthetic_sources(directory: Path, store_dates: dict) -> dict[str, Path]:
+    orders, headers, lines = [], [], []
+    order_id = 0
+    for store, dates in store_dates.items():
         for index, ordered in enumerate(dates):
             order_id += 1
             discount = 0.1 if index % 2 else 0.2
@@ -64,7 +73,7 @@ def synthetic_sources(directory: Path) -> dict[str, Path]:
         "orders": pd.DataFrame(orders),
         "headers": pd.DataFrame(headers),
         "lines": pd.DataFrame(lines),
-        "stores": pd.DataFrame({"StoreID": range(1, 9)}),
+        "stores": pd.DataFrame({"StoreID": sorted(store_dates)}),
     }
     paths = {}
     for name, frame in frames.items():
@@ -73,76 +82,118 @@ def synthetic_sources(directory: Path) -> dict[str, Path]:
     return paths
 
 
+def source_manifest(paths, path, start="2011-01-01", end="2013-10-01"):
+    from reseller_churn.artifacts import file_sha256, write_json
+
+    write_json(
+        path,
+        {
+            "schema": "source-coverage-v1",
+            "attested_by": "synthetic fixture",
+            "approved_excluded_order_ids": [],
+            "sources": {
+                name: {
+                    "sha256": file_sha256(p),
+                    **(
+                        {"coverage_from": start, "coverage_through": end}
+                        if name != "stores"
+                        else {}
+                    ),
+                }
+                for name, p in paths.items()
+            },
+        },
+    )
+    return path
+
+
+def synthetic_development():
+    """Balanced synthetic cells with the same identities in all four periods."""
+    import numpy as np
+
+    from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
+
+    rows = []
+    for snapshot in TRAINING_SNAPSHOTS:
+        for store in range(1, 33):
+            values = [
+                1,
+                20 + store,
+                10 + store,
+                0.7,
+                0.1,
+                0.2,
+                100 + store,
+                0.1,
+                np.nan if store % 5 == 0 else 0.02,
+                0.5,
+            ]
+            rows.append(
+                {
+                    "StoreID": store,
+                    "snapshot": pd.Timestamp(snapshot),
+                    **dict(zip(FEATURES, values)),
+                    "churn": store % 2,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def smoke(directory: Path) -> None:
+    from reseller_churn.artifacts import verify_manifest
+    from reseller_churn.modeling.grouped_validation import (
+        GroupedValidationPlan,
+        ThresholdPolicy,
+    )
+    from reseller_churn.modeling.training import develop
+    from reseller_churn.prediction import CSV_COLUMNS
+
     paths = synthetic_sources(directory)
+    coverage = source_manifest(paths, directory / "source_manifest.json")
+    # Small grouped plan exercises all production responsibilities. Precision zero
+    # makes this execution fixture feasible; it makes no quality claim.
+    develop(
+        synthetic_development(),
+        directory / "development",
+        plan=GroupedValidationPlan(outer_folds=2, inner_folds=2, repeat_seeds=(42,)),
+        policy=ThresholdPolicy(minimum_precision=0),
+    )
     inputs = [
         value for name, path in paths.items() for value in [f"--{name}", str(path)]
     ]
-    inputs += ["--coverage-from", "2011-01-01", "--coverage-through", "2013-10-01"]
-    main(["prepare", *inputs, "--output", str(directory / "preparation")])
     main(
         [
-            "train",
-            "--development",
-            str(directory / "preparation/development.csv"),
-            "--prediction-date",
-            "2013-10-01",
-            "--output",
-            str(directory / "model"),
-        ]
-    )
-    main(
-        [
-            "features",
+            "export",
             *inputs,
+            "--source-manifest",
+            str(coverage),
+            "--coverage-from",
+            "2011-01-01",
+            "--coverage-through",
+            "2013-10-01",
             "--snapshot",
             "2013-10-01",
-            "--output",
-            str(directory / "features"),
-        ]
-    )
-    main(
-        [
-            "predict",
             "--model",
-            str(directory / "model"),
-            "--features",
-            str(directory / "features/features.csv"),
+            str(directory / "development/models.joblib"),
+            "--model-manifest",
+            str(directory / "development/model_manifest.json"),
             "--output",
-            str(directory / "prediction"),
+            str(directory / "export"),
         ]
     )
-    predictions = pd.read_csv(directory / "prediction/ranked_predictions.csv")
-    # Entirely synthetic outcomes: no historical final-test labels are read.
-    outcomes = predictions[["StoreID", "snapshot"]].assign(
-        actual_churn=predictions.StoreID.mod(2).astype(int),
+    result = pd.read_csv(
+        directory / "export/predictions.csv", float_precision="round_trip"
     )
-    outcomes.to_csv(directory / "outcomes.csv", index=False)
-    main(
-        [
-            "evaluate",
-            "--predictions",
-            str(directory / "prediction/ranked_predictions.csv"),
-            "--outcomes",
-            str(directory / "outcomes.csv"),
-            "--cutoffs",
-            "0.06",
-            "0.3",
-            "0.55",
-            "--outcomes-through",
-            "2014-04-01",
-            "--cohort-status",
-            "inspected",
-            "--output",
-            str(directory / "evaluation"),
-        ]
-    )
-    metrics = pd.read_csv(directory / "evaluation/cutoff_metrics.csv")
-    assert metrics[metrics.subgroup.eq("overall")].shape[0] == 3
-    assert metrics[metrics.subgroup.eq("overall")].rows.eq(len(predictions)).all()
-    print("Synthetic end-to-end smoke passed.")
+    assert list(result) == CSV_COLUMNS
+    assert result.StoreID.tolist() == list(range(2, 9))
+    assert set(result["Predicted churn"]) <= {"Yes", "No"}
+    manifest = verify_manifest(directory / "export")
+    assert manifest["models_fitted"] == 0 and manifest["outcomes_accessed"] is False
+    print("Synthetic grouped training and Power BI export smoke passed.")
 
 
 if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(prefix="reseller-churn-smoke-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="reseller-churn-production-smoke-"
+    ) as temporary:
         smoke(Path(temporary))
