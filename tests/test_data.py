@@ -50,7 +50,12 @@ def test_established_rejected_raw_orders_stay_excluded(source_paths):
     frame = pd.read_csv(source_paths["headers"])
     rejected = frame.iloc[[0]].assign(SalesOrderID=999, SubTotal=-1)
     pd.concat([frame, rejected]).to_csv(source_paths["headers"], index=False)
-    source = load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
+    with pytest.raises(ValueError, match="Unexpected orders"):
+        load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
+    source = load_sources(
+        source_paths, "2011-01-01", "2013-10-01", "2013-10-01",
+        approved_excluded_order_ids=[999],
+    )
     assert source.excluded_order_ids == (999,)
     assert not source.headers.SalesOrderID.eq(999).any()
 

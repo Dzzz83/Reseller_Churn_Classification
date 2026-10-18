@@ -47,6 +47,7 @@ def parser() -> argparse.ArgumentParser:
         if name == "features":
             command.add_argument("--snapshot", required=True)
         command.add_argument("--output", type=Path, required=True)
+        command.add_argument("--approved-excluded-order-ids", type=int, nargs="*", default=[])
     command = commands.add_parser("train", help="Train the fixed five-seed ensemble")
     command.add_argument("--development", type=Path, required=True)
     command.add_argument("--prediction-date", required=True)
@@ -91,7 +92,8 @@ def _run_data_command(arguments: argparse.Namespace) -> None:
         else date(arguments.snapshot)
     )
     source = load_sources(
-        paths, arguments.coverage_from, arguments.coverage_through, needed_through
+        paths, arguments.coverage_from, arguments.coverage_through, needed_through,
+        approved_excluded_order_ids=arguments.approved_excluded_order_ids,
     )
     data = (
         build_development(source)
@@ -108,6 +110,8 @@ def _run_data_command(arguments: argparse.Namespace) -> None:
             "inputs": input_identity(paths),
             "coverage_from": arguments.coverage_from,
             "coverage_through": arguments.coverage_through,
+            "loaded_through": str(source.loaded_through.date()),
+            "approved_excluded_order_ids": arguments.approved_excluded_order_ids,
             "rows": len(data),
             "snapshots": sorted(data.snapshot.dt.strftime("%Y-%m-%d").unique()),
             "final_outcomes_constructed": False,

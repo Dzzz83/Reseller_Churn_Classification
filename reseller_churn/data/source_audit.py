@@ -5,6 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from reseller_churn.data.validation import validate_category_revenue, validate_order_dates
+
 
 REQUIRED_ORDER_COLUMNS = {
     "StoreID",
@@ -33,6 +35,11 @@ def audit_source_data(
             f"stores={sorted(missing_store_columns)}"
         )
 
+    validate_order_dates(orders.OrderDate)
+    validate_category_revenue(orders)
+    quantities = orders.qty.to_numpy(dtype=float)
+    if not np.isfinite(quantities).all() or (quantities <= 0).any():
+        raise ValueError("Order quantities must be finite and positive.")
     duplicate_order_ids = int(orders["SalesOrderID"].duplicated().sum())
     duplicate_order_rows = int(orders.duplicated().sum())
     missing_order_dates = int(orders["OrderDate"].isna().sum())

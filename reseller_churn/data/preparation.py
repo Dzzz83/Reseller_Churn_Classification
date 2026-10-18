@@ -13,6 +13,7 @@ from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
 from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.eligibility import get_eligible_store_ids
 from reseller_churn.data.prediction_window import PredictionWindow
+from reseller_churn.data.validation import validate_category_revenue, validate_order_dates
 
 DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
 KEYS = ["StoreID", "snapshot"]
@@ -89,9 +90,12 @@ class Sources:
     lines: pd.DataFrame
     coverage_from: pd.Timestamp
     coverage_through: pd.Timestamp
+    loaded_through: pd.Timestamp
     excluded_order_ids: tuple[int, ...] = ()
 
     def require_coverage(self, start: DateLike, end: DateLike) -> None:
+        if date(end) > self.loaded_through:
+            raise ValueError("Required window extends beyond the loaded source cutoff.")
         if date(start) < self.coverage_from or date(end) > self.coverage_through:
             raise ValueError(
                 "Declared source coverage does not contain the complete required window."
@@ -108,8 +112,8 @@ def _read_source_files(
     require_columns(orders, ORDER_COLUMNS, "orders")
     require_columns(headers, HEADER_COLUMNS, "headers")
     require_columns(lines, LINE_COLUMNS, "lines")
-    if orders.OrderDate.isna().any() or headers.OrderDate.isna().any():
-        raise ValueError("Source order dates must be present.")
+    validate_order_dates(orders.OrderDate)
+    validate_order_dates(headers.OrderDate)
     if not lines.SalesOrderID.isin(headers.SalesOrderID).all():
         raise ValueError("Orphan order lines lack a source header.")
     return orders, stores, headers, lines
@@ -164,13 +168,7 @@ def _validate_source_values(
         if not frame.StoreID.isin(stores.StoreID).all():
             raise ValueError(f"{name} references unknown stores.")
     finite_columns(orders, ["qty", "n_lines"], "orders", positive=True)
-    finite_columns(orders, CATEGORIES, "orders")
-    if (orders[CATEGORIES] < 0).any().any():
-        raise ValueError("Category revenue cannot be negative.")
-    if not np.allclose(
-        orders[CATEGORIES].sum(axis=1), orders.SubTotal, atol=0.01, rtol=0
-    ):
-        raise ValueError("Category revenue does not reconcile with clean subtotal.")
+    validate_category_revenue(orders)
     finite_columns(
         lines,
         ["ProductID", "OrderQty", "UnitPrice", "LineTotal"],
@@ -222,6 +220,8 @@ def load_sources(
     coverage_from: DateLike,
     coverage_through: DateLike,
     needed_through: DateLike,
+    *,
+    approved_excluded_order_ids: Iterable[int] = (),
 ) -> Sources:
     """Load and reconcile pre-cutoff source rows without exposing future facts.
 
@@ -232,7 +232,7 @@ def load_sources(
     start = date(coverage_from)
     through = date(coverage_through)
     cutoff = date(needed_through)
-    if start >= through or cutoff > through:
+    if start >= through or cutoff > through or cutoff <= start:
         raise ValueError("Invalid or insufficient source coverage.")
 
     orders, stores, headers, lines = _read_source_files(paths)
@@ -240,9 +240,17 @@ def load_sources(
     headers, lines, excluded = _accepted_order_population(
         orders, headers, lines, stores
     )
+    approved = pd.DataFrame({"SalesOrderID": list(approved_excluded_order_ids)})
+    unique_ids(approved, ["SalesOrderID"], "approved exclusions")
+    unexpected = set(excluded) - set(approved.SalesOrderID)
+    if unexpected:
+        raise ValueError(
+            f"Unexpected orders absent from clean input: {sorted(unexpected)}. "
+            "Supply independently approved excluded order IDs."
+        )
     _validate_source_values(orders, stores, headers, lines)
     _reconcile_accepted_orders(orders, headers, lines)
-    return Sources(orders, stores, headers, lines, start, through, excluded)
+    return Sources(orders, stores, headers, lines, start, through, cutoff, excluded)
 
 
 @dataclass(frozen=True)

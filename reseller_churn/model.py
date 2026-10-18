@@ -68,6 +68,23 @@ def validate_features(frame: pd.DataFrame) -> pd.DataFrame:
             raise ValueError(f"Feature outside [0, 1]: {name}")
     if not result.discount_change_3m.dropna().between(-1, 1).all():
         raise ValueError("Discount change outside [-1, 1].")
+    eligibility_days = (
+        result.snapshot - result.snapshot.map(lambda t: t - pd.DateOffset(months=6))
+    ).dt.days
+    if not ((result.recency_days >= 1) & (result.recency_days <= eligibility_days)).all():
+        raise ValueError("Recency does not describe an eligible historical account.")
+    if (result.revenue_12m <= 0).any() or (
+        result.revenue_3m > result.revenue_12m + 0.02
+    ).any():
+        raise ValueError("Recent revenue must not exceed positive annual revenue.")
+    shares = result[["share_bikes", "share_accessories", "share_clothing"]].sum(axis=1)
+    if (shares > 1 + 1e-6).any():
+        raise ValueError("Category shares sum to more than one.")
+    no_recent_orders = result.n_orders_3m.eq(0)
+    if (result.loc[no_recent_orders, "revenue_3m"].abs() > 0.02).any() or (
+        result.loc[~no_recent_orders, "revenue_3m"] <= 0
+    ).any():
+        raise ValueError("Recent order counts and revenue disagree.")
     return result
 
 
