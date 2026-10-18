@@ -219,10 +219,15 @@ With `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1` and the existing project `.venv`
   `6ee382620eeae80bb2fce68734813e0323b7620a56c4b73f867ecfdad66894ba`.
   No feature table was loaded and no prediction method was called for it.
 
-A wheel build using `pip wheel --no-deps --no-build-isolation` could not complete:
-`setuptools.build_meta` is absent from the existing environments. No dependency
-was installed. Installed-wheel verification and the updated GitHub Actions job
-remain unexecuted locally. CI declares the normal isolated build requirements.
+After installing `setuptools==84.0.0` and `wheel==0.48.0` in the existing
+project `.venv`, `python -B -m pip wheel --no-deps --no-build-isolation
+--wheel-dir /tmp/churn-grouped-wheel .` passed. The wheel was installed with
+`--no-deps --target` into a disposable directory. From outside the repository,
+importing that installed package, `python -m reseller_churn --help`, and its
+installed `reseller-churn --help` entry point all passed. Temporary installation
+and build directories were removed; the wheel remains in
+`/tmp/churn-grouped-wheel/`. Model runtime dependencies were not upgraded.
+The updated GitHub Actions job remains unexecuted locally.
 
 The proposed 2014-05-02 real export remains pending complete, reconciled source
 coverage and historical-availability evidence. No database query or real export
