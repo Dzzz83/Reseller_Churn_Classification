@@ -10,8 +10,11 @@ FEATURES = (
     "revenue_12m",
     "weighted_discount_3m",
     "discount_change_3m",
-    "discounted_line_share_12m",
+    "discount_frequency_12m",
 )
+# The retained binary predates the public rename. Adapt names only at inference;
+# never rewrite the binary or change the feature order/values.
+RETAINED_FEATURES = (*FEATURES[:-1], "discounted_line_share_12m")
 PURCHASE_FEATURES = FEATURES[:7]
 DISCOUNT_FEATURES = FEATURES[-3:]
 SEEDS = (42, 78, 88, 1034, 2026)

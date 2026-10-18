@@ -345,9 +345,68 @@ def test_retained_identity_cannot_override_cutoff(
     import reseller_churn.modeling.bundles as bundles
 
     metadata = json.loads(model_artifact[1].read_text())
+    from reseller_churn.config.frozen_model import RETAINED_FEATURES
+
     monkeypatch.setattr(bundles, "RETAINED_SHA256", metadata["model_sha256"])
+    metadata["features"] = list(RETAINED_FEATURES)
     metadata["threshold"] = 0.27912546
     path = tmp_path / "modified.json"
     write_json(path, metadata)
     with pytest.raises(ValueError, match="exact frozen cutoff"):
         load_model(model_artifact[0], path)
+
+
+def test_retained_feature_name_adapter_preserves_scores_and_public_csv(
+    model_artifact, feature_frame, source_paths, tmp_path, monkeypatch
+):
+    import reseller_churn.modeling.bundles as bundles
+    from reseller_churn.config.frozen_model import RETAINED_FEATURES
+
+    # Emulate the retained artifact's original names on a synthetic fitted
+    # ensemble. Its numeric state and feature positions remain unchanged.
+    bundle = joblib.load(model_artifact[0])
+    bundle["spec"]["features"] = list(RETAINED_FEATURES)
+    for model in bundle["models"]:
+        model.feature_names_in_ = np.array(RETAINED_FEATURES)
+    path = tmp_path / "retained.joblib"
+    joblib.dump(bundle, path)
+    metadata = json.loads(model_artifact[1].read_text())
+    metadata["features"] = list(RETAINED_FEATURES)
+    metadata["model_sha256"] = file_sha256(path)
+    manifest_path = tmp_path / "retained.json"
+    write_json(manifest_path, metadata)
+    monkeypatch.setattr(bundles, "RETAINED_SHA256", metadata["model_sha256"])
+    expected_inputs = feature_frame[list(FEATURES)].copy()
+    expected_inputs.columns = RETAINED_FEATURES
+    expected = np.mean(
+        [model.predict_proba(expected_inputs)[:, 1] for model in bundle["models"]],
+        axis=0,
+    )
+    np.testing.assert_array_equal(
+        load_model(path, manifest_path).probabilities(feature_frame), expected
+    )
+    evidence = source_manifest(source_paths, tmp_path / "source_coverage.json")
+    output = tmp_path / "export"
+    export_predictions(
+        model_path=path,
+        model_manifest=manifest_path,
+        paths=source_paths,
+        source_manifest=evidence,
+        coverage_from="2011-01-01",
+        coverage_through="2013-10-01",
+        snapshot="2013-10-01",
+        output=output,
+    )
+    csv = pd.read_csv(output / "predictions.csv", float_precision="round_trip")
+    assert "discount_frequency_12m" in csv
+    assert "discounted_line_share_12m" not in csv
+    np.testing.assert_array_equal(csv["Model score"], expected)
+    np.testing.assert_array_equal(
+        csv.discount_frequency_12m, feature_frame.discount_frequency_12m
+    )
+    saved = verify_manifest(output)
+    assert saved["features"] == list(FEATURES)
+    assert saved["estimator_features"] == list(RETAINED_FEATURES)
+    assert saved["feature_name_mapping"] == {
+        "discount_frequency_12m": "discounted_line_share_12m"
+    }

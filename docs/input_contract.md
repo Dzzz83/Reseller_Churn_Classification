@@ -96,7 +96,7 @@ feature calculation.
 | revenue_12m | Accepted subtotals in preceding twelve months |
 | weighted_discount_3m | Sum(gross line value × discount) / sum(gross line value), gross = quantity × unit price |
 | discount_change_3m | Recent three-month weighted discount minus preceding three-month weighted discount |
-| discounted_line_share_12m | Fraction of preceding twelve-month line rows with discount > 0 |
+| discount_frequency_12m | Fraction of preceding twelve-month line rows with discount > 0 |
 
 Discount absence is missing, not zero discount. The estimator handles missing
 values natively; the seven base features must be finite. Eligibility constrains
@@ -108,7 +108,7 @@ sum above one, and recent order counts and revenue must agree.
 The exact columns are:
 
 ```text
-StoreID,Snapshot,n_orders_3m,revenue_3m,recency_days,share_bikes,share_accessories,share_clothing,revenue_12m,weighted_discount_3m,discount_change_3m,discounted_line_share_12m,Model score,Predicted churn
+StoreID,Snapshot,n_orders_3m,revenue_3m,recency_days,share_bikes,share_accessories,share_clothing,revenue_12m,weighted_discount_3m,discount_change_3m,discount_frequency_12m,Model score,Predicted churn
 ```
 
 There is one row per eligible reseller at one snapshot, in ascending StoreID

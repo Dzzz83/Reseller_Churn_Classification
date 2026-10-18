@@ -89,13 +89,13 @@ def test_discount_builder_weights_gross_values_and_preserves_missing_periods():
     assert stores.index.tolist() == [1, 2, 3]
     assert stores.loc[1, "weighted_discount_3m"] == pytest.approx(0.28)
     assert stores.loc[1, "discount_change_3m"] == pytest.approx(0.18)
-    assert stores.loc[1, "discounted_line_share_12m"] == pytest.approx(0.75)
+    assert stores.loc[1, "discount_frequency_12m"] == pytest.approx(0.75)
     assert stores.loc[2, "weighted_discount_3m"] == 0.0
-    assert stores.loc[2, "discounted_line_share_12m"] == 0.0
+    assert stores.loc[2, "discount_frequency_12m"] == 0.0
     assert np.isnan(stores.loc[2, "discount_change_3m"])
     assert np.isnan(stores.loc[3, "weighted_discount_3m"])
     assert np.isnan(stores.loc[3, "discount_change_3m"])
-    assert stores.loc[3, "discounted_line_share_12m"] == 1.0
+    assert stores.loc[3, "discount_frequency_12m"] == 1.0
     pd.testing.assert_frame_equal(lines, original_lines)
 
 

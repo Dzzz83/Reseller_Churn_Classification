@@ -14,7 +14,7 @@ use synthetic data exclusively, with single-thread environment settings.
 
 | Check | Result |
 | --- | --- |
-| Synthetic regression suite | 59 passed after integrating current main |
+| Synthetic regression suite | 60 passed after restoring the public discount feature name |
 | Source-checkout smoke | Grouped development, five-seed training, portable loading and Power BI export passed |
 | Retained artifact loading | Matching SHA256, five fitted estimators, exact parameters/seeds/features/classes and matching runtime; no fitting or scoring |
 | Wheel build and inspection | Built production-only wheel; packaged artifact manifest present; no research imports, binaries, CSVs, datasets or test packages |
@@ -86,11 +86,13 @@ execution authorization.
 
 Conflict resolution integrates main at 241c6a0, including the purchase/discount
 builder separation, shared calendar-date parser and adapted feature regression
-tests from the intervening refactor. The saved model and required CSV retain
-its exact feature name discounted_line_share_12m; renaming it to
-discount_frequency_12m would violate the retained estimator contract. The
+tests from the intervening refactor. A follow-up restores the public feature
+name discount_frequency_12m. The retained estimator's former name,
+discounted_line_share_12m, is confined to its artifact contract and an explicit
+inference mapping; no binary, feature value, score or cutoff changes. The
 period/class-weighted production commands replace the old balanced-class
-workflow. The suite now contains 59 passing synthetic tests.
+workflow. The suite now contains 60 passing synthetic tests, including retained-model
+name adaptation and unchanged-score export coverage.
 
 This follow-up prepares the user-authorized GitHub merge. No history rewrite,
 binary upload, real model training or prediction export is included.

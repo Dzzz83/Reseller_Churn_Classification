@@ -77,6 +77,12 @@ def export_predictions(
             "rows": len(result),
             "snapshot": str(snapshot.date()),
             "features": list(FEATURES),
+            "estimator_features": ensemble.manifest["features"],
+            "feature_name_mapping": {
+                public: saved
+                for public, saved in zip(FEATURES, ensemble.manifest["features"])
+                if public != saved
+            },
             "model_sha256": ensemble.manifest["model_sha256"],
             "threshold": ensemble.manifest["threshold"],
             "threshold_comparison": ">=",

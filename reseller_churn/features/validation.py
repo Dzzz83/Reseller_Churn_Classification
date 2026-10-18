@@ -34,7 +34,7 @@ def validate_features(frame: pd.DataFrame) -> pd.DataFrame:
         "share_accessories",
         "share_clothing",
         "weighted_discount_3m",
-        "discounted_line_share_12m",
+        "discount_frequency_12m",
     ]:
         if not result[name].dropna().between(0, 1).all():
             raise ValueError(f"Feature outside [0, 1]: {name}")

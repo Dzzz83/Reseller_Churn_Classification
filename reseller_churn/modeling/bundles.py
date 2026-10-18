@@ -16,6 +16,7 @@ from reseller_churn.config.frozen_model import (
     FEATURES,
     MODEL_ID,
     PARAMETERS,
+    RETAINED_FEATURES,
     SEEDS,
     TRAINING_SNAPSHOTS,
 )
@@ -26,8 +27,8 @@ from reseller_churn.modeling.ensemble import apply_threshold, mean_probabilities
 RETAINED_SHA256 = "6ee382620eeae80bb2fce68734813e0323b7620a56c4b73f867ecfdad66894ba"
 
 
-def model_spec():
-    return {"id": MODEL_ID, "features": list(FEATURES), "parameters": PARAMETERS}
+def model_spec(*, features=FEATURES):
+    return {"id": MODEL_ID, "features": list(features), "parameters": PARAMETERS}
 
 
 def artifact_manifest(path, threshold, *, training=None):
@@ -64,7 +65,11 @@ class LoadedEnsemble:
         frame = validate_features(frame)
         if frame.snapshot.min() < date(self.manifest["labels_available_at"]):
             raise ValueError("Model training labels were unavailable at the snapshot.")
-        return mean_probabilities(self.models, frame.loc[:, list(FEATURES)])
+        estimator_inputs = frame.loc[:, list(FEATURES)].copy()
+        # Only the trusted retained artifact uses the former final feature name.
+        # The loader validates this exact positional correspondence before scoring.
+        estimator_inputs.columns = self.manifest["features"]
+        return mean_probabilities(self.models, estimator_inputs)
 
 
 def load_model(path: Path, manifest_path: Path | None = None) -> LoadedEnsemble:
@@ -86,9 +91,12 @@ def load_model(path: Path, manifest_path: Path | None = None) -> LoadedEnsemble:
         raise ValueError("Model checksum differs from the artifact manifest.")
     if manifest.get("runtime") != runtime_versions():
         raise ValueError("Model runtime versions differ from the saved environment.")
+    expected_features = (
+        RETAINED_FEATURES if manifest["model_sha256"] == RETAINED_SHA256 else FEATURES
+    )
     expected = {
         "model_id": MODEL_ID,
-        "features": list(FEATURES),
+        "features": list(expected_features),
         "parameters": PARAMETERS,
         "seeds": list(SEEDS),
         "threshold_comparison": ">=",
@@ -107,7 +115,7 @@ def load_model(path: Path, manifest_path: Path | None = None) -> LoadedEnsemble:
         raise ValueError("Expected a bundle containing spec and models.")
     spec = bundle["spec"]
     if not isinstance(spec, dict) or any(
-        spec.get(k) != v for k, v in model_spec().items()
+        spec.get(k) != v for k, v in model_spec(features=expected_features).items()
     ):
         raise ValueError("Unsupported model specification.")
     if set(spec) - {"id", "features", "parameters", "description"}:
@@ -126,7 +134,7 @@ def load_model(path: Path, manifest_path: Path | None = None) -> LoadedEnsemble:
         ):
             raise ValueError("Estimator parameters or seeds differ from the contract.")
         check_is_fitted(model)
-        if list(getattr(model, "feature_names_in_", ())) != list(FEATURES):
+        if list(getattr(model, "feature_names_in_", ())) != list(expected_features):
             raise ValueError("Estimator feature order differs from the contract.")
         if not np.array_equal(model.classes_, [0, 1]):
             raise ValueError("Estimator classes must be [0, 1].")

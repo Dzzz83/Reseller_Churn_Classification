@@ -28,6 +28,12 @@ The retained `frozen_models.joblib` has SHA256:
 6ee382620eeae80bb2fce68734813e0323b7620a56c4b73f867ecfdad66894ba
 ```
 
+Public features and exports use `discount_frequency_12m`. The retained bundle
+still records `discounted_line_share_12m`; the loader maps only that name at the
+estimator boundary, preserving feature order, values and the binary checksum.
+Future development artifacts use the public name directly. Export manifests
+record both public and estimator feature orders and any name mapping.
+
 Its dictionary contains `spec` and `models`; it requires no research classes to
 load. The production loader validates checksum before deserialization, exact
 runtime, specification, feature order, estimator type, all constructor parameters,
@@ -84,6 +90,7 @@ For proposed snapshot 2014-05-02, complete source coverage must contain
 2013-11-02. The separate authorized backup check confirmed 467 eligible resellers
 and reconciled the complete source window; see [source readiness](verification.md#remaining-export-readiness).
 The older detailed exports stopping at 2013-10-01 must not be used for this
-snapshot. No real prediction export has been run; execution awaits authorization. Scores are not validated calibrated
+snapshot. The authorized 2014-05-02 prediction export has been completed and verified; no
+future outcomes were used. Scores are not validated calibrated
 individual risk estimates. New independent evaluation requires frozen methodology
 and explicit user approval; protected final-test data stays outside development.

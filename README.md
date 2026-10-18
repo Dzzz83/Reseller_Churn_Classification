@@ -89,6 +89,11 @@ The new output directory contains:
   aggregation, source hashes/declarations, effective and loaded coverage,
   exclusions, row count and output hash, `models_fitted=0`, `outcomes_accessed=false`.
 
+The annual discount feature is named `discount_frequency_12m`: the fraction of
+order lines with a discount during the previous twelve months. The retained
+binary uses its former name internally; the loader maps names without changing
+values, scores or the saved file.
+
 Features and scores retain round-trip numeric precision. Missing discount values
 are blank; there is no imputation or display rounding. Flags use full-precision
 `score >= 0.27912545951329487`. Power BI should import Snapshot as Date, StoreID

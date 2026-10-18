@@ -70,7 +70,7 @@ def build_discount_features(
 
     # Fraction of order lines with a discount in the last 12 months.
     line_shares = history.UnitPriceDiscount.gt(0).groupby(history.StoreID).mean()
-    features = line_shares.rename("discounted_line_share_12m").to_frame()
+    features = line_shares.rename("discount_frequency_12m").to_frame()
     # The series are indexed by StoreID, so assignment aligns each store's values.
     features["weighted_discount_3m"] = recent_discounts
     features["discount_change_3m"] = recent_discounts - previous_discounts
