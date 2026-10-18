@@ -11,16 +11,16 @@ and explicit authorization. Reusable modeling and
 data logic lives in `reseller_churn/`, with orchestration in
 `pipeline/development_workflow.py`.
 
-The fixed ten-feature CLI is separate: `python -m reseller_churn --help`
-lists its preparation, training, scoring, and explicit cutoff-evaluation commands.
-It uses `config/frozen_model.py`, `data/preparation.py`, `model.py`, and
-`evaluation/cutoff_evaluation.py`. See [code architecture](../docs/code_architecture.md)
-for shared helpers and saved-model compatibility.
+The installed CLI, `python -m reseller_churn --help`, exposes preparation,
+grouped development and outcome-free saved-model export. Historical fixed
+training, scoring and guarded cutoff evaluation remain separate commands. See
+[code architecture](../docs/code_architecture.md) for shared helpers and bundle
+compatibility.
 
 | Phase | Entry point | Purpose |
 | --- | --- | --- |
-| Prepare data | `pipeline/prepare_data.py` | Audit source files, build historical-only features and approved labeled development rows, compare with tracked references, and save generated files under one run ID |
-| Develop models | `pipeline/develop_models.py` | Compare complete candidate configurations on the registered temporal folds; report probability thresholds and precision-floor sensitivity; refit each unique selected candidate once |
+| Prepare data | `pipeline/prepare_data.py` | Reconcile explicit clean-order/header/line inputs, enforce declared and loaded coverage, and save ten-feature labeled development rows under one run ID |
+| Develop models | `pipeline/develop_models.py` | Select complete configurations and cutoffs using inner reseller groups, assess on outer groups, and save provisional full-development refits |
 | Final evaluation | `debug/run_final_testing_evaluation.py`; instructions in `pipeline/12_final_evaluation/` | Authorized frozen-model October evaluation completed; excluded from the supported runner |
 
 ## Grouped precision and ablation studies
@@ -79,82 +79,117 @@ Synthetic smoke checks execution, not model quality.
 
 ## Run preparation and development
 
-Run the complete development workflow from the repository root:
-
-```bash
-python pipeline/run_full_development_pipeline.py
-```
-
-The runner creates a unique run ID. Existing run directories are preserved;
-choose a new ID for another experiment. Reports and models are generated
-files ignored by Git; tracked datasets remain regression references.
-
-## Search options
-
-The bounded default comparison crosses the three architectures, four named
-feature sets, and three imbalance strategies, using the baseline parameter
-settings and five seeds: 36 configurations. `--tune` expands this to 84 using a
-small parameter grid. Use `--architectures`, `--feature-sets`,
-`--imbalance-strategies`, and `--seeds` to restrict a run explicitly.
-
-`--precision-floors` controls the minimum precision scenarios. Defaults are
-0.10 through 0.90; the probability cutoff grid runs from 0.00 through 1.00 in
-0.01 steps. These are distinct settings. The
-[metric guide](../docs/evaluation_metrics.md#current-development-selection-reports)
-explains their meaning and the recall selection rule. The defaults are
-experimental values, not approved operating requirements.
-
-The preparation and development phases can be run separately with an explicit
-run ID:
-
-```bash
-python pipeline/prepare_data.py --run-id example-run
-python pipeline/develop_models.py --run-id example-run --precision-floors 0.3 0.5 0.7
-```
-
-For a small execution check, restrict the search explicitly. This is a smoke
-configuration and does not provide a model-quality comparison:
+The supported workflow uses explicit source files and repeated nested grouped
+validation. Existing reference datasets and historical artifacts are preserved.
+Run from the repository root, using a new run ID:
 
 ```bash
 python pipeline/run_full_development_pipeline.py \
-  --architectures logistic_regression \
-  --feature-sets rfm \
-  --imbalance-strategies none \
-  --seeds 42 \
-  --precision-floors 0.2 0.8
+  --run-id grouped-example \
+  --orders inputs/accepted_orders.csv --stores inputs/stores.csv \
+  --headers inputs/order_headers.csv --lines inputs/order_lines.csv \
+  --coverage-from 2011-01-01 --coverage-through 2013-10-01
 ```
+
+Coverage is a source-completeness declaration, not a transaction-date estimate.
+Raw headers omitted from the accepted clean orders require an independently
+reviewed `--approved-excluded-order-ids` list. Unapproved omissions fail.
+See the [input contract](../docs/input_contract.md).
+
+Preparation writes `results/<run_id>/preparation/development.csv`. Run grouped
+development separately with `python pipeline/develop_models.py --run-id <run_id>`.
+The installed CLI supports the same study directly from a development CSV:
+
+```bash
+python -m reseller_churn develop \
+  --development results/grouped-example/preparation/development.csv \
+  --output results/grouped-example/development \
+  --models models/provisional/grouped-example
+```
+
+For a self-contained execution check, run `python pipeline/grouped_smoke_test.py`.
+It prepares synthetic raw files, fits grouped ensembles, reloads a selected model
+and exports synthetic scores/flags. It reads no research datasets or outcomes.
+The earlier reference-parity and temporal orchestration remain in
+`legacy_prepare_data.py` and `legacy_temporal_workflow.py`; they are historical
+reproduction entry points and are not invoked by supported commands or CI.
+
+## Search options
+
+Defaults compare original ten-feature histogram boosting with global class
+weights and period/class weights, using five model seeds. Three repetitions
+(seeds 42, 78, 88) each use five outer grouped folds and three inner grouped folds.
+Every snapshot of a reseller stays together at both levels. Fold membership and
+row identity are saved. Any infeasible fitting partition fails before fitting;
+period/class weighting requires both classes in each of the four fitting periods.
+
+`--outer-folds`, `--inner-folds`, `--repeat-seeds`, `--inner-seed` and `--seeds`
+make the validation and model randomness explicit. `--architectures`,
+`--feature-sets`, `--imbalance-strategies`, and `--tune` restrict or expand the
+candidate specifications. Strict source preparation produces the ten-feature
+catalog; other registered catalogs require a separately prepared development CSV
+with their columns. Historical searches retain their original catalogs.
+
+Cutoff objectives are explicit:
+
+- `--cutoff-objective recall_at_precision` (default): maximize pooled inner OOF
+  recall subject to each requested `--precision-floors` fraction. Ties prefer
+  precision, then the higher cutoff. Default floors are 0.1 through 0.9.
+- `--cutoff-objective precision_at_recall --minimum-recall 0.9`: maximize pooled
+  inner OOF precision subject to recall strictly above 0.9. Ties prefer recall,
+  then the higher cutoff. Precision-floor arguments do not apply to this policy.
+
+Candidate ties prefer fewer features, then a stable candidate ID. Outer outcomes
+never select the candidate or cutoff. Scores from observed inner OOF values are
+used directly; there is no replacement by a two-decimal cutoff grid. These
+policies preserve the corresponding research objectives. They differ from the
+historical temporal workflow's every-fold precision rule.
+
+Grouped assessment estimates held-out reseller behavior within the development
+periods. Historical features still use only information before their snapshot.
+A saved model cannot score before all of its training labels became available.
 
 ## Read the outputs
 
-Start with `results/<run_id>/development/precision_floor_comparison.csv`. It
-shows the best-recall configuration for each minimum precision, its probability
-threshold, precision, recall, and alert counts. Infeasible scenarios have
-`status: no_feasible_candidate`. No single precision minimum is declared the
-operational winner.
-
-| Location within a run | Contents |
+| Location | Contents |
 | --- | --- |
-| `preparation/` | Generated features, labeled development data, unlabeled final-test features, source audit, and preparation manifest |
-| `development/candidate_configurations.csv` | Exact architectures, feature sets, strategies, parameters, and seeds searched |
-| `development/fold_ranking_metrics.csv` | Average precision and ROC-AUC for each candidate's seed-averaged scores in each fold |
-| `development/validation_predictions.csv` | Reseller identities, actual development labels, and candidate probabilities |
-| `development/threshold_tradeoffs.csv` | Per-fold and pooled metrics at every probability cutoff |
-| `development/selection/` | One configuration manifest per precision minimum, including explicit infeasible results |
-| `development/error_analysis_precision_*.csv` | Detected churn, missed churn, false alerts, and correct non-churn predictions for selected scenarios |
-| `development/recall_precision_tradeoffs.png` | Recall versus precision plot |
-| `development/development_manifest.json` | Run configuration, data identity, report names, and scenario statuses |
-| `evaluation/STATUS.md` | Records that protected final evaluation has not run |
+| `results/<run_id>/development/protocol.json` | Candidates, cutoff policies, split settings and normalized input hash |
+| `repeat_*/fold_*/split.json` | Outer row indices and reseller membership, referencing canonical sorted development rows |
+| `repeat_*/fold_*/inner_oof.csv` | Training-only OOF scores and inner fold membership for every candidate |
+| `validation_predictions.csv` | Outer predictions using inner-selected candidates and cutoffs |
+| `selection_status.csv` | Explicit selected/infeasible status for every outer fold and policy |
+| `operating_metrics.csv` | Repeat and snapshot recall, precision and false alerts; incomplete outer coverage is flagged |
+| `inner_oof.csv` | Full-development inner scores for the provisional final selection |
+| `selection/policy_*.json` | Configuration, full-development cutoff, runtime and model checksum |
+| `manifest.json` | Input identity, nested evidence checksums and execution provenance |
+| `models/provisional/<run_id>/` | One saved ensemble per distinct full-development selection |
 
-Each distinct selected ensemble is saved under `models/provisional/<run_id>/`.
-Scenarios selecting the same configuration share a bundle; their thresholds
-remain in their respective manifests. For the inputs of a particular saved
-predictor, read the manifest's `candidate.features`.
+A provisional full-development selection is not automatic promotion. Preserve
+outer results and infeasible statuses when judging a procedure.
 
-All labels used by the runner belong to approved development snapshots.
-**The supported runner never accesses final-test outcomes.** Separate final evaluation requires the
-freeze and approval described in [Stage 12](12_final_evaluation/README.md).
-Development scores inform selection and are not independent estimates of
-future performance.
+Build prediction features with `features`, supplying the same four source-file
+arguments and coverage declarations plus `--snapshot` and `--output`. Then use
+an existing grouped selection manifest or supported period/class research bundle:
+
+```bash
+python -m reseller_churn export \
+  --model results/all-candidate-precision-october-20261018-04/period_class_weighted/frozen_models.joblib \
+  --features results/may-snapshot/features.csv \
+  --threshold 0.27912545951329487 --output results/may-prediction-export
+```
+
+This is a future execution example, not a completed export. The feature directory
+must have a matching feature-stage manifest with sufficient declared and loaded
+coverage. The proposed 2014-05-02 snapshot requires annual inputs in
+`[2013-05-02, 2014-05-02)`; eligibility uses `[2013-11-02, 2014-05-02)`.
+Reported transactions through May 1 alone do not certify complete clean orders,
+headers, lines or historical availability.
+
+`predictions.csv` contains StoreID, snapshot, n_orders_3m, churn_probability,
+threshold, predicted_churn, model_id and rank. Scores are mean probabilities in
+the recorded feature order; flags use `>=` before display rounding. This export
+currently supports the ten-feature source contract. It fits no model, optimizes
+no cutoff and reads no outcomes or adjacent saved prediction files.
 
 ## Historical diagnostics and separate research
 

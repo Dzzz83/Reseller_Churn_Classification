@@ -190,28 +190,35 @@ still registers RFM, Pruned, Reduced, and Full. See the
 
 ## Set up and run
 
-The standalone grouped studies have [reproduction commands](comparisons/grouped_ablation.md#execution-and-verification).
-The module/package import collisions are resolved: frozen settings live in
-`config/frozen_model.py`, strict preparation in `data/preparation.py`, and
-explicit cutoff reports in `evaluation/cutoff_evaluation.py`. Both workflows
-use shared window, label, metric, and artifact helpers. See
-[code architecture](docs/code_architecture.md) for ownership and compatibility.
+Supported development uses repeated nested grouped validation. All snapshots of
+one reseller stay together. Inner groups select configurations and cutoffs;
+outer groups assess the selection procedure. Historical temporal comparisons
+remain separate reproduction code.
 
 Use Python 3.11 or later in a project virtual environment:
 
 ```bash
 python -m pip install -e ".[dev]"
 python -m pytest -q
-python pipeline/run_full_development_pipeline.py
+python pipeline/grouped_smoke_test.py
+python -m reseller_churn --help
 ```
 
-For fixed ten-feature scoring, start with `python -m reseller_churn --help`
-or `reseller-churn --help`. These expose `prepare`, `features`, `train`,
-`predict`, and `evaluate`; they do not search models or select cutoffs.
-Required source inputs are documented in the [input contract](docs/input_contract.md).
+The default test suite and grouped smoke use synthetic inputs. The smoke trains
+small synthetic ensembles and exports their scores; it does not access saved
+research outcomes or establish model quality. Historical and reference-data tests
+remain available through explicit paths.
 
-The runner prepares data and compares model configurations on temporal folds,
-prioritizing recall at several minimum precision levels. See the
-[pipeline guide](pipeline/README.md) for options and output files. Final-test
-evaluation requires a frozen methodology and explicit user approval; follow
-[Stage 12 instructions](pipeline/12_final_evaluation/README.md).
+`prepare` reconciles accepted clean orders with headers and lines. `develop`
+performs grouped selection; `features` builds an unlabeled historical snapshot;
+`export` loads an existing supported bundle and saves full-precision scores and
+flags at an explicit threshold, without fitting or accessing outcomes. The
+historical fixed-baseline `train`, `predict`, and guarded `evaluate` commands
+remain available separately.
+
+See the [pipeline guide](pipeline/README.md) for complete commands and output
+schemas, the [input contract](docs/input_contract.md) for coverage and exclusion
+requirements, and [code architecture](docs/code_architecture.md) for bundle
+compatibility. The proposed May 2014 export still requires complete, reconciled
+source inputs; the existing pre-October 2013 detailed exports do not establish
+that coverage.

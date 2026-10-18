@@ -1,6 +1,8 @@
 # Pipeline refactoring plan and implementation record
 
-Preparation and model development were refactored on 2026-10-10. Protected final
+The sections below record the 2026-10-10 refactor. The current grouped
+consolidation is recorded at the end of this document. Preparation and model
+development were originally refactored on 2026-10-10. Protected final
 evaluation remains guarded. This document records the motivation, implemented
 changes, and verification; current commands belong in the
 [pipeline guide](../pipeline/README.md).
@@ -93,3 +95,33 @@ and execution prerequisites in [pipeline/README.md](../pipeline/README.md#debugg
 The 39 focused checks and the earlier 67-test refactor suite have different
 scopes; neither count describes a new full-suite run for this documentation
 update.
+
+
+## Grouped pipeline consolidation — 2026-10-18
+
+The implementation branch preserves the current development research in a Git
+checkpoint and consolidates it with `pipeline_preparation`. The original dirty
+checkout is unchanged. No branch is merged or pushed automatically.
+
+Supported development now uses repeated nested reseller groups. The package
+owns reusable split validation, explicit cutoff policies, period/class weights,
+ensemble aggregation and bundle adapters. Thin pipeline scripts share command
+arguments and preparation code with the installed CLI. Temporal/reference-parity
+orchestration remains in named legacy modules for historical reproduction.
+
+Source fixes enforce effective loaded coverage, independently approved rejected
+order IDs, nonnegative category revenue and midnight dates. Imported ten-feature
+matrices receive eligibility/revenue/share consistency checks. Saved-model export
+validates model and feature provenance and applies a supplied full-precision
+threshold without fitting or reading outcomes. Old pickle class locations and
+original manifests remain intact; compatibility is explicit per bundle format.
+
+Synthetic tests protect grouped separation at both levels, inner-only choices,
+infeasible partitions, weighting, serialization, float/cutoff boundaries and the
+source failure cases. One CI workflow replaces the overlapping real-data and
+temporal development jobs. Current commands belong in `pipeline/README.md`;
+verification results belong in `docs/verification.md`.
+
+The planned May 2014 real prediction export remains separate. Neither recorded
+last-purchase dates nor pre-October detailed exports establish all required
+source coverage or historical recording-time availability.

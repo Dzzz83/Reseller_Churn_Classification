@@ -183,3 +183,45 @@ links resolve after repairing two historical seven-versus-ten anchors.
 `git diff --check` passes. No new model fitting, final evaluation or behavior
 tests ran for these static edits. Prior execution checks above remain historical
 checks, not newly rerun claims.
+
+
+## Grouped consolidation and pipeline fixes — 2026-10-18
+
+Implementation took place in an isolated worktree on
+`refactor/grouped-pipeline-consolidation`, based on research checkpoint
+`4bb611bd6cd27d1803434ec112d85cafa37771a2`. The original checkout, index and
+uncommitted research files were preserved. Changes are separate from historical
+research results; no real-data model was trained or scored and no protected
+outcomes, saved predictions, errors or performance reports were used.
+
+With `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1` and the existing project `.venv`:
+
+- `python -B -m pytest -q`: **98 passed**. The default suite now uses synthetic
+  grouped/core cases; historical and reference-data tests remain explicit-path
+  checks. It includes source validation failures, loaded coverage, exclusions,
+  grouped isolation, inner-only selection, infeasible policies, model reloads,
+  architecture compatibility, exact cutoff equality and float round trips.
+- An explicit compatibility run covering grouped research, fixed-feature
+  comparisons, period/reseller weights, precision-floor selection, retained
+  synthetic candidates, candidate development, legacy preparation/workflow and
+  synthetic boundary safeguards: **46 passed**. One existing scikit-learn SVC
+  `probability` deprecation warning remains in the historical RBF candidate.
+- `python -B pipeline/grouped_smoke_test.py`: passed preparation, nested grouped
+  fitting, serialization, feature construction and outcome-free score/flag
+  export, using disposable synthetic files only.
+- Ruff import/lint and formatting checks passed for `reseller_churn/`, supported
+  pipeline entry points, grouped/source-contract tests and the three modified
+  grouped comparison modules. `git diff --check` passed.
+- The actual saved `period_class_weighted/frozen_models.joblib` loaded through
+  the new adapter with five estimators and matching checksum
+  `6ee382620eeae80bb2fce68734813e0323b7620a56c4b73f867ecfdad66894ba`.
+  No feature table was loaded and no prediction method was called for it.
+
+A wheel build using `pip wheel --no-deps --no-build-isolation` could not complete:
+`setuptools.build_meta` is absent from the existing environments. No dependency
+was installed. Installed-wheel verification and the updated GitHub Actions job
+remain unexecuted locally. CI declares the normal isolated build requirements.
+
+The proposed 2014-05-02 real export remains pending complete, reconciled source
+coverage and historical-availability evidence. No database query or real export
+was performed by this implementation.

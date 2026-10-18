@@ -1,7 +1,8 @@
 # Input, time, and feature contract
 
-Every source CSV has a header row. Dates are timezone-naive; scoring snapshots
-and declared coverage endpoints must be calendar dates at midnight.
+Every source CSV has a header row. Order dates, scoring snapshots and declared
+coverage endpoints must be timezone-naive calendar dates at midnight. Intraday
+orders are rejected to preserve the trained calendar-day recency formula.
 
 | File | Required columns |
 | --- | --- |
@@ -18,18 +19,24 @@ quantities, and accepted revenue are positive; discounts are fractions in
 [0, 1]. Category revenue sums match subtotals within 0.01, detail revenue within
 0.02, and line formulas within rounding tolerances.
 
-Source and training CSV parsing preserve the original protocol. Scoring feature
-and prediction CSVs use round-trip float parsing: decimal serialization must
+Historical fixed training keeps its original CSV parsing protocol. Supported
+grouped development, scoring features and prediction CSVs use round-trip float
+parsing: decimal serialization must
 not move a feature across a fitted histogram boundary or a score across a
 user-supplied cutoff.
 
-Accepted clean order IDs define the historical population. Raw orders omitted
-by established cleaning are excluded, with their IDs recorded in manifests.
+Accepted clean order IDs define the historical population. Any historical raw
+header omitted from the clean orders must be listed explicitly in independently
+approved excluded order IDs. Otherwise preparation fails rather than treating a
+missing accepted order as an intentional rejection. Approved and actual excluded
+IDs are recorded in manifests.
 The pipeline does not reclassify orders from current cancellation status.
 Source facts are assumed available when the order was placed; recording-time
 versions remain unverified. The declared coverage interval must be complete,
 including days with no transactions. This requires source knowledge beyond
-what the pipeline can infer from a CSV's first/last purchase.
+what the pipeline can infer from a CSV's first/last purchase. `loaded_through`
+records the exclusive cutoff actually retained in memory; feature and label
+requests must fit both the declared interval and the loaded interval.
 
 For snapshot t, eligible resellers purchased in `[t - 6 months, t)`. Features
 use only transactions in `[t - 12 months, t)` and recent periods strictly before
@@ -48,6 +55,26 @@ handling; the seven base features must be finite.
 | weighted_discount_3m | Sum(gross line value × discount) / sum(gross line value), gross = quantity × unit price |
 | discount_change_3m | Recent three-month weighted discount minus the preceding three-month weighted discount |
 | discounted_line_share_12m | Fraction of line rows in the preceding twelve months with discount > 0 |
+
+Imported ten-feature tables require unique positive reseller IDs, calendar
+snapshots and finite base features. Recency must fit the six-month eligibility
+window. Annual revenue must be positive, recent revenue cannot exceed it, recent
+counts and revenue must agree, and the three included category shares cannot sum
+to more than one (with a small floating-point tolerance). Missing discounts remain
+native missing values.
+
+`export` requires an unlabeled features CSV and its feature-stage manifest. The
+file checksum, row/snapshot population, declared annual coverage and effective
+loaded cutoff are checked. A valid manifest records source declarations; it
+cannot independently prove source completeness or recording-time availability.
+
+The export uses existing estimators only. It writes StoreID, snapshot,
+n_orders_3m, churn_probability, threshold, predicted_churn, model_id and rank.
+The score is the mean seeded probability, and predicted_churn is one when the
+full-precision score is greater than or equal to the explicit threshold. The
+export manifest records model and feature identities, the original training
+source metadata, comparison rule and zero models fitted. Outcomes are never
+required or read.
 
 Evaluation accepts saved unlabeled predictions with StoreID, snapshot,
 churn_probability, and n_orders_3m; rank is optional. The separate outcome CSV

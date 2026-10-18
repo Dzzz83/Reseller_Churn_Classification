@@ -1,5 +1,13 @@
 # Frozen model, evaluations, and research findings
 
+Supported development now uses nested grouped validation; see the
+[pipeline guide](../pipeline/README.md). The fixed baseline and saved research
+bundles below retain their recorded methodologies. Refactoring does not refit,
+reselect or promote them. The period/class-weighted prediction adapter retains
+the supplied development cutoff `0.27912545951329487` when explicitly requested;
+actual May 2014 scoring awaits complete reconciled source inputs.
+
+
 The final pipeline carries the methodology frozen before the original
 2026-10-11 evaluation. Its source research commit is `f53202d` on
 `pipeline_preparation`. Parameter/feature/seed changes require explicit new

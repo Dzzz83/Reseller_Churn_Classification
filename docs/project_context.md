@@ -43,7 +43,7 @@ The boundaries are implemented in
 | Location | Responsibility |
 | --- | --- |
 | `reseller_churn/config/` | Paths, feature sets, seeds, model settings, and validation schedules |
-| `reseller_churn/data/` | Loading, prediction windows, eligibility, labels, dataset assembly, temporal folds |
+| `reseller_churn/data/` | Loading, source validation, historical windows, eligibility, labels and dataset assembly |
 | `reseller_churn/features/` | Reusable main feature construction |
 | `reseller_churn/modeling/` | Model factories, candidate definitions, training-only fitting, seed ensembles, and manifest-checked refitting |
 | `reseller_churn/evaluation/` | Ranking and threshold metrics, precision-constrained selection, reports, and regression checks |
@@ -84,22 +84,21 @@ reseller can occur at multiple snapshots, so rows are not independent identities
 Counts are registered in
 [validation_settings.py](../reseller_churn/config/validation_settings.py).
 
-| Fold | Training snapshots | Validation snapshot |
-| --- | --- | --- |
-| 1 | 2012-07-01 | 2013-01-01 |
-| 2 | 2012-07-01, 2012-10-01 | 2013-04-01 |
+Supported development uses repeated nested StratifiedGroupKFold by StoreID:
+three repeat seeds (42, 78, 88), five outer folds and three inner folds (seed 78).
+Every snapshot of a reseller stays together. Training-only inner OOF predictions
+select candidates and cutoffs; outer outcomes only assess the selected procedure.
+Settings and memberships are saved with normalized input identity.
 
-[TemporalDataset](../reseller_churn/data/temporal_dataset.py) checks that every
-training label window ends by the validation snapshot. Chronological validation
-asks about later periods. GroupKFold by `StoreID`, used in older comparisons,
-and StratifiedGroupKFold ask about unseen reseller identities within mixed
-historical periods. The earlier seven-versus-ten comparison used one grouped
-split seed, 42. The latest precision study uses three repeat seeds (42, 78, 88),
-five outer grouped folds, and three inner grouped folds on all 1,375 rows.
-The user chose grouped validation as the criterion for this research; no temporal
-validation or final testing is run by the latest studies. The earlier temporal
-comparison scores 683 January/April rows and remains a separate historical
-experiment. Grouped results do not establish future-period performance.
+The default candidates are ten-feature HGB with global class or period/class
+weights. Cutoff policies are named explicitly: maximize recall at a precision
+floor, or maximize precision with recall strictly above a specified limit.
+Infeasible fitting partitions and cutoff choices remain explicit.
+
+Grouped validation is the supported development criterion. Historical temporal
+workflows remain separate reproduction code. Grouped results describe held-out
+resellers within the development periods; features must still precede each row's
+snapshot, and model training labels must exist by an actual scoring date.
 
 ## Current model status
 
@@ -246,17 +245,17 @@ report locations. Historical numbered scripts and separate research audits
 run independently. Final evaluation remains outside the supported runner; its
 authorized completed run is documented in [evaluation metrics](evaluation_metrics.md#final-test-evaluation--2026-10-11).
 
-Development CI runs the regression suite before a bounded smoke check using
-RFM features and one seed across all three architectures and imbalance
-strategies. This checks execution and saved artifacts, rather than running the
-full search on every change.
+Development CI runs self-contained grouped/core tests, focused synthetic research
+compatibility checks and a grouped end-to-end smoke. It performs no real-data
+training or protected evaluation.
 
-Tracked processed CSVs are fixed regression references. The supported
-preparation runner checks generated engineered features, labeled development
-data, and unlabeled final-test features against these references before writing
-under `results/<run_id>/`. It records source row counts, schema, missing/duplicate
-keys, and revenue reconciliation in `source_audit.json`. Legacy Stages 03 and 04
-write to `results/legacy_preparation/`, not the tracked reference paths.
+Supported preparation reconciles explicit clean orders, stores, headers and
+lines; validates declared/effective loaded coverage; and writes ten-feature
+labeled development rows to `results/<run_id>/preparation/development.csv`.
+Unexpected raw-order exclusions fail without an independently approved ID list.
+Tracked reference data is preserved. Earlier reference-parity preparation and
+temporal orchestration are retained in the named legacy modules; numbered
+historical scripts continue to write their existing historical output locations.
 
 When changing research assumptions or feature inputs, retain the original
 experiment definitions and results as evidence of their own configurations.
