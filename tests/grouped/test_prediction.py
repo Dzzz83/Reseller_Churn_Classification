@@ -68,7 +68,7 @@ def test_period_bundle_adapter_does_not_open_adjacent_scores(retained_model):
 
 
 @pytest.mark.parametrize(
-    "mutation", ["checksum", "runtime", "features", "seed", "spec"]
+    "mutation", ["checksum", "runtime", "features", "seed", "spec", "weighting"]
 )
 def test_invalid_retained_models_are_rejected(retained_model, mutation):
     metadata = retained_model.parent / "manifest.json"
@@ -83,6 +83,8 @@ def test_invalid_retained_models_are_rejected(retained_model, mutation):
             bundle["models"][0].feature_names_in_ = np.array(list(reversed(FEATURES)))
         elif mutation == "seed":
             bundle["models"][0].random_state = 999
+        elif mutation == "weighting":
+            bundle["models"][0].class_weight = "balanced"
         else:
             bundle["spec"]["id"] = "personalized_recency"
         joblib.dump(bundle, retained_model)

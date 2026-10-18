@@ -87,10 +87,10 @@ def load_period_class_model(path: Path) -> LoadedEnsemble:
     for model, seed in zip(models, SEEDS):
         if not isinstance(model, HistGradientBoostingClassifier):
             raise ValueError("Unexpected estimator type in period/class bundle.")
-        if any(
-            model.get_params().get(k) != v
-            for k, v in {**PARAMETERS, "random_state": seed}.items()
-        ):
+        expected_parameters = HistGradientBoostingClassifier(
+            **PARAMETERS, random_state=seed
+        ).get_params()
+        if model.get_params() != expected_parameters:
             raise ValueError(
                 "Saved estimator parameters differ from the specification."
             )

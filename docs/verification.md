@@ -196,11 +196,13 @@ outcomes, saved predictions, errors or performance reports were used.
 
 With `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1` and the existing project `.venv`:
 
-- `python -B -m pytest -q`: **98 passed**. The default suite now uses synthetic
+- `python -B -m pytest -q`: **99 passed**. The default suite now uses synthetic
   grouped/core cases; historical and reference-data tests remain explicit-path
   checks. It includes source validation failures, loaded coverage, exclusions,
   grouped isolation, inner-only selection, infeasible policies, model reloads,
-  architecture compatibility, exact cutoff equality and float round trips.
+  architecture compatibility, exact cutoff equality and float round trips. Final
+  review also verifies every retained estimator setting, including class_weight,
+  against frozen constructor defaults.
 - An explicit compatibility run covering grouped research, fixed-feature
   comparisons, period/reseller weights, precision-floor selection, retained
   synthetic candidates, candidate development, legacy preparation/workflow and
