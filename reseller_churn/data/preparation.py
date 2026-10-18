@@ -3,8 +3,6 @@
 import csv
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date as CalendarDate
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -18,8 +16,13 @@ from reseller_churn.data.validation import (
     validate_category_revenue,
     validate_order_dates,
 )
+from reseller_churn.dates import DateLike
+from reseller_churn.dates import parse_calendar_date as date
+from reseller_churn.features.builders import (
+    build_discount_features,
+    build_purchase_features,
+)
 
-DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
 KEYS = ["StoreID", "snapshot"]
 CATEGORIES = ["rev_bikes", "rev_components", "rev_clothing", "rev_accessories"]
 ORDER_COLUMNS = [
@@ -41,13 +44,6 @@ LINE_COLUMNS = [
     "UnitPriceDiscount",
     "LineTotal",
 ]
-
-
-def date(value: DateLike) -> pd.Timestamp:
-    result = pd.Timestamp(value)
-    if pd.isna(result) or result.tzinfo is not None or result != result.normalize():
-        raise ValueError("Dates must be non-missing, timezone-naive calendar dates.")
-    return result
 
 
 def require_columns(frame: pd.DataFrame, columns: Iterable[str], name: str) -> None:
@@ -287,84 +283,27 @@ def load_sources(
     return Sources(orders, stores, headers, lines, start, through, cutoff, excluded)
 
 
-@dataclass(frozen=True)
-class _DiscountStatistics:
-    weighted_discount: pd.Series
-    discounted_line_share: pd.Series
-
-
-def _discount_statistics(
-    details: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
-) -> _DiscountStatistics:
-    """Calculate reseller discount measures within a half-open date window."""
-    rows = details[details.OrderDate.ge(start) & details.OrderDate.lt(end)]
-    gross = rows.OrderQty * rows.UnitPrice
-    discount = (gross * rows.UnitPriceDiscount).groupby(rows.StoreID).sum()
-    denominator = gross.groupby(rows.StoreID).sum()
-    discounted_line_share = rows.UnitPriceDiscount.gt(0).groupby(rows.StoreID).mean()
-    return _DiscountStatistics(discount / denominator, discounted_line_share)
-
-
 def build_features(source: Sources, snapshot: DateLike) -> pd.DataFrame:
-    """Build only the ten frozen inputs, preserving their original formulas."""
+    """Combine independent purchase and discount inputs for eligible resellers."""
     snapshot = date(snapshot)
     window = PredictionWindow.from_date(snapshot)
-    history_start = window.history_start
-    source.require_coverage(history_start, snapshot)
+    source.require_coverage(window.history_start, snapshot)
     history = window.select_history(source.orders)
     eligible = get_eligible_store_ids(source.orders, window)
     history = history[history.StoreID.isin(eligible)]
-    features = (
-        history.groupby("StoreID")
-        .agg(
-            last_order=("OrderDate", "max"),
-            revenue_12m=("SubTotal", "sum"),
-            rev_bikes=("rev_bikes", "sum"),
-            rev_accessories=("rev_accessories", "sum"),
-            rev_clothing=("rev_clothing", "sum"),
-        )
-        .reset_index()
-    )
-    features["snapshot"] = snapshot
-    features["recency_days"] = (snapshot - features.last_order).dt.days
-    recent_start = snapshot - pd.DateOffset(months=3)
-    recent = (
-        history[history.OrderDate.ge(recent_start)]
-        .groupby("StoreID")
-        .agg(
-            n_orders_3m=("SalesOrderID", "nunique"),
-            revenue_3m=("SubTotal", "sum"),
-        )
-    )
-    for name in ["n_orders_3m", "revenue_3m"]:
-        features[name] = features.StoreID.map(recent[name]).fillna(0)
-    features["n_orders_3m"] = features.n_orders_3m.astype(int)
-    for category in ["bikes", "accessories", "clothing"]:
-        features[f"share_{category}"] = (
-            features[f"rev_{category}"] / features.revenue_12m
-        )
+    purchases = build_purchase_features(history, snapshot)
 
     details = source.lines.merge(
         source.headers[["SalesOrderID", "StoreID", "OrderDate"]],
         on="SalesOrderID",
         validate="many_to_one",
     )
-
-    recent_discount = _discount_statistics(details, recent_start, snapshot)
-    previous_discount = _discount_statistics(
-        details, snapshot - pd.DateOffset(months=6), recent_start
+    details = details[details.StoreID.isin(purchases.StoreID)]
+    discounts = build_discount_features(details, snapshot)
+    features = purchases.merge(
+        discounts, on="StoreID", how="left", validate="one_to_one"
     )
-    annual_discount = _discount_statistics(details, history_start, snapshot)
-    features["weighted_discount_3m"] = features.StoreID.map(
-        recent_discount.weighted_discount
-    )
-    features["discount_change_3m"] = (
-        features.weighted_discount_3m
-        - features.StoreID.map(previous_discount.weighted_discount)
-    )
-    features["discounted_line_share_12m"] = features.StoreID.map(
-        annual_discount.discounted_line_share
-    )
+    features["snapshot"] = snapshot
     return features[[*KEYS, *FEATURES]].sort_values("StoreID").reset_index(drop=True)
 
 

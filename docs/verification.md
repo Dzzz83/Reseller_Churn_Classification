@@ -14,7 +14,7 @@ use synthetic data exclusively, with single-thread environment settings.
 
 | Check | Result |
 | --- | --- |
-| Synthetic regression suite | 54 passed |
+| Synthetic regression suite | 59 passed after integrating current main |
 | Source-checkout smoke | Grouped development, five-seed training, portable loading and Power BI export passed |
 | Retained artifact loading | Matching SHA256, five fitted estimators, exact parameters/seeds/features/classes and matching runtime; no fitting or scoring |
 | Wheel build and inspection | Built production-only wheel; packaged artifact manifest present; no research imports, binaries, CSVs, datasets or test packages |
@@ -35,13 +35,14 @@ fixture now includes both present and missing values. No dependency or model
 setting changed to bypass that error. Synthetic checks do not establish that
 future fitting partitions with entirely missing columns will train successfully.
 
-No real training, scoring, prediction export, new performance calculation,
-database query or access to protected final-test labels, predictions, errors or
-performance artifacts was performed. Loading the retained model inspected only
-the bundle and production contract. GitHub-hosted Actions have not run locally;
-CI mirrors the synthetic, static and package checks. A separate YAML parser
-check was not run because PyYAML is absent from the active environment; the
-workflow has not yet been executed by GitHub Actions.
+Implementation and conflict-resolution checks performed no real training,
+scoring, prediction export, new performance calculation or access to protected
+final-test labels, predictions, errors or performance artifacts. Loading the
+retained model inspected only the bundle and production contract. The separate
+user-authorized backup source check is recorded below. GitHub Actions passed on
+the original production commit 8b8712b (run 39109765781); the resolved merge will
+run the same synthetic, static and installed-package checks. A separate local
+YAML parser check was not run because PyYAML is absent from the environment.
 
 ## Main-branch scope
 
@@ -58,18 +59,38 @@ configuration; future grouped development is separate from saved-model export.
 
 ## Remaining export readiness
 
-For proposed snapshot 2014-05-02, independently establish complete reconciled
-orders, headers and details for [2013-05-02, 2014-05-02), with valid reseller
-references, source hashes, source-owner coverage attestations and independently
-approved exclusions. The handoff records detail exports stopping at exclusive
-2013-10-01. Orders through May 1 cannot establish detail completeness. Current
-complete sources were not established or processed in this implementation.
+A separate user-authorized source check on 2026-10-18 inspected the supplied
+CompanyX.bak and its matching CompanyX_Audit restoration. The backup checksum is
+1a9f1457f96cf2dc00a4ea4bd8212b74f54337a727cd742722bfec4dd0591379;
+its BackupSetGUID matches the restoration history. The original backup remained
+mounted read-only and unchanged.
 
-The eligibility period is [2013-11-02, 2014-05-02). The proposed 467 eligible
-resellers remains unverified and is not encoded as an expected population.
-The real export awaits source reconciliation and separate execution authorization.
-The model checksum/runtime checks pass; no model-side blocker or evidence
-requiring retraining was found in the authorized artifact inspection.
+The full [2013-05-02, 2014-05-02) source window contains 1,812 orders and
+30,790 line items. All order IDs, StoreIDs, dates, subtotals, quantities, line
+counts and category revenues match the existing clean order file exactly.
+No exclusions are required in this window. The backup independently reproduces
+467 resellers with purchases in [2013-11-02, 2014-05-02); the pipeline continues
+to calculate eligibility rather than hard-code that number.
 
-Review the branch diff against main. No push, merge, history rewrite, binary
-upload or real export is included in this preparation.
+The earlier detailed exports stopped at 2013-10-01. Replacement source files,
+SQL evidence, backup/restore identity, a production source_coverage.json and
+validation_summary.json are retained locally under the companion workspace's
+inputs/snapshot-20140502-source-check-20261018 directory. They pass production
+source and hash-bound coverage validation and remain outside Git. Completeness
+is relative to the supplied backup; original recording-time availability cannot
+be independently established from it. No churn labels or model scores were
+constructed during the source check. The real export still awaits separate
+execution authorization.
+
+## Integration with current main
+
+Conflict resolution integrates main at 241c6a0, including the purchase/discount
+builder separation, shared calendar-date parser and adapted feature regression
+tests from the intervening refactor. The saved model and required CSV retain
+its exact feature name discounted_line_share_12m; renaming it to
+discount_frequency_12m would violate the retained estimator contract. The
+period/class-weighted production commands replace the old balanced-class
+workflow. The suite now contains 59 passing synthetic tests.
+
+This follow-up prepares the user-authorized GitHub merge. No history rewrite,
+binary upload, real model training or prediction export is included.

@@ -12,6 +12,7 @@ FEATURES = (
     "discount_change_3m",
     "discounted_line_share_12m",
 )
+PURCHASE_FEATURES = FEATURES[:7]
 DISCOUNT_FEATURES = FEATURES[-3:]
 SEEDS = (42, 78, 88, 1034, 2026)
 PARAMETERS = {

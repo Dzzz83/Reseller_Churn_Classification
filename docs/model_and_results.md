@@ -81,9 +81,9 @@ selection or verification here.
 
 For proposed snapshot 2014-05-02, complete source coverage must contain
 [2013-05-02, 2014-05-02), including the six-month eligibility period beginning
-2013-11-02. The proposed 467 eligible resellers remains unverified. The handoff's
-recorded detailed extracts stop at exclusive 2013-10-01; later order dates alone
-do not establish completeness. A real export awaits reconciled complete sources
-and explicit execution authorization. Scores are not validated calibrated
+2013-11-02. The separate authorized backup check confirmed 467 eligible resellers
+and reconciled the complete source window; see [source readiness](verification.md#remaining-export-readiness).
+The older detailed exports stopping at 2013-10-01 must not be used for this
+snapshot. No real prediction export has been run; execution awaits authorization. Scores are not validated calibrated
 individual risk estimates. New independent evaluation requires frozen methodology
 and explicit user approval; protected final-test data stays outside development.

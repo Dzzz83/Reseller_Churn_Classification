@@ -72,11 +72,13 @@ OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 reseller-churn export \
 This is a command example, **not an export already performed**. For this snapshot,
 history is `[2013-05-02, 2014-05-02)` and eligibility is
 `[2013-11-02, 2014-05-02)`. The pipeline derives the eligible count from purchases;
-467 is a proposed count awaiting verification. The handoff records detailed
-exports ending at exclusive 2013-10-01. Complete reconciled headers, lines and
-order summaries through exclusive 2014-05-02, their source hashes and coverage
-attestation are still needed. Do not extrapolate discount features or issue a
-partial real export. Implementation verification used synthetic data only.
+the pipeline does not hard-code an expected population. A separately authorized
+source check on 2026-10-18 verified 467 eligible resellers against the supplied
+CompanyX backup. Complete source extracts and a production coverage manifest
+were saved locally; see [source readiness](docs/verification.md#remaining-export-readiness).
+The earlier exports ending at 2013-10-01 are insufficient. Use the newly verified
+full-window inputs for this snapshot. Implementation/model checks used synthetic
+data; no real prediction export has been run.
 
 The new output directory contains:
 
