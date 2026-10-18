@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import hashlib
 import json
 import math
+from dataclasses import asdict, dataclass
 from typing import Any
 
-from reseller_churn.config.feature_sets import FEATURE_SETS
+from reseller_churn.config.feature_sets import LEGACY_FEATURE_SETS, MODEL_FEATURE_SETS
 from reseller_churn.config.model_settings import (
     BASELINE_GRADIENT_BOOSTING,
     BASELINE_RANDOM_FOREST,
     MODEL_SEEDS,
 )
-
 
 ARCHITECTURES = (
     "logistic_regression",
@@ -25,7 +24,10 @@ IMBALANCE_STRATEGIES = (
     "none",
     "balanced_weights",
     "random_oversampling",
+    "period_class_weights",
 )
+LEGACY_IMBALANCE_STRATEGIES = IMBALANCE_STRATEGIES[:3]
+
 
 @dataclass(frozen=True)
 class Candidate:
@@ -40,11 +42,16 @@ class Candidate:
     def __post_init__(self) -> None:
         if self.architecture not in ARCHITECTURES:
             raise ValueError(f"Unknown architecture: {self.architecture}")
-        if self.feature_set not in FEATURE_SETS:
+        if self.feature_set not in MODEL_FEATURE_SETS:
             raise ValueError(f"Unknown feature set: {self.feature_set}")
         if self.imbalance_strategy not in IMBALANCE_STRATEGIES:
+            raise ValueError(f"Unknown imbalance strategy: {self.imbalance_strategy}")
+        if (
+            self.imbalance_strategy == "period_class_weights"
+            and self.architecture != "hist_gradient_boosting"
+        ):
             raise ValueError(
-                f"Unknown imbalance strategy: {self.imbalance_strategy}"
+                "Period/class weighting is supported for histogram boosting only."
             )
         if not self.seeds or len(set(self.seeds)) != len(self.seeds):
             raise ValueError("seeds must be non-empty and unique.")
@@ -78,7 +85,9 @@ class Candidate:
         def require_positive_integer(name: str) -> None:
             value = self.parameters[name]
             if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-                raise ValueError(f"{self.architecture} {name} must be a positive integer.")
+                raise ValueError(
+                    f"{self.architecture} {name} must be a positive integer."
+                )
 
         def require_positive_number(name: str) -> None:
             value = self.parameters[name]
@@ -100,8 +109,7 @@ class Candidate:
                 require_positive_integer("max_depth")
             max_features = self.parameters["max_features"]
             if not (
-                isinstance(max_features, str)
-                and max_features in {"sqrt", "log2"}
+                isinstance(max_features, str) and max_features in {"sqrt", "log2"}
             ) and not (
                 isinstance(max_features, (int, float))
                 and not isinstance(max_features, bool)
@@ -125,7 +133,7 @@ class Candidate:
 
     @property
     def features(self) -> tuple[str, ...]:
-        return tuple(FEATURE_SETS[self.feature_set])
+        return tuple(MODEL_FEATURE_SETS[self.feature_set])
 
     @property
     def candidate_id(self) -> str:
@@ -212,11 +220,11 @@ def build_candidates(
 ) -> list[Candidate]:
     """Build the bounded Cartesian comparison, with optional explicit tuning."""
     selected_architectures = architectures or ARCHITECTURES
-    selected_features = feature_sets or tuple(FEATURE_SETS)
-    selected_strategies = imbalance_strategies or IMBALANCE_STRATEGIES
+    selected_features = feature_sets or LEGACY_FEATURE_SETS
+    selected_strategies = imbalance_strategies or LEGACY_IMBALANCE_STRATEGIES
 
     unknown_architectures = set(selected_architectures) - set(ARCHITECTURES)
-    unknown_features = set(selected_features) - set(FEATURE_SETS)
+    unknown_features = set(selected_features) - set(MODEL_FEATURE_SETS)
     unknown_strategies = set(selected_strategies) - set(IMBALANCE_STRATEGIES)
     if unknown_architectures or unknown_features or unknown_strategies:
         raise ValueError(
@@ -237,6 +245,11 @@ def build_candidates(
         architecture_seeds = seeds or MODEL_SEEDS
         for feature_set in selected_features:
             for strategy in selected_strategies:
+                if (
+                    strategy == "period_class_weights"
+                    and architecture != "hist_gradient_boosting"
+                ):
+                    continue
                 for parameters in parameter_options[architecture]:
                     candidates.append(
                         Candidate(

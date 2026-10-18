@@ -16,13 +16,9 @@ def balance_classes_by_random_oversampling(
     combined = features.copy()
     combined["_target"] = target
 
-    non_churn = combined[
-        combined["_target"] == 0
-    ]
+    non_churn = combined[combined["_target"] == 0]
 
-    churn = combined[
-        combined["_target"] == 1
-    ]
+    churn = combined[combined["_target"] == 1]
 
     sampled_churn = churn.sample(
         n=len(non_churn),
@@ -40,8 +36,6 @@ def balance_classes_by_random_oversampling(
         random_state=random_seed,
     ).reset_index(drop=True)
 
-    balanced_target = balanced.pop(
-        "_target"
-    ).astype(int)
+    balanced_target = balanced.pop("_target").astype(int)
 
     return balanced, balanced_target

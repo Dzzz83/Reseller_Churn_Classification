@@ -15,11 +15,7 @@ import pandas as pd
 from sklearn.utils.class_weight import compute_sample_weight
 
 from reseller_churn.artifacts import file_sha256
-from reseller_churn.config.feature_sets import FEATURE_SETS
-from reseller_churn.config.model_settings import (
-    GradientBoostingSettings,
-    RandomForestSettings,
-)
+from reseller_churn.config.feature_sets import FEATURE_SETS, LEGACY_FEATURE_SETS
 from reseller_churn.config.project_paths import PROJECT_ROOT
 from reseller_churn.config.validation_settings import (
     DEVELOPMENT_FOLDS,
@@ -29,10 +25,12 @@ from reseller_churn.config.validation_settings import (
 )
 from reseller_churn.evaluation.selection import SELECTION_RULE
 from reseller_churn.modeling.candidates import Candidate, candidate_from_dict
+from reseller_churn.modeling.ensemble import apply_threshold, mean_probabilities
 from reseller_churn.modeling.model_factory import ModelFactory
 from reseller_churn.modeling.resampling import (
     balance_classes_by_random_oversampling,
 )
+from reseller_churn.modeling.weighting import period_weights
 
 RESERVED_COLUMNS = {"StoreID", "snapshot", "churn"}
 
@@ -75,7 +73,8 @@ def validate_labeled_development_data(data: pd.DataFrame) -> pd.DataFrame:
     }:
         raise ValueError("Development target must contain only non-missing 0/1 labels.")
 
-    for feature_set, features in FEATURE_SETS.items():
+    for feature_set in LEGACY_FEATURE_SETS:
+        features = FEATURE_SETS[feature_set]
         reserved_features = RESERVED_COLUMNS.intersection(features)
         if reserved_features:
             raise ValueError(
@@ -133,33 +132,13 @@ def fold_manifest(folds: tuple[TemporalFold, ...] = DEVELOPMENT_FOLDS) -> list[d
     ]
 
 
-def _create_candidate_model(candidate: Candidate, seed: int):
-    parameters = candidate.parameters
-    if candidate.architecture == "logistic_regression":
-        return ModelFactory.create_logistic_regression(
-            c=float(parameters["C"]),
-            max_iter=int(parameters["max_iter"]),
-        )
-    if candidate.architecture == "random_forest":
-        return ModelFactory.create_random_forest(
-            RandomForestSettings(**parameters),
-            random_seed=seed,
-        )
-    if candidate.architecture == "hist_gradient_boosting":
-        return ModelFactory.create_gradient_boosting(
-            GradientBoostingSettings(**parameters),
-            random_seed=seed,
-        )
-    raise ValueError(f"Unsupported architecture: {candidate.architecture}")
-
-
 def _fit_one_model(
     candidate: Candidate,
     training_features: pd.DataFrame,
     training_target: pd.Series,
     seed: int,
 ):
-    fit_features = training_features.copy()
+    fit_features = training_features.loc[:, list(candidate.features)].copy()
     fit_target = training_target.astype(int).copy()
 
     if candidate.imbalance_strategy == "random_oversampling":
@@ -169,13 +148,15 @@ def _fit_one_model(
             random_seed=seed,
         )
 
-    model = _create_candidate_model(candidate, seed)
+    model = ModelFactory.create_candidate(candidate, seed)
     fit_kwargs: dict[str, Any] = {}
-    if candidate.imbalance_strategy == "balanced_weights":
-        sample_weight = compute_sample_weight(
-            class_weight="balanced",
-            y=fit_target,
-        )
+    if candidate.imbalance_strategy in {"balanced_weights", "period_class_weights"}:
+        if candidate.imbalance_strategy == "balanced_weights":
+            sample_weight = compute_sample_weight("balanced", fit_target)
+        else:
+            sample_weight = period_weights(
+                training_features.assign(churn=training_target.to_numpy())
+            )
         fit_kwargs[
             "model__sample_weight"
             if candidate.architecture in {"logistic_regression", "random_forest"}
@@ -216,15 +197,10 @@ class FittedProbabilityEnsemble:
             )
 
         selected_features = features.loc[:, list(self.features)]
-        by_seed = [
-            model.predict_proba(selected_features)[:, 1] for model in self.models
-        ]
-        return np.mean(by_seed, axis=0)
+        return mean_probabilities(self.models, selected_features)
 
     def predict(self, features: pd.DataFrame, threshold: float) -> np.ndarray:
-        if not np.isfinite(threshold) or not 0 <= threshold <= 1:
-            raise ValueError("threshold must be finite and between 0 and 1.")
-        return (self.predict_probabilities(features) >= threshold).astype(int)
+        return apply_threshold(self.predict_probabilities(features), threshold)
 
 
 def fit_candidate_ensemble(
@@ -235,11 +211,10 @@ def fit_candidate_ensemble(
 ) -> FittedProbabilityEnsemble:
     """Fit the same seed policy used during validation, on training rows only."""
     candidate_config = candidate_from_dict(candidate.to_dict())
-    selected_features = training_features.loc[:, list(candidate_config.features)]
     fitted_models = tuple(
         _fit_one_model(
             candidate_config,
-            selected_features,
+            training_features,
             training_target,
             seed,
         )
@@ -259,21 +234,17 @@ def fit_and_predict_candidate(
     validation_features: pd.DataFrame,
 ) -> tuple[np.ndarray, tuple[Any, ...]]:
     """Fit one candidate's seed ensemble and return averaged probabilities."""
-    selected_features = training_features.loc[:, list(candidate.features)]
     selected_validation_features = validation_features.loc[:, list(candidate.features)]
     models = tuple(
         _fit_one_model(
             candidate,
-            selected_features,
+            training_features,
             training_target,
             seed,
         )
         for seed in candidate.seeds
     )
-    probabilities = np.mean(
-        [model.predict_proba(selected_validation_features)[:, 1] for model in models],
-        axis=0,
-    )
+    probabilities = mean_probabilities(models, selected_validation_features)
     return probabilities, models
 
 

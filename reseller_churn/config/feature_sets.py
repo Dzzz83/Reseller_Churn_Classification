@@ -1,5 +1,7 @@
 """Named feature sets used by experiments."""
 
+from reseller_churn.config.frozen_model import FEATURES
+
 RFM_FEATURES = [
     "recency_days",
     "n_orders_12m",
@@ -59,3 +61,8 @@ FEATURE_SETS = {
     "reduced": REDUCED_FEATURES,
     "pruned": PRUNED_FEATURES,
 }
+
+# Historical comparisons retain the catalog produced by FeaturePipeline.
+# Model specifications also support the separately prepared ten-feature contract.
+LEGACY_FEATURE_SETS = tuple(FEATURE_SETS)
+MODEL_FEATURE_SETS = {**FEATURE_SETS, "ten": list(FEATURES)}

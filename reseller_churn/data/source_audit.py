@@ -5,8 +5,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from reseller_churn.data.validation import validate_category_revenue, validate_order_dates
-
+from reseller_churn.data.validation import (
+    validate_category_revenue,
+    validate_order_dates,
+)
 
 REQUIRED_ORDER_COLUMNS = {
     "StoreID",
@@ -54,12 +56,14 @@ def audit_source_data(
         ["rev_bikes", "rev_components", "rev_clothing", "rev_accessories"]
     ].sum(axis=1, min_count=4)
     revenue_mismatches = int(
-        (~np.isclose(
-            reconstructed_revenue,
-            orders["SubTotal"],
-            atol=0.01,
-            rtol=0,
-        )).sum()
+        (
+            ~np.isclose(
+                reconstructed_revenue,
+                orders["SubTotal"],
+                atol=0.01,
+                rtol=0,
+            )
+        ).sum()
     )
 
     checks = {

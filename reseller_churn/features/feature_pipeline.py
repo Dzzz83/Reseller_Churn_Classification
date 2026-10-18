@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from reseller_churn.data.prediction_window import PredictionWindow
 from reseller_churn.data.eligibility import get_eligible_store_ids
-
+from reseller_churn.data.prediction_window import PredictionWindow
+from reseller_churn.data.validation import validate_order_dates
 
 CATEGORY_REVENUE_COLUMNS = {
     "bikes": "rev_bikes",
@@ -50,6 +50,7 @@ class FeaturePipeline:
         stores: pd.DataFrame,
         snapshots: tuple[str, ...] | list[str],
     ) -> pd.DataFrame:
+        validate_order_dates(orders.OrderDate)
         snapshot_features = [
             self._build_snapshot(
                 orders=orders,
@@ -85,9 +86,7 @@ class FeaturePipeline:
             window,
         )
 
-        history = history[
-            history["StoreID"].isin(eligible_store_ids)
-        ].copy()
+        history = history[history["StoreID"].isin(eligible_store_ids)].copy()
 
         features = self._build_rfm_features(
             history,
@@ -105,9 +104,7 @@ class FeaturePipeline:
             history,
         )
 
-        features = self._add_revenue_trend_features(
-            features
-        )
+        features = self._add_revenue_trend_features(features)
 
         features = self._add_product_share_features(
             features,
@@ -137,9 +134,7 @@ class FeaturePipeline:
             .reset_index()
         )
 
-        features["recency_days"] = (
-            window.snapshot - features["last_order"]
-        ).dt.days
+        features["recency_days"] = (window.snapshot - features["last_order"]).dt.days
 
         features["snapshot"] = window.snapshot
 
@@ -163,14 +158,9 @@ class FeaturePipeline:
         result = features.copy()
 
         for months in (6, 3):
-            period_start = (
-                window.snapshot
-                - pd.DateOffset(months=months)
-            )
+            period_start = window.snapshot - pd.DateOffset(months=months)
 
-            recent_orders = history[
-                history["OrderDate"] >= period_start
-            ]
+            recent_orders = history[history["OrderDate"] >= period_start]
 
             count_column = f"n_orders_{months}m"
             revenue_column = f"revenue_{months}m"
@@ -232,10 +222,7 @@ class FeaturePipeline:
             validate="one_to_one",
         )
 
-        result["overdue_ratio"] = (
-            result["recency_days"]
-            / result["mean_gap"]
-        )
+        result["overdue_ratio"] = result["recency_days"] / result["mean_gap"]
 
         return result
 
@@ -245,34 +232,20 @@ class FeaturePipeline:
     ) -> pd.DataFrame:
         result = features.copy()
 
-        previous_revenue = (
-            result["revenue_12m"]
-            - result["revenue_6m"]
-        )
+        previous_revenue = result["revenue_12m"] - result["revenue_6m"]
 
         if (previous_revenue < -0.01).any():
-            raise AssertionError(
-                "Previous six-month revenue became negative."
-            )
+            raise AssertionError("Previous six-month revenue became negative.")
 
-        previous_revenue = previous_revenue.clip(
-            lower=0
-        )
+        previous_revenue = previous_revenue.clip(lower=0)
 
-        has_previous_revenue = (
-            previous_revenue > 0.01
-        )
+        has_previous_revenue = previous_revenue > 0.01
 
-        result[
-            "has_previous_6m_revenue"
-        ] = has_previous_revenue.astype(int)
+        result["has_previous_6m_revenue"] = has_previous_revenue.astype(int)
 
         result["revenue_trend"] = np.where(
             has_previous_revenue,
-            (
-                np.log1p(result["revenue_6m"])
-                - np.log1p(previous_revenue)
-            ),
+            (np.log1p(result["revenue_6m"]) - np.log1p(previous_revenue)),
             np.nan,
         )
 
@@ -283,16 +256,10 @@ class FeaturePipeline:
         features: pd.DataFrame,
         history: pd.DataFrame,
     ) -> pd.DataFrame:
-        revenue_columns = list(
-            CATEGORY_REVENUE_COLUMNS.values()
-        )
+        revenue_columns = list(CATEGORY_REVENUE_COLUMNS.values())
 
         category_revenue = (
-            history.groupby("StoreID")[
-                revenue_columns
-            ]
-            .sum()
-            .reset_index()
+            history.groupby("StoreID")[revenue_columns].sum().reset_index()
         )
 
         result = features.merge(
@@ -306,16 +273,9 @@ class FeaturePipeline:
             category,
             revenue_column,
         ) in CATEGORY_REVENUE_COLUMNS.items():
-            result[
-                f"share_{category}"
-            ] = (
-                result[revenue_column]
-                / result["revenue_12m"]
-            )
+            result[f"share_{category}"] = result[revenue_column] / result["revenue_12m"]
 
-        return result.drop(
-            columns=revenue_columns
-        )
+        return result.drop(columns=revenue_columns)
 
     @staticmethod
     def _add_store_age_feature(
@@ -324,9 +284,7 @@ class FeaturePipeline:
         window: PredictionWindow,
     ) -> pd.DataFrame:
         result = features.merge(
-            stores[
-                ["StoreID", "YearOpened"]
-            ],
+            stores[["StoreID", "YearOpened"]],
             on="StoreID",
             how="left",
             validate="one_to_one",
@@ -337,10 +295,7 @@ class FeaturePipeline:
                 "A reseller feature row could not be matched to stores data."
             )
 
-        result["store_age"] = (
-            window.snapshot.year
-            - result["YearOpened"]
-        )
+        result["store_age"] = window.snapshot.year - result["YearOpened"]
 
         return result.drop(
             columns=[

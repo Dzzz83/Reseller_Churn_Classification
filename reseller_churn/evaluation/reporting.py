@@ -34,9 +34,7 @@ def error_analysis_from_predictions(
     if result.empty:
         raise ValueError(f"No saved predictions for candidate {candidate_id}.")
 
-    result["predicted_churn"] = (
-        result["churn_probability"] >= threshold
-    ).astype(int)
+    result["predicted_churn"] = (result["churn_probability"] >= threshold).astype(int)
     actual_churn = result["actual_churn"].astype(int)
     predicted_churn = result["predicted_churn"]
     result["result_type"] = "correct_non_churn"

@@ -11,9 +11,4 @@ def get_eligible_store_ids(
 
     recent_orders = window.select_eligibility_period(orders)
 
-    return sorted(
-        recent_orders["StoreID"]
-        .drop_duplicates()
-        .astype(int)
-        .tolist()
-    )
+    return sorted(recent_orders["StoreID"].drop_duplicates().astype(int).tolist())

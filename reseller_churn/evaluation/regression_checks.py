@@ -12,15 +12,9 @@ class RegressionChecks:
     ) -> None:
         keys = ["StoreID", "snapshot"]
 
-        expected = (
-            expected.sort_values(keys)
-            .reset_index(drop=True)
-        )
+        expected = expected.sort_values(keys).reset_index(drop=True)
 
-        actual = (
-            actual.sort_values(keys)
-            .reset_index(drop=True)
-        )
+        actual = actual.sort_values(keys).reset_index(drop=True)
 
         if list(expected.columns) != list(actual.columns):
             raise AssertionError(
@@ -37,9 +31,7 @@ class RegressionChecks:
                 left = pd.to_datetime(expected[column])
                 right = pd.to_datetime(actual[column])
                 if not left.equals(right):
-                    raise AssertionError(
-                        "Snapshot values changed during refactoring."
-                    )
+                    raise AssertionError("Snapshot values changed during refactoring.")
                 continue
 
             if pd.api.types.is_numeric_dtype(expected[column]):
@@ -53,14 +45,10 @@ class RegressionChecks:
                     atol=1e-8,
                     equal_nan=True,
                 ):
-                    raise AssertionError(
-                        f"Feature values changed for {column}."
-                    )
+                    raise AssertionError(f"Feature values changed for {column}.")
             else:
                 if not expected[column].equals(actual[column]):
-                    raise AssertionError(
-                        f"Values changed for {column}."
-                    )
+                    raise AssertionError(f"Values changed for {column}.")
 
     @staticmethod
     def assert_score_matches(

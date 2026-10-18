@@ -13,7 +13,10 @@ from reseller_churn.config.frozen_model import FEATURES, TRAINING_SNAPSHOTS
 from reseller_churn.data.churn_labels import build_churn_labels
 from reseller_churn.data.eligibility import get_eligible_store_ids
 from reseller_churn.data.prediction_window import PredictionWindow
-from reseller_churn.data.validation import validate_category_revenue, validate_order_dates
+from reseller_churn.data.validation import (
+    validate_category_revenue,
+    validate_order_dates,
+)
 
 DateLike = str | CalendarDate | datetime | np.datetime64 | pd.Timestamp
 KEYS = ["StoreID", "snapshot"]

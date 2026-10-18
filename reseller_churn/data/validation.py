@@ -21,7 +21,9 @@ def validate_category_revenue(orders: pd.DataFrame) -> None:
     values = orders[list(CATEGORY_COLUMNS)].to_numpy(dtype=float)
     subtotal = orders.SubTotal.to_numpy(dtype=float)
     if not np.isfinite(values).all() or (values < 0).any():
-        raise ValueError("Invalid category revenue: values must be finite and nonnegative.")
+        raise ValueError(
+            "Invalid category revenue: values must be finite and nonnegative."
+        )
     if not np.isfinite(subtotal).all() or (subtotal <= 0).any():
         raise ValueError("Order subtotals must be finite and positive.")
     if not np.allclose(values.sum(axis=1), subtotal, atol=0.01, rtol=0):

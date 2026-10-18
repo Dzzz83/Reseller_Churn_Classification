@@ -3,37 +3,19 @@
 import argparse
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from comparisons import grouped_precision_recall as study
-from comparisons.baseline_diagnosis.inputs import read_csv, require
+from comparisons.baseline_diagnosis.inputs import read_csv
 from comparisons.fixed_feature_comparison import run_fixed_hgb
 from comparisons.reseller_weighting import fit_weighted
 from comparisons.retained_calibration import LIMITS, intersection_gate
 from reseller_churn.artifacts import verify_manifest
+from reseller_churn.modeling.weighting import period_weights
 
 ROOT = Path(__file__).resolve().parents[1]
 CANDIDATE = "period_class_weighted"
 TAIL = 0.0000078125
-
-
-def period_weights(train):
-    require(
-        set(train.snapshot.dt.strftime("%Y-%m-%d")) == set(study.SNAPSHOTS),
-        "All four approved fitting periods required",
-    )
-    counts = train.groupby(["snapshot", "churn"]).size()
-    require(
-        len(counts) == 8 and train.churn.isin([0, 1]).all(),
-        "Both fitting outcomes required in every period",
-    )
-    return np.array(
-        [
-            len(train) / (8 * counts.loc[(row.snapshot, row.churn)])
-            for row in train[["snapshot", "churn"]].itertuples(index=False)
-        ]
-    )
 
 
 def fit_period_weighted(train, validation_features, spec):

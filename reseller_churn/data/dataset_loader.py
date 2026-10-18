@@ -30,7 +30,5 @@ class DatasetLoader:
     ) -> pd.DataFrame:
         """Load labeled development snapshots from a reference or run output."""
         data = pd.read_csv(path)
-        data["snapshot"] = pd.to_datetime(
-            data["snapshot"]
-        ).dt.strftime("%Y-%m-%d")
+        data["snapshot"] = pd.to_datetime(data["snapshot"]).dt.strftime("%Y-%m-%d")
         return data

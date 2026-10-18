@@ -12,8 +12,7 @@ from reseller_churn.cli import main
 
 
 def synthetic_sources(directory: Path) -> dict[str, Path]:
-    orders, headers, lines = [], [], []
-    order_id = 0
+    store_dates = {}
     for store in range(1, 9):
         dates = ["2012-03-01", "2012-06-01", "2012-09-01", "2012-12-01", "2013-03-01"]
         if store > 2:
@@ -22,6 +21,14 @@ def synthetic_sources(directory: Path) -> dict[str, Path]:
             dates += ["2013-06-01"]
         else:
             dates = dates[:2]
+        store_dates[store] = dates
+    return write_synthetic_sources(directory, store_dates)
+
+
+def write_synthetic_sources(directory: Path, store_dates: dict) -> dict[str, Path]:
+    orders, headers, lines = [], [], []
+    order_id = 0
+    for store, dates in store_dates.items():
         for index, ordered in enumerate(dates):
             order_id += 1
             discount = 0.1 if index % 2 else 0.2
@@ -64,7 +71,7 @@ def synthetic_sources(directory: Path) -> dict[str, Path]:
         "orders": pd.DataFrame(orders),
         "headers": pd.DataFrame(headers),
         "lines": pd.DataFrame(lines),
-        "stores": pd.DataFrame({"StoreID": range(1, 9)}),
+        "stores": pd.DataFrame({"StoreID": sorted(store_dates)}),
     }
     paths = {}
     for name, frame in frames.items():

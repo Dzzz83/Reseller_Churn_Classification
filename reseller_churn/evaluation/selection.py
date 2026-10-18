@@ -9,7 +9,6 @@ import pandas as pd
 
 from reseller_churn.evaluation.metrics import calculate_threshold_metrics
 
-
 SELECTION_RULE = (
     "maximize mean fold recall subject to the minimum precision being met "
     "in every development fold; break ties by worst-fold recall, mean "
@@ -41,7 +40,9 @@ def evaluate_threshold_tradeoffs(
     for fold_name, values in fold_predictions.items():
         raw_target = np.asarray(values["target"])
         if raw_target.ndim != 1 or not np.isin(raw_target, [0, 1]).all():
-            raise ValueError(f"{fold_name}: target must be a one-dimensional 0/1 array.")
+            raise ValueError(
+                f"{fold_name}: target must be a one-dimensional 0/1 array."
+            )
         target = raw_target.astype(int)
         probabilities = np.asarray(values["probabilities"], dtype=float)
         if (
@@ -128,9 +129,7 @@ def select_for_precision_floor(
         raise ValueError("Threshold results do not contain per-fold precision.")
 
     eligible = threshold_results[
-        threshold_results[fold_precision_columns]
-        .ge(minimum_precision)
-        .all(axis=1)
+        threshold_results[fold_precision_columns].ge(minimum_precision).all(axis=1)
     ]
     if eligible.empty:
         return {

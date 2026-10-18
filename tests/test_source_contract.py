@@ -23,18 +23,20 @@ def test_research_audit_rejects_offsetting_negative_categories(source_paths):
         audit_source_data(orders, stores)
 
 
-@pytest.mark.parametrize("name", ["orders", "headers"])
-def test_intraday_orders_are_rejected(source_paths, name):
-    frame = pd.read_csv(source_paths[name])
-    frame["OrderDate"] = pd.to_datetime(frame.OrderDate)
-    frame.loc[0, "OrderDate"] += pd.Timedelta(hours=12)
-    frame.to_csv(source_paths[name], index=False)
+def test_intraday_orders_are_rejected_even_when_sources_agree(source_paths):
+    for name in ("orders", "headers"):
+        frame = pd.read_csv(source_paths[name])
+        frame["OrderDate"] = pd.to_datetime(frame.OrderDate)
+        frame.loc[0, "OrderDate"] += pd.Timedelta(hours=12)
+        frame.to_csv(source_paths[name], index=False)
     with pytest.raises(ValueError, match="midnight"):
         load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
 
 
 @pytest.mark.parametrize("mutation", ["recency", "revenue", "shares", "recent"])
-def test_imported_features_must_describe_a_possible_eligible_account(source_paths, mutation):
+def test_imported_features_must_describe_a_possible_eligible_account(
+    source_paths, mutation
+):
     source = load_sources(source_paths, "2011-01-01", "2013-10-01", "2013-10-01")
     features = build_features(source, "2013-10-01")
     if mutation == "recency":

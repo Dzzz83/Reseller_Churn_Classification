@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from pipeline import development_workflow
+from pipeline import legacy_temporal_workflow as development_workflow
 from reseller_churn.config.feature_sets import FEATURE_SETS
 from reseller_churn.config.validation_settings import LABELED_SNAPSHOTS
 from reseller_churn.evaluation.selection import evaluate_threshold_tradeoffs

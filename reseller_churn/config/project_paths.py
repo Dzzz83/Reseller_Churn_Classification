@@ -1,6 +1,6 @@
-from pathlib import Path
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATASETS_DIR = PROJECT_ROOT / "datasets"
@@ -14,12 +14,8 @@ LEGACY_PREPARATION_DIR = RESULTS_DIR / "legacy_preparation"
 LEGACY_ENGINEERED_FEATURES_PATH = (
     LEGACY_PREPARATION_DIR / "reseller_order_age_features.csv"
 )
-LEGACY_LABELED_SNAPSHOTS_PATH = (
-    LEGACY_PREPARATION_DIR / "ml_labeled_snapshots.csv"
-)
-LEGACY_FINAL_TEST_FEATURES_PATH = (
-    LEGACY_PREPARATION_DIR / "ml_test_features.csv"
-)
+LEGACY_LABELED_SNAPSHOTS_PATH = LEGACY_PREPARATION_DIR / "ml_labeled_snapshots.csv"
+LEGACY_FINAL_TEST_FEATURES_PATH = LEGACY_PREPARATION_DIR / "ml_test_features.csv"
 
 ORDERS_PATH = DATASETS_DIR / "orders_clean.csv"
 STORES_PATH = DATASETS_DIR / "stores_clean.csv"

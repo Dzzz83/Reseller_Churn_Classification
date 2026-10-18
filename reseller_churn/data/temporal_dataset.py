@@ -47,19 +47,14 @@ class TemporalDataset:
         # Every configured snapshot must exist.
         available_snapshots = set(self.data[self.snapshot_column])
 
-        missing = sorted(
-            set(fold.training_snapshots) - available_snapshots
-        )
+        missing = sorted(set(fold.training_snapshots) - available_snapshots)
 
         if missing:
-            raise ValueError(
-                f"{fold.name}: missing training snapshots: {missing}"
-            )
+            raise ValueError(f"{fold.name}: missing training snapshots: {missing}")
 
         if fold.validation_snapshot not in available_snapshots:
             raise ValueError(
-                f"{fold.name}: missing validation snapshot: "
-                f"{fold.validation_snapshot}"
+                f"{fold.name}: missing validation snapshot: {fold.validation_snapshot}"
             )
 
         # All training labels must be available before validation.
@@ -73,20 +68,15 @@ class TemporalDataset:
                 )
 
         training_data = self.data[
-            self.data[self.snapshot_column].isin(
-                fold.training_snapshots
-            )
+            self.data[self.snapshot_column].isin(fold.training_snapshots)
         ].copy()
 
         validation_data = self.data[
-            self.data[self.snapshot_column]
-            == fold.validation_snapshot
+            self.data[self.snapshot_column] == fold.validation_snapshot
         ].copy()
 
         if training_data.empty or validation_data.empty:
-            raise ValueError(
-                f"{fold.name}: training or validation data is empty."
-            )
+            raise ValueError(f"{fold.name}: training or validation data is empty.")
 
         return PreparedTemporalFold(
             name=fold.name,

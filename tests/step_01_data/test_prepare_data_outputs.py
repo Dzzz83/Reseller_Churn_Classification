@@ -3,7 +3,7 @@ import json
 
 import pandas as pd
 
-import pipeline.prepare_data as prepare_module
+import pipeline.legacy_prepare_data as prepare_module
 
 
 def _sha256(path):

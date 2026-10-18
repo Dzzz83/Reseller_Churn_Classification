@@ -22,7 +22,18 @@ dev = ["pytest", "ruff"]
 include = ["reseller_churn*", "comparisons*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# Default verification is self-contained. Historical/reference-data regressions
+# remain available by passing their paths explicitly.
+testpaths = [
+    "tests/grouped",
+    "tests/test_data.py",
+    "tests/test_source_contract.py",
+    "tests/test_model.py",
+    "tests/test_artifacts.py",
+    "tests/test_evaluation.py",
+    "tests/test_pipeline.py",
+    "tests/step_02_features/test_feature_snapshot_boundaries.py",
+]
 
 [project.scripts]
 reseller-churn = "reseller_churn.cli:main"

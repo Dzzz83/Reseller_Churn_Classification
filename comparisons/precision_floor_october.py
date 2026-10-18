@@ -19,6 +19,8 @@ from reseller_churn.artifacts import (
     write_json,
     write_manifest,
 )
+from reseller_churn.modeling.grouped_validation import ThresholdPolicy
+from reseller_churn.modeling.grouped_validation import cutoff_scan as cutoff_scan
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "results/positive-floor-october-evaluation-20261018"
@@ -26,52 +28,12 @@ CANDIDATE = "positive_floor_veto"
 FLOORS = list(range(20, 101, 10))
 
 
-def cutoff_scan(labels, scores):
-    labels = np.asarray(labels)
-    scores = np.asarray(scores, dtype=float)
-    require(
-        len(labels) == len(scores) > 0 and np.isin(labels, [0, 1]).all(),
-        "Invalid labels",
-    )
-    require(
-        np.isfinite(scores).all() and ((scores >= 0) & (scores <= 1)).all(),
-        "Invalid scores",
-    )
-    require(labels.sum() > 0, "Recall undefined")
-    positive = np.sort(scores[labels == 1])
-    negative = np.sort(scores[labels == 0])
-    cuts = np.unique(np.r_[0.0, scores])
-    tp = len(positive) - np.searchsorted(positive, cuts, side="left")
-    fp = len(negative) - np.searchsorted(negative, cuts, side="left")
-    return pd.DataFrame(
-        dict(
-            cutoff=cuts,
-            tp=tp,
-            fp=fp,
-            fn=len(positive) - tp,
-            tn=len(negative) - fp,
-            alerts=tp + fp,
-            recall=tp / len(positive),
-            precision=np.divide(tp, tp + fp, out=np.zeros(len(tp)), where=tp + fp > 0),
-        )
-    )
-
-
 def select_floor(scan, minimum_percent):
     require(
         0 < minimum_percent <= 100 and int(minimum_percent) == minimum_percent,
         "Invalid precision floor",
     )
-    feasible = scan[
-        (scan.alerts > 0) & (100 * scan.tp >= minimum_percent * scan.alerts)
-    ]
-    if feasible.empty:
-        return None
-    # Recall shares a fixed denominator, so maximizing TP is exact.
-    return max(
-        feasible.to_dict("records"),
-        key=lambda r: (r["tp"], Fraction(int(r["tp"]), int(r["alerts"])), r["cutoff"]),
-    )
+    return ThresholdPolicy(minimum_precision=minimum_percent / 100).select(scan)
 
 
 def independent_choice(labels, scores, minimum_percent):

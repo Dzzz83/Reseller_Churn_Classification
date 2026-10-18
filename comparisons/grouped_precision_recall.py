@@ -17,9 +17,14 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import average_precision_score
-from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.utils.class_weight import compute_sample_weight
 from threadpoolctl import threadpool_limits
+
+from reseller_churn.modeling.grouped_validation import (
+    ThresholdPolicy,
+    cutoff_scan,
+    grouped_splits,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOTS = ("2012-07-01", "2012-10-01", "2013-01-01", "2013-04-01")
@@ -126,21 +131,6 @@ def validate_development(frame, canonical=True):
     return data.sort_values(["snapshot", "StoreID"]).reset_index(drop=True)
 
 
-def grouped_splits(data, count, seed):
-    splitter = StratifiedGroupKFold(n_splits=count, shuffle=True, random_state=seed)
-    result = list(splitter.split(data, data.churn, data.StoreID))
-    coverage = np.zeros(len(data), dtype=int)
-    for train, valid in result:
-        if set(data.iloc[train].StoreID) & set(data.iloc[valid].StoreID):
-            raise ValueError("Reseller overlap across training and validation")
-        coverage[valid] += 1
-        if data.iloc[train].churn.nunique() != 2:
-            raise ValueError("Training fold lacks both classes")
-    if not np.all(coverage == 1):
-        raise ValueError("Validation folds must cover each row once")
-    return result
-
-
 def decision_metrics(y, score, cutoff):
     y = np.asarray(y) == 1
     alert = np.asarray(score) >= np.asarray(cutoff)
@@ -162,24 +152,13 @@ def decision_metrics(y, score, cutoff):
 
 
 def select_threshold(y, score):
-    """Training OOF only; strict >90% recall, ties precision/recall/cutoff."""
-    y, score = np.asarray(y), np.asarray(score)
-    if (
-        not np.isfinite(score).all()
-        or not np.isin(y, [0, 1]).all()
-        or not (y == 1).any()
-    ):
-        raise ValueError("Invalid training OOF scores or labels")
-    options = []
-    for cutoff in np.unique(np.r_[0.0, score]):
-        alert = score >= cutoff
-        caught = int(((y == 1) & alert).sum())
-        recall = caught / int((y == 1).sum())
-        precision = caught / max(1, int(alert.sum()))
-        if recall > 0.90:
-            options.append((precision, recall, float(cutoff)))
-    precision, recall, cutoff = max(options)
-    return dict(precision=precision, recall=recall, cutoff=cutoff)
+    """Training OOF only; preserve the historical strict >90% recall objective."""
+    chosen = ThresholdPolicy(objective="precision_at_recall").select(
+        cutoff_scan(y, score)
+    )
+    if chosen is None:
+        raise ValueError("No training OOF cutoff meets the recall target")
+    return {name: chosen[name] for name in ("precision", "recall", "cutoff")}
 
 
 def choose_configuration(selection_rows):

@@ -11,6 +11,7 @@ from reseller_churn.config.model_settings import (
     GradientBoostingSettings,
     RandomForestSettings,
 )
+from reseller_churn.modeling.candidates import Candidate
 
 
 class ModelFactory:
@@ -88,3 +89,24 @@ class ModelFactory:
             random_state=random_seed,
             early_stopping=False,
         )
+
+    @staticmethod
+    def create_candidate(candidate: Candidate, seed: int):
+        """Build a validated registered specification without fitting it."""
+        parameters = candidate.parameters
+        if candidate.architecture == "logistic_regression":
+            return ModelFactory.create_logistic_regression(
+                c=float(parameters["C"]),
+                max_iter=int(parameters["max_iter"]),
+            )
+        if candidate.architecture == "random_forest":
+            return ModelFactory.create_random_forest(
+                RandomForestSettings(**parameters),
+                random_seed=seed,
+            )
+        if candidate.architecture == "hist_gradient_boosting":
+            return ModelFactory.create_gradient_boosting(
+                GradientBoostingSettings(**parameters),
+                random_seed=seed,
+            )
+        raise ValueError(f"Unsupported architecture: {candidate.architecture}")

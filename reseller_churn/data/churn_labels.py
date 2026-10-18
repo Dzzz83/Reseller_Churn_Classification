@@ -13,21 +13,14 @@ def build_churn_labels(
     eligible_store_ids = get_eligible_store_ids(orders, window)
     future_orders = window.select_label_period(orders)
 
-    future_order_counts = (
-        future_orders.groupby("StoreID")["SalesOrderID"].nunique()
-    )
+    future_order_counts = future_orders.groupby("StoreID")["SalesOrderID"].nunique()
 
     labels = pd.DataFrame({"StoreID": eligible_store_ids})
 
     labels["future_orders"] = (
-        labels["StoreID"]
-        .map(future_order_counts)
-        .fillna(0)
-        .astype(int)
+        labels["StoreID"].map(future_order_counts).fillna(0).astype(int)
     )
 
-    labels["churn"] = (
-        labels["future_orders"] == 0
-    ).astype(int)
+    labels["churn"] = (labels["future_orders"] == 0).astype(int)
 
     return labels

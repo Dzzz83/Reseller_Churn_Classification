@@ -76,9 +76,9 @@ def calculate_threshold_metrics(
         raise ValueError("threshold must be finite and between 0 and 1.")
 
     predictions = (probability_values >= threshold).astype(int)
-    true_negative, false_positive, false_negative, true_positive = (
-        confusion_matrix(target_values, predictions, labels=[0, 1]).ravel()
-    )
+    true_negative, false_positive, false_negative, true_positive = confusion_matrix(
+        target_values, predictions, labels=[0, 1]
+    ).ravel()
     true_negative = int(true_negative)
     false_positive = int(false_positive)
     false_negative = int(false_negative)
@@ -93,9 +93,7 @@ def calculate_threshold_metrics(
         "precision": float(
             precision_score(target_values, predictions, zero_division=0)
         ),
-        "recall": float(
-            recall_score(target_values, predictions, zero_division=0)
-        ),
+        "recall": float(recall_score(target_values, predictions, zero_division=0)),
         "f1": float(f1_score(target_values, predictions, zero_division=0)),
         "accuracy": float(accuracy_score(target_values, predictions)),
         "alert_count": alert_count,
